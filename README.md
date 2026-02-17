@@ -1,3 +1,5 @@
+> **[QuickStart Guide →](./QuickStart.md)** — Get the platform running locally in under 5 minutes.
+
 # OlympusOSS Identity Platform
 
 A complete, enterprise-grade identity and access management platform built on [Ory](https://www.ory.sh/) open-source infrastructure. Designed for a single organization that needs full control over both customer and employee identity — without vendor lock-in or per-user pricing.

@@ -31,7 +31,7 @@ services:
       - '4000:80'
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@athena.dev
-      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_DEFAULT_PASSWORD=admin123!
       - PGADMIN_CONFIG_SERVER_MODE=True
     volumes:
       - type: bind
