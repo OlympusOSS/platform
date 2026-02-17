@@ -62,7 +62,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
     "credentials": {
       "password": {
         "config": {
-          "password": "admin123!"
+          "password": "Welcome1"
         }
       }
     },
@@ -82,7 +82,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
     "credentials": {
       "password": {
         "config": {
-          "password": "admin123!"
+          "password": "Welcome1"
         }
       }
     },
@@ -108,7 +108,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     "credentials": {
       "password": {
         "config": {
-          "password": "admin123!"
+          "password": "Welcome1"
         }
       }
     },
@@ -131,7 +131,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     "credentials": {
       "password": {
         "config": {
-          "password": "admin123!"
+          "password": "Welcome1"
         }
       }
     },
