@@ -52,14 +52,14 @@ One company. Two identity domains. Complete isolation. Full control.
 
 ### Two Domains, One Platform
 
-| | Customer (CIAM) | Employee (IAM) |
-|---|---|---|
-| **Who** | Your customers, end users, clients | Your employees, admins, support staff |
-| **Identity Store** | CIAM Kratos | IAM Kratos |
-| **OAuth2 / OIDC** | CIAM Hydra | IAM Hydra |
-| **Consent** | CIAM Medusa | IAM Medusa |
-| **Authentication** | CIAM Hera | IAM Hera |
-| **Admin Panel** | CIAM Athena | IAM Athena |
+|                    | Customer (CIAM)                    | Employee (IAM)                        |
+|--------------------|-------------------------------------|---------------------------------------|
+| **Who**            | Your customers, end users, clients  | Your employees, admins, support staff |
+| **Identity Store** | CIAM Kratos                         | IAM Kratos                            |
+| **OAuth2 / OIDC**  | CIAM Hydra                          | IAM Hydra                             |
+| **Consent**        | CIAM Medusa                         | IAM Medusa                            |
+| **Authentication** | CIAM Hera                           | IAM Hera                              |
+| **Admin Panel**    | CIAM Athena                         | IAM Athena                            |
 
 Both admin panels are protected by the employee identity store. A customer can never access admin tooling — they exist in a completely separate identity pool.
 
@@ -147,16 +147,16 @@ Identity is one of the most expensive line items in a modern SaaS stack. Managed
 
 ### vs. Managed Identity Providers
 
-| | Auth0 | Okta | AWS Cognito | Ory Network | OlympusOSS Identity Platform |
-|---|---|---|---|---|---|
-| **Pricing model** | Per MAU | Per MAU | Per MAU | Per aDAU (avg daily active) | Fixed infrastructure cost |
-| **10K users/mo** | ~$228/mo | ~$200/mo | ~$55/mo | ~$210/mo | $0 (beyond hosting) |
-| **100K users/mo** | ~$1,900/mo | ~$2,000/mo | ~$550/mo | ~$1,470/mo | $0 (beyond hosting) |
-| **1M users/mo** | ~$19,000/mo | ~$15,000+/mo | ~$5,500/mo | ~$14,070/mo | $0 (beyond hosting) |
-| **Separate CIAM + IAM** | 2x the cost | Separate product (Workforce + Customer Identity) | Manual setup | Separate projects | Built-in |
-| **Data ownership** | Vendor-hosted | Vendor-hosted | AWS-locked | Ory-hosted (or self-hosted enterprise) | You own it |
-| **Custom consent flows** | Limited | Limited | Very limited | Full control (headless) | Full control |
-| **OAuth2 server included** | Add-on cost | Add-on cost | Built-in (limited) | Built-in (full Hydra) | Built-in (full Hydra) |
+|                            | Auth0         | Okta                                             | Ory Network                            | OlympusOSS Identity Platform |
+|----------------------------|---------------|--------------------------------------------------|----------------------------------------|------------------------------|
+| **Pricing model**          | Per MAU       | Per MAU                                          | Per aDAU (avg daily active)            | Fixed infrastructure cost    |
+| **10K users/mo**           | ~$228/mo      | ~$200/mo                                         | ~$210/mo                               | $0 (beyond hosting)          |
+| **100K users/mo**          | ~$1,900/mo    | ~$2,000/mo                                       | ~$1,470/mo                             | $0 (beyond hosting)          |
+| **1M users/mo**            | ~$19,000/mo   | ~$15,000+/mo                                     | ~$14,070/mo                            | $0 (beyond hosting)          |
+| **Separate CIAM + IAM**   | 2x the cost   | Separate product (Workforce + Customer Identity) | Separate projects                      | Built-in                     |
+| **Data ownership**         | Vendor-hosted | Vendor-hosted                                    | Ory-hosted (or self-hosted enterprise) | You own it                   |
+| **Custom consent flows**   | Limited       | Limited                                          | Full control (headless)                | Full control                 |
+| **OAuth2 server included** | Add-on cost   | Add-on cost                                      | Built-in (full Hydra)                  | Built-in (full Hydra)        |
 
 **At 100K monthly active users, OlympusOSS Identity Platform saves $20,000 - $24,000 per year compared to Auth0 or Okta.** At 1M users, savings exceed $180,000/year. The cost is running a few lightweight containers and a PostgreSQL instance.
 
@@ -176,21 +176,21 @@ Identity is one of the most expensive line items in a modern SaaS stack. Managed
 
 Running the full platform (both IAM and CIAM domains) in production:
 
-| Resource | Specification | Estimated Cost |
-|----------|--------------|----------------|
-| PostgreSQL | Single instance, 2 vCPU / 8GB RAM | ~$50-100/mo |
-| Application containers (10 services) | Lightweight, ~256MB each | ~$50-100/mo |
-| **Total** | | **~$100-200/mo** |
+| Resource                             | Specification                     | Estimated Cost   |
+|--------------------------------------|-----------------------------------|------------------|
+| PostgreSQL                           | Single instance, 2 vCPU / 8GB RAM | ~$50-100/mo      |
+| Application containers (10 services) | Lightweight, ~256MB each          | ~$50-100/mo      |
+| **Total**                            |                                   | **~$100-200/mo** |
 
 This is a **fixed cost** that does not increase with user count. At scale, the savings are dramatic:
 
 | Monthly Active Users | Managed Provider (avg) | Ory Network (est.) | OlympusOSS Identity Platform | Annual Savings vs Managed |
-|---------------------|----------------------|---------------------|--------------------------|--------------------------|
-| 10,000 | ~$200/mo | ~$210/mo | ~$150/mo | ~$600 |
-| 50,000 | ~$1,000/mo | ~$770/mo | ~$150/mo | ~$10,200 |
-| 100,000 | ~$2,000/mo | ~$1,470/mo | ~$180/mo | ~$21,840 |
-| 500,000 | ~$10,000/mo | ~$7,070/mo | ~$180/mo | ~$117,840 |
-| 1,000,000 | ~$18,000/mo | ~$14,070/mo | ~$250/mo | ~$213,000 |
+|----------------------|------------------------|---------------------|------------------------------|---------------------------|
+| 10,000               | ~$200/mo               | ~$210/mo            | ~$150/mo                     | ~$600                     |
+| 50,000               | ~$1,000/mo             | ~$770/mo            | ~$150/mo                     | ~$10,200                  |
+| 100,000              | ~$2,000/mo             | ~$1,470/mo          | ~$180/mo                     | ~$21,840                  |
+| 500,000              | ~$10,000/mo            | ~$7,070/mo          | ~$180/mo                     | ~$117,840                 |
+| 1,000,000            | ~$18,000/mo            | ~$14,070/mo         | ~$250/mo                     | ~$213,000                 |
 
 ### Operational Savings
 
@@ -214,95 +214,95 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 ### Authentication
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **Email + Password** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Social Login (Google, GitHub, etc.)** | ✅ OIDC providers | ✅ 15+ providers | ✅ 30+ providers | ✅ Extensive catalog | ✅ Major providers | ✅ Major providers | ✅ Major providers |
-| **Passwordless / Passkeys** | ✅ | ✅ | ✅ | ✅ | ⚠️ Custom auth only | ✅ | ✅ |
-| **MFA / TOTP** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Adaptive / Risk-Based MFA** | ⚠️ In development | ✅ Step-up MFA | ✅ Built-in | ✅ Built-in | ✅ Advanced Security | ✅ Conditional Access | ⚠️ Via blocking functions |
-| **Magic Links** | ✅ | ✅ | ✅ | ⚠️ Limited | ❌ | ❌ | ✅ Email link |
-| **SMS OTP** | ⚠️ In development | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Built-in (per SMS cost) |
-| **WebAuthn / FIDO2** | ✅ | ✅ | ✅ | ✅ | ⚠️ Custom auth only | ✅ | ⚠️ Limited |
-| **Backup / Recovery Codes** | ✅ | ✅ Lookup Secrets | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Biometric Auth** | ✅ Via passkeys | ✅ Via WebAuthn | ✅ Via Guardian app | ✅ Via Okta Verify | ⚠️ Custom auth only | ✅ Windows Hello | ✅ Via passkeys |
+| Feature                                 | OlympusOSS Identity Platform | Ory Network       | Auth0               | Okta                 |
+|-----------------------------------------|------------------------------|--------------------|---------------------|----------------------|
+| **Email + Password**                    | ✅                           | ✅                 | ✅                  | ✅                   |
+| **Social Login (Google, GitHub, etc.)** | ✅ OIDC providers            | ✅ 15+ providers   | ✅ 30+ providers    | ✅ Extensive catalog |
+| **Passwordless / Passkeys**             | ✅                           | ✅                 | ✅                  | ✅                   |
+| **MFA / TOTP**                          | ✅                           | ✅                 | ✅                  | ✅                   |
+| **Adaptive / Risk-Based MFA**           | ⚠️ In development           | ✅ Step-up MFA     | ✅ Built-in         | ✅ Built-in          |
+| **Magic Links**                         | ✅                           | ✅                 | ✅                  | ⚠️ Limited           |
+| **SMS OTP**                             | ⚠️ In development           | ✅ Built-in        | ✅ Built-in         | ✅ Built-in          |
+| **WebAuthn / FIDO2**                    | ✅                           | ✅                 | ✅                  | ✅                   |
+| **Backup / Recovery Codes**             | ✅                           | ✅ Lookup Secrets  | ✅                  | ✅                   |
+| **Biometric Auth**                      | ✅ Via passkeys              | ✅ Via WebAuthn    | ✅ Via Guardian app | ✅ Via Okta Verify   |
 
 ### Federation & Enterprise SSO
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **OIDC Federation** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Enterprise SSO (OIDC — modern)** | ✅ Via Ory Hydra | ✅ Via Ory Polis | ✅ | ✅ Industry-leading | ⚠️ Basic | ✅ | ⚠️ Via OIDC/SAML |
-| **SAML 2.0 (legacy)** | ⚠️ In development | ✅ Via Ory Polis | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Directory Sync (AD/LDAP)** | ⚠️ In development | ⚠️ SCIM-based via Polis | ✅ | ✅ Native AD agent | ⚠️ Via federation | ✅ Native AD sync | ⚠️ Via Google Workspace |
-| **SCIM Provisioning** | ⚠️ In development | ✅ Via Ory Polis | ✅ | ✅ 7000+ app integrations | ❌ | ✅ | ❌ |
-| **User Lifecycle Management** | ⚠️ In development | ✅ Via SCIM + webhooks | ✅ | ✅ Best-in-class | ⚠️ Lambda triggers | ✅ | ⚠️ Via blocking functions |
-| **Pre-built App Integrations** | ❌ | ⚠️ Via Zapier (5000+ apps) | ✅ Extensive | ✅ 7000+ OIN catalog | ⚠️ AWS services only | ✅ Microsoft 365 + gallery | ⚠️ GCP services |
+| Feature                            | OlympusOSS Identity Platform | Ory Network                 | Auth0        | Okta                       |
+|------------------------------------|------------------------------|-----------------------------|--------------|-----------------------------|
+| **OIDC Federation**                | ✅                           | ✅                          | ✅           | ✅                          |
+| **Enterprise SSO (OIDC — modern)** | ✅ Via Ory Hydra             | ✅ Via Ory Polis            | ✅           | ✅ Industry-leading         |
+| **SAML 2.0 (legacy)**             | ⚠️ In development           | ✅ Via Ory Polis            | ✅           | ✅                          |
+| **Directory Sync (AD/LDAP)**       | ⚠️ In development           | ⚠️ SCIM-based via Polis    | ✅           | ✅ Native AD agent          |
+| **SCIM Provisioning**              | ⚠️ In development           | ✅ Via Ory Polis            | ✅           | ✅ 7000+ app integrations   |
+| **User Lifecycle Management**      | ⚠️ In development           | ✅ Via SCIM + webhooks      | ✅           | ✅ Best-in-class            |
+| **Pre-built App Integrations**     | ❌                           | ⚠️ Via Zapier (5000+ apps) | ✅ Extensive | ✅ 7000+ OIN catalog        |
 
 ### OAuth2 & Authorization
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **Full OAuth2 Server** | ✅ Ory Hydra (certified) | ✅ Ory Hydra (certified) | ✅ | ✅ | ⚠️ Limited grant types | ✅ | ❌ Not an OAuth2 server |
-| **OpenID Connect Provider** | ✅ | ✅ OpenID Certified | ✅ | ✅ | ✅ | ✅ | ❌ Auth only, not a provider |
-| **Custom Scopes & Claims** | ✅ Full control | ✅ Full control | ✅ | ✅ | ⚠️ Limited | ✅ | ❌ |
-| **Client Credentials Flow** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Device Authorization Flow** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
-| **Token Introspection** | ✅ | ✅ | ✅ | ✅ | ⚠️ Limited | ✅ | ❌ |
-| **Custom Consent Screens** | ✅ Medusa (full control) | ✅ Headless (bring your own) | ⚠️ Limited customization | ⚠️ Limited customization | ❌ | ⚠️ Limited branding | ❌ |
-| **Unlimited OAuth2 Clients** | ✅ | ✅ | ⚠️ Tier-limited | ⚠️ Tier-limited | ✅ | ✅ | N/A |
-| **Permissions (Zanzibar)** | ❌ | ✅ Ory Keto (OPL) | ❌ | ❌ | ❌ | ⚠️ Custom policies | ❌ |
+| Feature                       | OlympusOSS Identity Platform | Ory Network                   | Auth0                      | Okta                     |
+|-------------------------------|------------------------------|-------------------------------|----------------------------|--------------------------|
+| **Full OAuth2 Server**        | ✅ Ory Hydra (certified)     | ✅ Ory Hydra (certified)      | ✅                         | ✅                       |
+| **OpenID Connect Provider**   | ✅                           | ✅ OpenID Certified            | ✅                         | ✅                       |
+| **Custom Scopes & Claims**    | ✅ Full control              | ✅ Full control                | ✅                         | ✅                       |
+| **Client Credentials Flow**   | ✅                           | ✅                             | ✅                         | ✅                       |
+| **Device Authorization Flow** | ✅                           | ✅                             | ✅                         | ✅                       |
+| **Token Introspection**       | ✅                           | ✅                             | ✅                         | ✅                       |
+| **Custom Consent Screens**    | ✅ Medusa (full control)     | ✅ Headless (bring your own)   | ⚠️ Limited customization   | ⚠️ Limited customization |
+| **Unlimited OAuth2 Clients**  | ✅                           | ✅                             | ⚠️ Tier-limited            | ⚠️ Tier-limited          |
+| **Permissions (Zanzibar)**    | ❌                           | ✅ Ory Keto (OPL)             | ❌                         | ❌                       |
 
 ### Admin & Management
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **Admin Dashboard** | ✅ Athena (custom-built) | ✅ Ory Console | ✅ Polished SaaS dashboard | ✅ Polished SaaS dashboard | ✅ AWS Console | ✅ Azure Portal | ✅ GCP Console |
-| **Identity CRUD API** | ✅ Full REST API | ✅ Full REST API | ✅ Management API | ✅ | ✅ | ✅ Microsoft Graph | ✅ Admin SDK |
-| **Session Management** | ✅ View + revoke | ✅ View + revoke + extend | ✅ | ✅ | ⚠️ Basic | ✅ | ⚠️ Basic |
-| **Custom Identity Schemas** | ✅ JSON Schema-based | ✅ JSON Schema-based | ⚠️ Custom attributes | ⚠️ Profile attributes | ⚠️ Custom attributes | ⚠️ Extension attributes | ⚠️ Custom claims |
-| **Audit Logging** | ⚠️ In development | ✅ Event streaming (Enterprise) | ✅ Log streaming | ✅ System Log + SIEM | ✅ CloudTrail | ✅ Azure Monitor | ✅ Cloud Logging |
-| **User Migration Tools** | ⚠️ In development | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration | ✅ Import tools | ✅ Lambda-based JIT migration | ✅ Bulk import + sync | ⚠️ Import via Admin SDK |
-| **Bulk User Import** | ⚠️ In development | ✅ Up to 1000/batch | ✅ | ✅ CSV + API | ✅ CSV import | ✅ | ⚠️ |
+| Feature                     | OlympusOSS Identity Platform | Ory Network                            | Auth0                    | Okta                   |
+|-----------------------------|------------------------------|----------------------------------------|--------------------------|------------------------|
+| **Admin Dashboard**         | ✅ Athena (custom-built)     | ✅ Ory Console                         | ✅ Polished SaaS dashboard | ✅ Polished SaaS dashboard |
+| **Identity CRUD API**       | ✅ Full REST API             | ✅ Full REST API                       | ✅ Management API        | ✅                     |
+| **Session Management**      | ✅ View + revoke             | ✅ View + revoke + extend              | ✅                       | ✅                     |
+| **Custom Identity Schemas** | ✅ JSON Schema-based         | ✅ JSON Schema-based                   | ⚠️ Custom attributes     | ⚠️ Profile attributes  |
+| **Audit Logging**           | ⚠️ In development           | ✅ Event streaming (Enterprise)        | ✅ Log streaming         | ✅ System Log + SIEM   |
+| **User Migration Tools**    | ⚠️ In development           | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration   | ✅ Import tools        |
+| **Bulk User Import**        | ⚠️ In development           | ✅ Up to 1000/batch                    | ✅                       | ✅ CSV + API           |
 
 ### Developer Experience
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **Self-Hosted Option** | ✅ Full control | ✅ Enterprise License available | ❌ SaaS only | ❌ SaaS only | ❌ AWS-managed | ❌ Azure-managed | ❌ GCP-managed |
-| **Open Source** | ✅ Apache 2.0 | ✅ Apache 2.0 (core components) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **SDK / Language Support** | ✅ REST API (any language) | ✅ SDKs for Go, JS, PHP, Java, .NET, Python, Dart | ✅ SDKs for 15+ languages | ✅ SDKs for 10+ languages | ✅ AWS SDKs | ✅ MSAL for 10+ languages | ✅ Firebase SDKs |
-| **Pre-Built Login UI** | ✅ Hera (custom-built) | ✅ Ory Elements (React components) | ✅ Universal Login (best-in-class) | ✅ Sign-In Widget | ✅ Hosted UI | ✅ Azure AD B2C flows | ✅ FirebaseUI |
-| **UI Customization Depth** | ✅ Full source code control | ✅ Full source code control (headless) | ⚠️ Theming + Actions | ⚠️ Theming + hooks | ⚠️ CSS only | ⚠️ HTML templates | ⚠️ Theming only |
-| **Documentation Quality** | ⚠️ Good (Ory docs) | ✅ Comprehensive | ✅ Excellent | ✅ Excellent | ⚠️ Inconsistent | ✅ Comprehensive | ✅ Good |
-| **Extensibility / Hooks** | ✅ Webhooks + custom code | ✅ Ory Actions (any language) | ✅ Actions, Rules, Hooks | ✅ Event Hooks, Inline Hooks | ✅ Lambda triggers | ✅ Custom policies | ✅ Blocking functions |
-| **Community / Ecosystem** | ⚠️ Growing (Ory community) | ✅ Active Slack + GitHub community | ✅ Large, mature | ✅ Large, enterprise-focused | ✅ AWS ecosystem | ✅ Massive Microsoft ecosystem | ✅ Firebase/GCP ecosystem |
-| **Time to First Auth** | ⚠️ Hours (Docker setup) | ✅ Minutes (SaaS + free tier) | ✅ Minutes (SaaS) | ✅ Minutes (SaaS) | ✅ Minutes (AWS Console) | ✅ Minutes (Azure Portal) | ✅ Minutes (GCP Console) |
+| Feature                    | OlympusOSS Identity Platform | Ory Network                                       | Auth0                              | Okta                          |
+|----------------------------|------------------------------|---------------------------------------------------|------------------------------------|-------------------------------|
+| **Self-Hosted Option**     | ✅ Full control              | ✅ Enterprise License available                    | ❌ SaaS only                       | ❌ SaaS only                  |
+| **Open Source**            | ✅ Apache 2.0               | ✅ Apache 2.0 (core components)                    | ❌                                 | ❌                            |
+| **SDK / Language Support** | ✅ REST API (any language)   | ✅ SDKs for Go, JS, PHP, Java, .NET, Python, Dart | ✅ SDKs for 15+ languages          | ✅ SDKs for 10+ languages    |
+| **Pre-Built Login UI**     | ✅ Hera (custom-built)       | ✅ Ory Elements (React components)                 | ✅ Universal Login (best-in-class) | ✅ Sign-In Widget             |
+| **UI Customization Depth** | ✅ Full source code control  | ✅ Full source code control (headless)             | ⚠️ Theming + Actions               | ⚠️ Theming + hooks            |
+| **Documentation Quality**  | ⚠️ Good (Ory docs)          | ✅ Comprehensive                                   | ✅ Excellent                       | ✅ Excellent                  |
+| **Extensibility / Hooks**  | ✅ Webhooks + custom code    | ✅ Ory Actions (any language)                      | ✅ Actions, Rules, Hooks           | ✅ Event Hooks, Inline Hooks  |
+| **Community / Ecosystem**  | ⚠️ Growing (Ory community)  | ✅ Active Slack + GitHub community                 | ✅ Large, mature                   | ✅ Large, enterprise-focused  |
+| **Time to First Auth**     | ⚠️ Hours (Docker setup)     | ✅ Minutes (SaaS + free tier)                      | ✅ Minutes (SaaS)                  | ✅ Minutes (SaaS)             |
 
 ### Infrastructure & Operations
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **Full Data Ownership** | ✅ Your database | ⚠️ Ory-hosted (data residency options) | ❌ Vendor-hosted | ❌ Vendor-hosted | ⚠️ AWS-locked | ⚠️ Azure-locked | ⚠️ GCP-locked |
-| **Multi-Tenancy** | ❌ | ✅ Enterprise tier | ✅ | ✅ | ✅ User pools | ✅ Tenants | ✅ Native support |
-| **Built-in CIAM + IAM Split** | ✅ Core architecture | ⚠️ Separate projects | ❌ Separate tenants | ⚠️ Separate products (CIC + WIC) | ❌ Manual setup | ⚠️ Separate tenants (Entra ID + External ID) | ❌ Manual setup |
-| **Cloud-Agnostic** | ✅ Runs anywhere | ⚠️ GCP-hosted (self-hosted enterprise available) | ❌ Auth0 cloud | ❌ Okta cloud | ❌ AWS only | ❌ Azure only | ❌ GCP only |
-| **Managed Service Option** | ❌ Self-hosted only | ✅ Fully managed | ✅ Fully managed | ✅ Fully managed | ✅ Fully managed | ✅ Fully managed | ✅ Fully managed |
-| **SLA Guarantee** | ❌ Self-managed | ✅ 99.99% (Enterprise) | ✅ 99.99% (enterprise) | ✅ 99.99% | ✅ 99.99% (AWS SLA) | ✅ 99.99% | ✅ 99.95% |
-| **Uptime Responsibility** | ⚠️ Your ops team | ✅ Ory-managed | ✅ Vendor-managed | ✅ Vendor-managed | ✅ Vendor-managed | ✅ Vendor-managed | ✅ Vendor-managed |
+| Feature                       | OlympusOSS Identity Platform | Ory Network                                          | Auth0                  | Okta                                   |
+|-------------------------------|------------------------------|------------------------------------------------------|------------------------|----------------------------------------|
+| **Full Data Ownership**       | ✅ Your database             | ⚠️ Ory-hosted (data residency options)               | ❌ Vendor-hosted       | ❌ Vendor-hosted                       |
+| **Multi-Tenancy**             | ❌                           | ✅ Enterprise tier                                    | ✅                     | ✅                                     |
+| **Built-in CIAM + IAM Split** | ✅ Core architecture         | ⚠️ Separate projects                                 | ❌ Separate tenants    | ⚠️ Separate products (CIC + WIC)      |
+| **Cloud-Agnostic**            | ✅ Runs anywhere             | ⚠️ GCP-hosted (self-hosted enterprise available)     | ❌ Auth0 cloud         | ❌ Okta cloud                          |
+| **Managed Service Option**    | ❌ Self-hosted only          | ✅ Fully managed                                      | ✅ Fully managed       | ✅ Fully managed                       |
+| **SLA Guarantee**             | ❌ Self-managed              | ✅ 99.99% (Enterprise)                                | ✅ 99.99% (enterprise) | ✅ 99.99%                              |
+| **Uptime Responsibility**     | ⚠️ Your ops team            | ✅ Ory-managed                                        | ✅ Vendor-managed      | ✅ Vendor-managed                      |
 
 ### Compliance & Security
 
-| Feature | OlympusOSS Identity Platform | Ory Network | Auth0 | Okta | AWS Cognito | Microsoft Entra ID | Google Identity Platform |
-|---------|---|---|---|---|---|---|---|
-| **SOC 2 Certified** | ⚠️ Accelerated — built on Ory's audited codebase | ✅ SOC 2 Type II | ✅ | ✅ | ✅ (AWS) | ✅ | ✅ (GCP) |
-| **HIPAA Eligible** | ⚠️ Accelerated — built on Ory's audited codebase | ⚠️ Contact sales | ✅ Enterprise tier | ✅ | ✅ | ✅ | ✅ |
-| **GDPR Ready** | ✅ Full data control | ✅ EU data residency | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Brute Force Protection** | ⚠️ Via rate limiting config | ✅ Built-in | ✅ Built-in | ✅ Built-in | ✅ Advanced Security | ✅ Smart Lockout | ⚠️ Via blocking functions |
-| **Bot Detection** | ⚠️ In development (CAPTCHA) | ✅ Cloudflare WAF + Bot Management | ✅ Built-in | ✅ Built-in | ✅ | ✅ | ⚠️ reCAPTCHA integration |
-| **Anomaly Detection** | ❌ | ⚠️ Risk-based MFA | ✅ Breached password detection | ✅ ThreatInsight | ✅ Adaptive auth | ✅ Identity Protection | ⚠️ Basic |
-| **Pwned Password Detection** | ❌ | ✅ Built-in | ✅ | ✅ | ❌ | ⚠️ Custom policy | ❌ |
-| **Rate Limiting** | ✅ Configurable | ✅ Tiered by plan | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Feature                      | OlympusOSS Identity Platform                     | Ory Network                          | Auth0                            | Okta               |
+|------------------------------|---------------------------------------------------|--------------------------------------|----------------------------------|--------------------|
+| **SOC 2 Certified**         | ⚠️ Accelerated — built on Ory's audited codebase | ✅ SOC 2 Type II                     | ✅                               | ✅                 |
+| **HIPAA Eligible**           | ⚠️ Accelerated — built on Ory's audited codebase | ⚠️ Contact sales                    | ✅ Enterprise tier               | ✅                 |
+| **GDPR Ready**               | ✅ Full data control                              | ✅ EU data residency                 | ✅                               | ✅                 |
+| **Brute Force Protection**   | ⚠️ Via rate limiting config                       | ✅ Built-in                          | ✅ Built-in                      | ✅ Built-in        |
+| **Bot Detection**            | ⚠️ In development (CAPTCHA)                      | ✅ Cloudflare WAF + Bot Management   | ✅ Built-in                      | ✅ Built-in        |
+| **Anomaly Detection**        | ❌                                                | ⚠️ Risk-based MFA                   | ✅ Breached password detection   | ✅ ThreatInsight   |
+| **Pwned Password Detection** | ❌                                                | ✅ Built-in                          | ✅                               | ✅                 |
+| **Rate Limiting**            | ✅ Configurable                                   | ✅ Tiered by plan                    | ✅                               | ✅                 |
 
 ### Where They Win
 
@@ -312,17 +312,11 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 **Okta** dominates workforce identity. If you need to provision employees across 7,000+ SaaS applications with SCIM, sync with Active Directory, and manage the full user lifecycle from onboarding to offboarding, Okta's Workforce Identity Cloud is unmatched. Their app integration catalog is the largest in the industry. For enterprises already invested in Okta's ecosystem, the operational maturity is a real advantage.
 
-**Microsoft Entra ID** is the natural choice for Microsoft shops. If your organization runs on Microsoft 365, Azure, and Windows, Entra ID gives you seamless SSO across the entire ecosystem with Conditional Access policies that are deeply integrated into the platform. Entra External ID extends this to CIAM with a generous 50,000 free MAU tier. For enterprises already paying for Microsoft 365, much of the workforce IAM functionality is included.
-
-**AWS Cognito** offers the best value among managed providers if you're already on AWS. Lambda triggers give you powerful customization hooks, and the pricing is significantly cheaper than Auth0 or Okta at scale. User Pools + Identity Pools give you both authentication and AWS resource authorization. If you're building on AWS and want identity as a managed service without the premium price tag, Cognito is compelling.
-
-**Google Identity Platform** is the most developer-friendly managed option. Multi-tenancy is built in, blocking functions let you inject custom logic into auth flows, and the Firebase SDK ecosystem makes integration effortless for web and mobile apps. The free tier (50,000 MAU) is generous, and pricing beyond that is the lowest among managed providers. If you're building consumer-facing apps on GCP or Firebase, it's a natural fit.
-
 ### Where OlympusOSS Identity Platform Wins
 
 **Total cost of ownership at scale.** Every managed provider charges per user — including Ory Network. At 100K+ MAU, those costs reach tens of thousands per month. OlympusOSS Identity Platform's cost is fixed infrastructure — the same whether you have 1,000 users or 10 million.
 
-**Full OAuth2 server included.** Most identity providers are authentication services. OlympusOSS Identity Platform includes Ory Hydra — a certified, full-featured OAuth2 and OpenID Connect server. Auth0 and Okta charge extra for comparable OAuth2 server capabilities. Google Identity Platform doesn't offer this at all.
+**Full OAuth2 server included.** Most identity providers are authentication services. OlympusOSS Identity Platform includes Ory Hydra — a certified, full-featured OAuth2 and OpenID Connect server. Auth0 and Okta charge extra for comparable OAuth2 server capabilities.
 
 **Data sovereignty.** Your identity data lives in your database, in your infrastructure, in your region. No vendor has access. No data processing agreements needed. No compliance questions about where customer PII is stored.
 
@@ -338,37 +332,37 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 | Port | Service | Domain | Purpose |
 |------|---------|--------|---------|
-| 2000 | Demo App | — | OAuth2 test client for both domains |
-| 3001 | CIAM Hera | Customer | Authentication UI for customers |
-| 3002 | CIAM Medusa | Customer | OAuth2 consent for customer-facing apps |
-| 3003 | CIAM Athena | Customer | Admin panel for customer identity management |
-| 3100 | CIAM Kratos (public) | Customer | Customer identity API |
-| 3101 | CIAM Kratos (admin) | Customer | Customer identity admin API |
-| 3102 | CIAM Hydra (public) | Customer | Customer OAuth2/OIDC endpoints |
-| 3103 | CIAM Hydra (admin) | Customer | Customer OAuth2 admin API |
-| 4001 | IAM Hera | Employee | Authentication UI for employees |
-| 4002 | IAM Medusa | Employee | OAuth2 consent for internal services |
-| 4003 | IAM Athena | Employee | Admin panel for employee identity management |
-| 4100 | IAM Kratos (public) | Employee | Employee identity API |
-| 4101 | IAM Kratos (admin) | Employee | Employee identity admin API |
-| 4102 | IAM Hydra (public) | Employee | Internal OAuth2/OIDC endpoints |
-| 4103 | IAM Hydra (admin) | Employee | Internal OAuth2 admin API |
+| 2000 | Demo App              | —                                    | OAuth2 test client for both domains          |
+| 3001 | CIAM Hera             | Customer                             | Authentication UI for customers              |
+| 3002 | CIAM Medusa           | Customer                             | OAuth2 consent for customer-facing apps      |
+| 3003 | CIAM Athena           | Customer                             | Admin panel for customer identity management |
+| 3100 | CIAM Kratos (public)  | Customer                             | Customer identity API                        |
+| 3101 | CIAM Kratos (admin)   | Customer                             | Customer identity admin API                  |
+| 3102 | CIAM Hydra (public)   | Customer                             | Customer OAuth2/OIDC endpoints               |
+| 3103 | CIAM Hydra (admin)    | Customer                             | Customer OAuth2 admin API                    |
+| 4001 | IAM Hera              | Employee                             | Authentication UI for employees              |
+| 4002 | IAM Medusa            | Employee                             | OAuth2 consent for internal services         |
+| 4003 | IAM Athena            | Employee                             | Employee identity management                 |
+| 4100 | IAM Kratos (public)   | Employee                             | Employee identity API                        |
+| 4101 | IAM Kratos (admin)    | Employee                             | Employee identity admin API                  |
+| 4102 | IAM Hydra (public)    | Employee                             | Internal OAuth2/OIDC endpoints               |
+| 4103 | IAM Hydra (admin)     | Employee                             | Internal OAuth2 admin API                    |
 
 ---
 
 ## Technology
 
-| Component | Technology |
-|-----------|-----------|
-| Identity Management | [Ory Kratos](https://www.ory.sh/kratos/) |
-| OAuth2 / OIDC | [Ory Hydra](https://www.ory.sh/hydra/) |
-| Admin Interface | [Athena](./Athena) — Next.js, TypeScript, Material UI |
-| Consent UI | [Medusa](./Medusa) — Next.js, TypeScript |
-| Authentication UI | [Hera](./Hera) — Next.js, TypeScript |
-| Demo App | [Demo](./Demo) — Next.js, TypeScript |
-| Runtime | [Bun](https://bun.sh/) |
-| Database | PostgreSQL |
-| Containerization | Docker / Docker Compose |
+| Component           | Technology                                             |
+|---------------------|--------------------------------------------------------|
+| Identity Management | [Ory Kratos](https://www.ory.sh/kratos/)               |
+| OAuth2 / OIDC       | [Ory Hydra](https://www.ory.sh/hydra/)                 |
+| Admin Interface     | [Athena](./Athena) — Next.js, TypeScript, Material UI  |
+| Consent UI          | [Medusa](./Medusa) — Next.js, TypeScript               |
+| Authentication UI   | [Hera](./Hera) — Next.js, TypeScript                   |
+| Demo App            | [Demo](./Demo) — Next.js, TypeScript                   |
+| Runtime             | [Bun](https://bun.sh/)                                 |
+| Database            | PostgreSQL                                              |
+| Containerization    | Docker / Docker Compose                                 |
 
 ---
 
