@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Athena Dev",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

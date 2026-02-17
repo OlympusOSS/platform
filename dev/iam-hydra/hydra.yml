@@ -1,0 +1,26 @@
+serve:
+  public:
+    port: 7002
+  admin:
+    port: 7003
+  cookies:
+    same_site_mode: Lax
+
+urls:
+  self:
+    issuer: http://localhost:7002
+  consent: http://localhost:4002/consent
+  login: http://localhost:4001/login
+  logout: http://localhost:4002/logout
+
+secrets:
+  system:
+    - iam-hydra-secret-change-me
+
+oidc:
+  subject_identifiers:
+    supported_types:
+      - pairwise
+      - public
+    pairwise:
+      salt: iam-hydra-pairwise-salt

@@ -1,0 +1,91 @@
+version: v0.13.0
+
+dsn: memory
+
+serve:
+  public:
+    base_url: http://localhost:7000/
+    port: 7000
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:4003
+        - http://localhost:4002
+        - http://localhost:4001
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
+      allow_credentials: true
+  admin:
+    base_url: http://localhost:7001/
+    port: 7001
+
+selfservice:
+  default_browser_return_url: http://localhost:4003/
+  allowed_return_urls:
+    - http://localhost:4003
+    - http://localhost:4002
+    - http://localhost:4001
+
+  methods:
+    password:
+      enabled: true
+
+  flows:
+    login:
+      ui_url: http://localhost:4003/login
+      lifespan: 10m
+
+    registration:
+      enabled: false
+
+    verification:
+      enabled: false
+
+    recovery:
+      enabled: false
+
+    settings:
+      ui_url: http://localhost:4003/settings
+
+    error:
+      ui_url: http://localhost:4003/error
+
+log:
+  level: debug
+  format: text
+  leak_sensitive_values: true
+
+secrets:
+  cookie:
+    - iam-kratos-cookie-secret-change-me
+  cipher:
+    - iam-kratos-cipher-secret!!abc
+
+hashers:
+  argon2:
+    parallelism: 1
+    memory: 128KB
+    iterations: 2
+    salt_length: 16
+    key_length: 16
+
+identity:
+  default_schema_id: admin
+  schemas:
+    - id: admin
+      url: file:///etc/config/iam-kratos/admin-identity.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true

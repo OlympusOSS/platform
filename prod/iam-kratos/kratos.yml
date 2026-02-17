@@ -1,0 +1,60 @@
+version: v0.13.0
+
+serve:
+  public:
+    port: 7000
+    cors:
+      enabled: true
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
+      allow_credentials: true
+  admin:
+    port: 7001
+
+selfservice:
+  methods:
+    password:
+      enabled: true
+
+  flows:
+    login:
+      lifespan: 10m
+
+    registration:
+      enabled: false
+
+    verification:
+      enabled: false
+
+    recovery:
+      enabled: false
+
+log:
+  level: info
+  format: json
+  leak_sensitive_values: false
+
+hashers:
+  argon2:
+    parallelism: 4
+    memory: 256KB
+    iterations: 3
+    salt_length: 16
+    key_length: 32
+
+identity:
+  default_schema_id: admin
+  schemas:
+    - id: admin
+      url: file:///etc/config/iam-kratos/admin-identity.schema.json

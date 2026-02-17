@@ -1,0 +1,10 @@
+serve:
+  cookies:
+    same_site_mode: Lax
+
+urls:
+  self:
+    issuer: http://localhost:5002
+  consent: http://localhost:3002/consent
+  login: http://localhost:3001/login
+  logout: http://localhost:3002/logout

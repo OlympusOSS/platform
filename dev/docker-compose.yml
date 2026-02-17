@@ -1,0 +1,465 @@
+services:
+  # ============================================================
+  # PostgreSQL (shared database)
+  # ============================================================
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./init-db.sql
+        target: /docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - intranet
+    restart: unless-stopped
+
+  # ============================================================
+  # pgAdmin (database management UI)
+  # ============================================================
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - '4000:80'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@athena.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=True
+    volumes:
+      - type: bind
+        source: ./pgadmin-servers.json
+        target: /pgadmin4/servers.json
+      - type: bind
+        source: ./pgadmin/config_local.py
+        target: /pgadmin4/config_local.py
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - pgadmin-init
+
+  pgadmin-init:
+    image: curlimages/curl:latest
+    depends_on:
+      - iam-hydra
+    volumes:
+      - type: bind
+        source: ./pgadmin/init-pgadmin-client.sh
+        target: /init-pgadmin-client.sh
+    environment:
+      - HYDRA_ADMIN_URL=http://iam-hydra:7003
+    networks:
+      - intranet
+    command: sh /init-pgadmin-client.sh
+    restart: 'no'
+
+  # ============================================================
+  # Mail Service for Testing
+  # ============================================================
+
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - '4001:4436'
+    networks:
+      - intranet
+
+  # ============================================================
+  # CIAM Kratos (Identity Admin)
+  # ============================================================
+
+  ciam-kratos-migrate:
+    image: oryd/kratos:v25.4.0
+    depends_on:
+      - postgres
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/ciam_kratos?sslmode=disable
+    volumes:
+      - type: bind
+        source: ./ciam-kratos
+        target: /etc/config/ciam-kratos
+    command: -c /etc/config/ciam-kratos/kratos.yml migrate sql -e --yes
+    restart: on-failure
+    networks:
+      - intranet
+
+  ciam-kratos:
+    depends_on:
+      - ciam-kratos-migrate
+    image: oryd/kratos:v25.4.0
+    ports:
+      - '5000:5000' # public
+      - '5001:5001' # admin
+    restart: unless-stopped
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/ciam_kratos?sslmode=disable
+      - LOG_LEVEL=trace
+      - SERVE_PUBLIC_PORT=5000
+      - SERVE_ADMIN_PORT=5001
+    command: serve -c /etc/config/ciam-kratos/kratos.yml --dev --watch-courier
+    volumes:
+      - type: bind
+        source: ./ciam-kratos
+        target: /etc/config/ciam-kratos
+    networks:
+      - intranet
+
+  kratos-selfservice-ui:
+    image: oryd/kratos-selfservice-ui-node:v25.4.0
+    ports:
+      - '3004:3004'
+    environment:
+      - PORT=3004
+      - KRATOS_PUBLIC_URL=http://ciam-kratos:5000/
+      - KRATOS_BROWSER_URL=http://localhost:5000/
+      - COOKIE_SECRET=changeme
+      - CSRF_COOKIE_NAME=ory_csrf_ui
+      - CSRF_COOKIE_SECRET=changeme
+      - SECURITY_MODE=
+    networks:
+      - intranet
+    restart: on-failure
+    depends_on:
+      - ciam-kratos
+
+  # ============================================================
+  # IAM Kratos (Internal IAM)
+  # ============================================================
+
+  iam-kratos-migrate:
+    image: oryd/kratos:v25.4.0
+    depends_on:
+      - postgres
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/iam_kratos?sslmode=disable
+    volumes:
+      - type: bind
+        source: ./iam-kratos
+        target: /etc/config/iam-kratos
+    command: -c /etc/config/iam-kratos/kratos.yml migrate sql -e --yes
+    restart: on-failure
+    networks:
+      - intranet
+
+  iam-kratos:
+    depends_on:
+      - iam-kratos-migrate
+    image: oryd/kratos:v25.4.0
+    ports:
+      - '7000:7000'
+      - '7001:7001'
+    restart: unless-stopped
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/iam_kratos?sslmode=disable
+      - LOG_LEVEL=trace
+      - SERVE_PUBLIC_PORT=7000
+      - SERVE_ADMIN_PORT=7001
+    command: serve -c /etc/config/iam-kratos/kratos.yml --dev --watch-courier
+    volumes:
+      - type: bind
+        source: ./iam-kratos
+        target: /etc/config/iam-kratos
+    networks:
+      - intranet
+
+  # ============================================================
+  # CIAM Hydra OAuth2
+  # ============================================================
+
+  ciam-hydra-migrate:
+    image: oryd/hydra:v25.4.0
+    depends_on:
+      - postgres
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/ciam_hydra?sslmode=disable
+    command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
+    volumes:
+      - type: bind
+        source: ./ciam-hydra
+        target: /etc/config/ciam-hydra
+    restart: on-failure
+    networks:
+      - intranet
+
+  ciam-hydra:
+    image: oryd/hydra:v25.4.0
+    ports:
+      - '5002:5002' # public
+      - '5003:5003' # admin
+      - '5004:5004' # token user
+    command: serve -c /etc/config/ciam-hydra/hydra.yml all --dev
+    volumes:
+      - type: bind
+        source: ./ciam-hydra
+        target: /etc/config/ciam-hydra
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/ciam_hydra?sslmode=disable
+      - SERVE_PUBLIC_PORT=5002
+      - SERVE_ADMIN_PORT=5003
+    restart: unless-stopped
+    depends_on:
+      - ciam-hydra-migrate
+    networks:
+      - intranet
+
+  # ============================================================
+  # IAM Hydra (Internal OAuth2)
+  # ============================================================
+
+  iam-hydra-migrate:
+    image: oryd/hydra:v25.4.0
+    depends_on:
+      - postgres
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/iam_hydra?sslmode=disable
+    command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
+    volumes:
+      - type: bind
+        source: ./iam-hydra
+        target: /etc/config/iam-hydra
+    restart: on-failure
+    networks:
+      - intranet
+
+  iam-hydra:
+    image: oryd/hydra:v25.4.0
+    depends_on:
+      - iam-hydra-migrate
+    ports:
+      - '7002:7002'
+      - '7003:7003'
+    environment:
+      - DSN=postgres://postgres:secret@postgres:5432/iam_hydra?sslmode=disable
+      - SERVE_PUBLIC_PORT=7002
+      - SERVE_ADMIN_PORT=7003
+    command: serve -c /etc/config/iam-hydra/hydra.yml all --dev
+    volumes:
+      - type: bind
+        source: ./iam-hydra
+        target: /etc/config/iam-hydra
+    restart: unless-stopped
+    networks:
+      - intranet
+
+  # ============================================================
+  # IAM Medusa (OAuth2 consent/logout for iam-hydra)
+  # ============================================================
+
+  iam-medusa:
+    build:
+      context: ../Medusa
+      dockerfile: Dockerfile.dev
+    ports:
+      - '4002:4002'
+    environment:
+      - PORT=4002
+      - HYDRA_ADMIN_URL=http://iam-hydra:7003
+    volumes:
+      - ../Medusa:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - iam-hydra
+
+  # ============================================================
+  # CIAM Medusa (OAuth2 consent/logout for ciam-hydra)
+  # ============================================================
+
+  ciam-medusa:
+    build:
+      context: ../Medusa
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3002:3002'
+    environment:
+      - PORT=3002
+      - HYDRA_ADMIN_URL=http://ciam-hydra:5003
+    volumes:
+      - ../Medusa:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - ciam-hydra
+
+  # ============================================================
+  # IAM Hera (Authentication UI for iam-kratos + iam-hydra)
+  # ============================================================
+
+  iam-hera:
+    build:
+      context: ../Hera
+      dockerfile: Dockerfile.dev
+    ports:
+      - '4001:4001'
+    environment:
+      - PORT=4001
+      - HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - KRATOS_PUBLIC_URL=http://iam-kratos:7000
+    volumes:
+      - ../Hera:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - iam-hydra
+      - iam-kratos
+
+  # ============================================================
+  # CIAM Hera (Authentication UI for ciam-kratos + ciam-hydra)
+  # ============================================================
+
+  ciam-hera:
+    build:
+      context: ../Hera
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3001:3001'
+    environment:
+      - PORT=3001
+      - HYDRA_ADMIN_URL=http://ciam-hydra:5003
+      - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
+    volumes:
+      - ../Hera:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - ciam-hydra
+      - ciam-kratos
+
+  # ============================================================
+  # CIAM Athena (CIAM Admin Panel)
+  # ============================================================
+
+  ciam-athena:
+    build:
+      context: ../Athena
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3003:3000'
+    environment:
+      - NODE_ENV=development
+      - KRATOS_ADMIN_URL=http://ciam-kratos:5001
+      - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
+      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:5001
+      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:5000
+      - HYDRA_PUBLIC_URL=http://ciam-hydra:5002
+      - HYDRA_ADMIN_URL=http://ciam-hydra:5003
+      # IAM Kratos (admin authentication)
+      - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
+      - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:7000
+    volumes:
+      - ../Athena:/app
+      - /app/node_modules
+    networks:
+      - intranet
+    depends_on:
+      - ciam-kratos
+      - iam-kratos
+
+  # ============================================================
+  # IAM Athena (IAM Admin Panel)
+  # ============================================================
+
+  iam-athena:
+    build:
+      context: ../Athena
+      dockerfile: Dockerfile.dev
+    ports:
+      - '4003:3000'
+    environment:
+      - NODE_ENV=development
+      - KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - KRATOS_PUBLIC_URL=http://iam-kratos:7000
+      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:7001
+      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:7000
+      # IAM Kratos (admin authentication)
+      - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
+      - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:7000
+    volumes:
+      - ../Athena:/app
+      - /app/node_modules
+    networks:
+      - intranet
+    depends_on:
+      - iam-kratos
+
+  # ============================================================
+  # Demo App (OAuth2 test client)
+  # ============================================================
+
+  demo:
+    build:
+      context: ../Demo
+      dockerfile: Dockerfile.dev
+    ports:
+      - '2000:2000'
+    environment:
+      - PORT=2000
+      - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - CIAM_CLIENT_ID=demo-ciam-client
+      - CIAM_CLIENT_SECRET=demo-ciam-secret
+      - IAM_CLIENT_ID=demo-iam-client
+      - IAM_CLIENT_SECRET=demo-iam-secret
+      - NEXT_PUBLIC_CIAM_HYDRA_URL=http://localhost:5002
+      - NEXT_PUBLIC_IAM_HYDRA_URL=http://localhost:7002
+      - NEXT_PUBLIC_APP_URL=http://localhost:2000
+    volumes:
+      - ../Demo:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - ciam-hydra
+      - iam-hydra
+
+  # ============================================================
+  # Dev Seed (identities + OAuth2 clients)
+  # ============================================================
+
+  athena-seed-dev:
+    image: curlimages/curl:latest
+    depends_on:
+      - iam-kratos
+      - ciam-hydra
+      - iam-hydra
+    volumes:
+      - type: bind
+        source: ./iam-seed-dev.sh
+        target: /iam-seed-dev.sh
+    networks:
+      - intranet
+    command: sh /iam-seed-dev.sh
+    restart: 'no'
+    profiles:
+      - init
+
+networks:
+  intranet:
+
+volumes:
+  postgres:

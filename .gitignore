@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# typescript
+*.tsbuildinfo
+
+# vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+
+# claude
+.claude/
+.plan
+CLAUDE.md
+
+# private
+private/
