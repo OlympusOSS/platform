@@ -372,6 +372,7 @@ services:
     volumes:
       - ../Athena:/app
       - /app/node_modules
+      - ciam-athena-next:/app/.next
     networks:
       - intranet
     depends_on:
@@ -402,6 +403,7 @@ services:
     volumes:
       - ../Athena:/app
       - /app/node_modules
+      - iam-athena-next:/app/.next
     networks:
       - intranet
     depends_on:
@@ -464,3 +466,5 @@ networks:
 
 volumes:
   postgres:
+  ciam-athena-next:
+  iam-athena-next:
