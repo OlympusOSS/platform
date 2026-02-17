@@ -153,7 +153,7 @@ Identity is one of the most expensive line items in a modern SaaS stack. Managed
 | **10K users/mo**           | ~$228/mo      | ~$200/mo                                         | ~$210/mo                               | $0 (beyond hosting)          |
 | **100K users/mo**          | ~$1,900/mo    | ~$2,000/mo                                       | ~$1,470/mo                             | $0 (beyond hosting)          |
 | **1M users/mo**            | ~$19,000/mo   | ~$15,000+/mo                                     | ~$14,070/mo                            | $0 (beyond hosting)          |
-| **Separate CIAM + IAM**   | 2x the cost   | Separate product (Workforce + Customer Identity) | Separate projects                      | Built-in                     |
+| **Separate CIAM + IAM**    | 2x the cost   | Separate product (Workforce + Customer Identity) | Separate projects                      | Built-in                     |
 | **Data ownership**         | Vendor-hosted | Vendor-hosted                                    | Ory-hosted (or self-hosted enterprise) | You own it                   |
 | **Custom consent flows**   | Limited       | Limited                                          | Full control (headless)                | Full control                 |
 | **OAuth2 server included** | Add-on cost   | Add-on cost                                      | Built-in (full Hydra)                  | Built-in (full Hydra)        |
@@ -255,15 +255,15 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 ### Admin & Management
 
-| Feature                     | OlympusOSS Identity Platform | Ory Network                            | Auth0                    | Okta                   |
-|-----------------------------|------------------------------|----------------------------------------|--------------------------|------------------------|
-| **Admin Dashboard**         | ✅ Athena (custom-built)     | ✅ Ory Console                         | ✅ Polished SaaS dashboard | ✅ Polished SaaS dashboard |
-| **Identity CRUD API**       | ✅ Full REST API             | ✅ Full REST API                       | ✅ Management API        | ✅                     |
-| **Session Management**      | ✅ View + revoke             | ✅ View + revoke + extend              | ✅                       | ✅                     |
-| **Custom Identity Schemas** | ✅ JSON Schema-based         | ✅ JSON Schema-based                   | ⚠️ Custom attributes     | ⚠️ Profile attributes  |
-| **Audit Logging**           | ⚠️ In development           | ✅ Event streaming (Enterprise)        | ✅ Log streaming         | ✅ System Log + SIEM   |
-| **User Migration Tools**    | ⚠️ In development           | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration   | ✅ Import tools        |
-| **Bulk User Import**        | ⚠️ In development           | ✅ Up to 1000/batch                    | ✅                       | ✅ CSV + API           |
+| Feature                     | OlympusOSS Identity Platform | Ory Network                            | Auth0                        | Okta                         |
+|-----------------------------|------------------------------|----------------------------------------|------------------------------|------------------------------|
+| **Admin Dashboard**         | ✅ Athena (custom-built)     | ✅ Ory Console                         | ✅ Polished SaaS dashboard   | ✅ Polished SaaS dashboard   |
+| **Identity CRUD API**       | ✅ Full REST API             | ✅ Full REST API                       | ✅ Management API            | ✅                           |
+| **Session Management**      | ✅ View + revoke             | ✅ View + revoke + extend              | ✅                           | ✅                           |
+| **Custom Identity Schemas** | ✅ JSON Schema-based         | ✅ JSON Schema-based                   | ⚠️ Custom attributes         | ⚠️ Profile attributes        |
+| **Audit Logging**           | ⚠️ In development           | ✅ Event streaming (Enterprise)        | ✅ Log streaming             | ✅ System Log + SIEM         |
+| **User Migration Tools**    | ⚠️ In development           | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration       | ✅ Import tools              |
+| **Bulk User Import**        | ⚠️ In development           | ✅ Up to 1000/batch                    | ✅                           | ✅ CSV + API                 |
 
 ### Developer Experience
 
@@ -295,7 +295,7 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 | Feature                      | OlympusOSS Identity Platform                     | Ory Network                          | Auth0                            | Okta               |
 |------------------------------|---------------------------------------------------|--------------------------------------|----------------------------------|--------------------|
-| **SOC 2 Certified**         | ⚠️ Accelerated — built on Ory's audited codebase | ✅ SOC 2 Type II                     | ✅                               | ✅                 |
+| **SOC 2 Certified**          | ⚠️ Accelerated — built on Ory's audited codebase | ✅ SOC 2 Type II                     | ✅                               | ✅                 |
 | **HIPAA Eligible**           | ⚠️ Accelerated — built on Ory's audited codebase | ⚠️ Contact sales                    | ✅ Enterprise tier               | ✅                 |
 | **GDPR Ready**               | ✅ Full data control                              | ✅ EU data residency                 | ✅                               | ✅                 |
 | **Brute Force Protection**   | ⚠️ Via rate limiting config                       | ✅ Built-in                          | ✅ Built-in                      | ✅ Built-in        |
@@ -330,8 +330,8 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 ## Port Allocation
 
-| Port | Service | Domain | Purpose |
-|------|---------|--------|---------|
+| Port | Service               | Domain                                 | Purpose                                      |
+|------|-----------------------|----------------------------------------|----------------------------------------------|
 | 2000 | Demo App              | —                                    | OAuth2 test client for both domains          |
 | 3001 | CIAM Hera             | Customer                             | Authentication UI for customers              |
 | 3002 | CIAM Medusa           | Customer                             | OAuth2 consent for customer-facing apps      |
