@@ -368,6 +368,7 @@ services:
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
+      - NEXT_PUBLIC_APP_INSTANCE=CIAM
     volumes:
       - ../Athena:/app
       - /app/node_modules
@@ -397,6 +398,7 @@ services:
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
+      - NEXT_PUBLIC_APP_INSTANCE=IAM
     volumes:
       - ../Athena:/app
       - /app/node_modules
