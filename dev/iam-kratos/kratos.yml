@@ -9,6 +9,7 @@ serve:
     cors:
       enabled: true
       allowed_origins:
+        - http://localhost:3003
         - http://localhost:4003
         - http://localhost:4002
         - http://localhost:4001
@@ -33,6 +34,7 @@ serve:
 selfservice:
   default_browser_return_url: http://localhost:4003/
   allowed_return_urls:
+    - http://localhost:3003
     - http://localhost:4003
     - http://localhost:4002
     - http://localhost:4001

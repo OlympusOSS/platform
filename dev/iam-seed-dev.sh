@@ -92,13 +92,13 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
 echo ""
 echo "=== CIAM Identities (Customers) ==="
 
-# Create demo customer: bobby@nannier.com
+# Create demo customer: bobby.nannier@gmail.com
 curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
     "schema_id": "customer",
     "traits": {
-      "email": "bobby@nannier.com",
+      "email": "bobby.nannier@gmail.com",
       "customer_id": "CUST-001",
       "first_name": "Bobby",
       "last_name": "Nannier",
@@ -113,7 +113,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
       }
     },
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (customer: CUST-001)" || echo "  bobby@nannier.com already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: bobby.nannier@gmail.com (customer: CUST-001)" || echo "  bobby.nannier@gmail.com already exists or failed"
 
 # Create demo customer: marine@nannier.com
 curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
