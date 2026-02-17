@@ -115,29 +115,6 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: bobby.nannier@gmail.com (customer: CUST-001)" || echo "  bobby.nannier@gmail.com already exists or failed"
 
-# Create demo customer: marine@nannier.com
-curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "customer",
-    "traits": {
-      "email": "marine@nannier.com",
-      "customer_id": "CUST-002",
-      "first_name": "Marine",
-      "last_name": "Nannier",
-      "loyalty_tier": "silver",
-      "account_status": "active"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: marine@nannier.com (customer: CUST-002)" || echo "  marine@nannier.com already exists or failed"
-
 echo ""
 echo "Creating OAuth2 clients for Demo app..."
 
