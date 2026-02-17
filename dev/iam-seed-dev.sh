@@ -1,14 +1,25 @@
 #!/bin/sh
 set -e
 
-KRATOS_ADMIN_URL="${KRATOS_ADMIN_URL:-http://iam-kratos:7001}"
+IAM_KRATOS_ADMIN_URL="${IAM_KRATOS_ADMIN_URL:-http://iam-kratos:7001}"
+CIAM_KRATOS_ADMIN_URL="${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}"
 CIAM_HYDRA_ADMIN_URL="${CIAM_HYDRA_ADMIN_URL:-http://ciam-hydra:5003}"
 IAM_HYDRA_ADMIN_URL="${IAM_HYDRA_ADMIN_URL:-http://iam-hydra:7003}"
 
 echo "Waiting for IAM Kratos to be ready..."
 for i in $(seq 1 30); do
-  if curl -sf "${KRATOS_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
+  if curl -sf "${IAM_KRATOS_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
     echo "IAM Kratos is ready!"
+    break
+  fi
+  echo "Waiting... ($i/30)"
+  sleep 2
+done
+
+echo "Waiting for CIAM Kratos to be ready..."
+for i in $(seq 1 30); do
+  if curl -sf "${CIAM_KRATOS_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
+    echo "CIAM Kratos is ready!"
     break
   fi
   echo "Waiting... ($i/30)"
@@ -36,10 +47,10 @@ for i in $(seq 1 30); do
 done
 
 echo ""
-echo "Creating seed identities..."
+echo "=== IAM Identities (Employee/Admin) ==="
 
 # Create admin user: bobby@nannier.com
-curl -sf -X POST "${KRATOS_ADMIN_URL}/admin/identities" \
+curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
     "schema_id": "admin",
@@ -58,14 +69,14 @@ curl -sf -X POST "${KRATOS_ADMIN_URL}/admin/identities" \
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (role: admin)" || echo "  bobby@nannier.com already exists or failed"
 
-# Create viewer user: viewer@athena.dev
-curl -sf -X POST "${KRATOS_ADMIN_URL}/admin/identities" \
+# Create viewer user: marine@nannier.com
+curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
     "schema_id": "admin",
     "traits": {
-      "email": "viewer@athena.dev",
-      "name": { "first": "Demo", "last": "Viewer" },
+      "email": "marine@nannier.com",
+      "name": { "first": "Marine", "last": "Nannier" },
       "role": "viewer"
     },
     "credentials": {
@@ -76,7 +87,56 @@ curl -sf -X POST "${KRATOS_ADMIN_URL}/admin/identities" \
       }
     },
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer)" || echo "  viewer@athena.dev already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: marine@nannier.com (role: viewer)" || echo "  marine@nannier.com already exists or failed"
+
+echo ""
+echo "=== CIAM Identities (Customers) ==="
+
+# Create demo customer: bobby@nannier.com
+curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_id": "customer",
+    "traits": {
+      "email": "bobby@nannier.com",
+      "customer_id": "CUST-001",
+      "first_name": "Bobby",
+      "last_name": "Nannier",
+      "loyalty_tier": "gold",
+      "account_status": "active"
+    },
+    "credentials": {
+      "password": {
+        "config": {
+          "password": "admin123!"
+        }
+      }
+    },
+    "state": "active"
+  }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (customer: CUST-001)" || echo "  bobby@nannier.com already exists or failed"
+
+# Create demo customer: marine@nannier.com
+curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_id": "customer",
+    "traits": {
+      "email": "marine@nannier.com",
+      "customer_id": "CUST-002",
+      "first_name": "Marine",
+      "last_name": "Nannier",
+      "loyalty_tier": "silver",
+      "account_status": "active"
+    },
+    "credentials": {
+      "password": {
+        "config": {
+          "password": "admin123!"
+        }
+      }
+    },
+    "state": "active"
+  }' > /dev/null 2>&1 && echo "  Created: marine@nannier.com (customer: CUST-002)" || echo "  marine@nannier.com already exists or failed"
 
 echo ""
 echo "Creating OAuth2 clients for Demo app..."

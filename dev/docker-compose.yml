@@ -69,7 +69,7 @@ services:
   mailslurper:
     image: oryd/mailslurper:latest-smtps
     ports:
-      - '4001:4436'
+      - '4436:4436'
     networks:
       - intranet
 
@@ -97,8 +97,8 @@ services:
       - ciam-kratos-migrate
     image: oryd/kratos:v25.4.0
     ports:
-      - '5000:5000' # public
-      - '5001:5001' # admin
+      - '3100:5000' # public
+      - '3101:5001' # admin
     restart: unless-stopped
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/ciam_kratos?sslmode=disable
@@ -120,7 +120,7 @@ services:
     environment:
       - PORT=3004
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000/
-      - KRATOS_BROWSER_URL=http://localhost:5000/
+      - KRATOS_BROWSER_URL=http://localhost:3100/
       - COOKIE_SECRET=changeme
       - CSRF_COOKIE_NAME=ory_csrf_ui
       - CSRF_COOKIE_SECRET=changeme
@@ -155,8 +155,8 @@ services:
       - iam-kratos-migrate
     image: oryd/kratos:v25.4.0
     ports:
-      - '7000:7000'
-      - '7001:7001'
+      - '4100:7000'
+      - '4101:7001'
     restart: unless-stopped
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/iam_kratos?sslmode=disable
@@ -193,9 +193,9 @@ services:
   ciam-hydra:
     image: oryd/hydra:v25.4.0
     ports:
-      - '5002:5002' # public
-      - '5003:5003' # admin
-      - '5004:5004' # token user
+      - '3102:5002' # public
+      - '3103:5003' # admin
+      - '3104:5004' # token user
     command: serve -c /etc/config/ciam-hydra/hydra.yml all --dev
     volumes:
       - type: bind
@@ -235,8 +235,8 @@ services:
     depends_on:
       - iam-hydra-migrate
     ports:
-      - '7002:7002'
-      - '7003:7003'
+      - '4102:7002'
+      - '4103:7003'
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/iam_hydra?sslmode=disable
       - SERVE_PUBLIC_PORT=7002
@@ -360,14 +360,14 @@ services:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
-      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:5001
-      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:5000
+      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:3101
+      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:3100
       - HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
       # IAM Kratos (admin authentication)
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
-      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:7000
+      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
     volumes:
       - ../Athena:/app
       - /app/node_modules
@@ -391,12 +391,12 @@ services:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
-      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:7001
-      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:7000
+      - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:4101
+      - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4100
       # IAM Kratos (admin authentication)
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
-      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:7000
+      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
     volumes:
       - ../Athena:/app
       - /app/node_modules
@@ -423,8 +423,8 @@ services:
       - CIAM_CLIENT_SECRET=demo-ciam-secret
       - IAM_CLIENT_ID=demo-iam-client
       - IAM_CLIENT_SECRET=demo-iam-secret
-      - NEXT_PUBLIC_CIAM_HYDRA_URL=http://localhost:5002
-      - NEXT_PUBLIC_IAM_HYDRA_URL=http://localhost:7002
+      - NEXT_PUBLIC_CIAM_HYDRA_URL=http://localhost:3102
+      - NEXT_PUBLIC_IAM_HYDRA_URL=http://localhost:4102
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
     volumes:
       - ../Demo:/app
@@ -445,6 +445,7 @@ services:
     image: curlimages/curl:latest
     depends_on:
       - iam-kratos
+      - ciam-kratos
       - ciam-hydra
       - iam-hydra
     volumes:
@@ -455,8 +456,6 @@ services:
       - intranet
     command: sh /iam-seed-dev.sh
     restart: 'no'
-    profiles:
-      - init
 
 networks:
   intranet:

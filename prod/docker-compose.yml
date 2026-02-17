@@ -45,8 +45,8 @@ services:
       - ciam-kratos-migrate
     image: oryd/kratos:v25.4.0
     ports:
-      - '5000:5000' # public
-      - '5001:5001' # admin
+      - '3100:5000' # public
+      - '3101:5001' # admin
     restart: unless-stopped
     environment:
       - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=disable
@@ -84,8 +84,8 @@ services:
       - iam-kratos-migrate
     image: oryd/kratos:v25.4.0
     ports:
-      - '7000:7000'
-      - '7001:7001'
+      - '4100:7000'
+      - '4101:7001'
     restart: unless-stopped
     environment:
       - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=disable
@@ -121,9 +121,9 @@ services:
   ciam-hydra:
     image: oryd/hydra:v25.4.0
     ports:
-      - '5002:5002' # public
-      - '5003:5003' # admin
-      - '5004:5004' # token user
+      - '3102:5002' # public
+      - '3103:5003' # admin
+      - '3104:5004' # token user
     command: serve -c /etc/config/ciam-hydra/hydra.yml all
     volumes:
       - type: bind
@@ -163,8 +163,8 @@ services:
     depends_on:
       - iam-hydra-migrate
     ports:
-      - '7002:7002'
-      - '7003:7003'
+      - '4102:7002'
+      - '4103:7003'
     environment:
       - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=disable
       - SERVE_PUBLIC_PORT=7002

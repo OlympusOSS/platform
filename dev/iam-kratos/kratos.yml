@@ -4,7 +4,7 @@ dsn: memory
 
 serve:
   public:
-    base_url: http://localhost:7000/
+    base_url: http://localhost:4100/
     port: 7000
     cors:
       enabled: true
@@ -27,7 +27,7 @@ serve:
         - Set-Cookie
       allow_credentials: true
   admin:
-    base_url: http://localhost:7001/
+    base_url: http://localhost:4101/
     port: 7001
 
 selfservice:
@@ -70,7 +70,7 @@ secrets:
   cookie:
     - iam-kratos-cookie-secret-change-me
   cipher:
-    - iam-kratos-cipher-secret!!abc
+    - iam-kratos-cipher-secret!!abcdef
 
 hashers:
   argon2:

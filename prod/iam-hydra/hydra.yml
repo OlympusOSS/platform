@@ -8,7 +8,7 @@ serve:
 
 urls:
   self:
-    issuer: http://localhost:7002
+    issuer: http://localhost:4102
   consent: http://localhost:4002/consent
   login: http://localhost:4001/login
   logout: http://localhost:4002/logout

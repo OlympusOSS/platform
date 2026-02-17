@@ -340,17 +340,17 @@ An honest, transparent comparison against the major identity platforms. Where co
 | 3001 | CIAM Hera | Customer | Authentication UI for customers |
 | 3002 | CIAM Medusa | Customer | OAuth2 consent for customer-facing apps |
 | 3003 | CIAM Athena | Customer | Admin panel for customer identity management |
+| 3100 | CIAM Kratos (public) | Customer | Customer identity API |
+| 3101 | CIAM Kratos (admin) | Customer | Customer identity admin API |
+| 3102 | CIAM Hydra (public) | Customer | Customer OAuth2/OIDC endpoints |
+| 3103 | CIAM Hydra (admin) | Customer | Customer OAuth2 admin API |
 | 4001 | IAM Hera | Employee | Authentication UI for employees |
 | 4002 | IAM Medusa | Employee | OAuth2 consent for internal services |
 | 4003 | IAM Athena | Employee | Admin panel for employee identity management |
-| 5000 | CIAM Kratos (public) | Customer | Customer identity API |
-| 5001 | CIAM Kratos (admin) | Customer | Customer identity admin API |
-| 5002 | CIAM Hydra (public) | Customer | Customer OAuth2/OIDC endpoints |
-| 5003 | CIAM Hydra (admin) | Customer | Customer OAuth2 admin API |
-| 7000 | IAM Kratos (public) | Employee | Employee identity API |
-| 7001 | IAM Kratos (admin) | Employee | Employee identity admin API |
-| 7002 | IAM Hydra (public) | Employee | Internal OAuth2/OIDC endpoints |
-| 7003 | IAM Hydra (admin) | Employee | Internal OAuth2 admin API |
+| 4100 | IAM Kratos (public) | Employee | Employee identity API |
+| 4101 | IAM Kratos (admin) | Employee | Employee identity admin API |
+| 4102 | IAM Hydra (public) | Employee | Internal OAuth2/OIDC endpoints |
+| 4103 | IAM Hydra (admin) | Employee | Internal OAuth2 admin API |
 
 ---
 

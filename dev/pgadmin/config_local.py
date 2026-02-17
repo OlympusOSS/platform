@@ -11,7 +11,7 @@ OAUTH2_CONFIG = [
         'OAUTH2_CLIENT_ID': 'pgadmin',
         'OAUTH2_CLIENT_SECRET': 'pgadmin-secret',
         'OAUTH2_TOKEN_URL': 'http://iam-hydra:7002/oauth2/token',
-        'OAUTH2_AUTHORIZATION_URL': 'http://localhost:7002/oauth2/auth',
+        'OAUTH2_AUTHORIZATION_URL': 'http://localhost:4102/oauth2/auth',
         'OAUTH2_API_BASE_URL': 'http://iam-hydra:7002/',
         'OAUTH2_USERINFO_ENDPOINT': 'userinfo',
         'OAUTH2_SCOPE': 'openid email profile',
