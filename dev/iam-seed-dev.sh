@@ -49,13 +49,13 @@ done
 echo ""
 echo "=== IAM Identities (Employee/Admin) ==="
 
-# Create admin user: bobby@nannier.com
+# Create admin user: admin@athena.dev
 curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
     "schema_id": "admin",
     "traits": {
-      "email": "bobby@nannier.com",
+      "email": "admin@athena.dev",
       "name": { "first": "Bobby", "last": "Nannier" },
       "role": "admin"
     },
@@ -67,15 +67,15 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
       }
     },
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (role: admin)" || echo "  bobby@nannier.com already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: admin@athena.dev (role: admin)" || echo "  admin@athena.dev already exists or failed"
 
-# Create viewer user: marine@nannier.com
+# Create viewer user: viewer@athena.dev
 curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
     "schema_id": "admin",
     "traits": {
-      "email": "marine@nannier.com",
+      "email": "viewer@athena.dev",
       "name": { "first": "Marine", "last": "Nannier" },
       "role": "viewer"
     },
@@ -87,7 +87,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
       }
     },
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: marine@nannier.com (role: viewer)" || echo "  marine@nannier.com already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer)" || echo "  viewer@athena.dev already exists or failed"
 
 echo ""
 echo "=== CIAM Identities (Customers) ==="
@@ -114,6 +114,29 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     },
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: bobby.nannier@gmail.com (customer: CUST-001)" || echo "  bobby.nannier@gmail.com already exists or failed"
+
+# Create demo customer: bobby@nannier.com
+curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_id": "customer",
+    "traits": {
+      "email": "bobby@nannier.com",
+      "customer_id": "CUST-002",
+      "first_name": "Bobby",
+      "last_name": "Nannier",
+      "loyalty_tier": "silver",
+      "account_status": "active"
+    },
+    "credentials": {
+      "password": {
+        "config": {
+          "password": "admin123!"
+        }
+      }
+    },
+    "state": "active"
+  }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (customer: CUST-002)" || echo "  bobby@nannier.com already exists or failed"
 
 echo ""
 echo "Creating OAuth2 clients for Demo app..."
