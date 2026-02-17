@@ -26,12 +26,12 @@ One company. Two identity domains. Complete isolation. Full control.
                     ┌─────────────────────────────────────────────────┐
                     │              Employee (IAM) Domain              │
                     │                                                 │
-                    │   IAM Kratos ── IAM Hydra ── IAM Medusa        │
-                    │   (identities)  (OAuth2)     (consent)         │
+                    │   IAM Kratos ── IAM Hydra ── IAM Medusa         │
+                    │   (identities)  (OAuth2)     (consent)          │
                     │        │                        │               │
                     │        ▼                        ▼               │
-                    │   IAM Hera              IAM Athena             │
-                    │   (authentication)      (Admin Panel)          │
+                    │   IAM Hera              IAM Athena              │
+                    │   (authentication)      (Admin Panel)           │
                     │                         "Manage internal users" │
                     └────────────────────┬────────────────────────────┘
                                          │
@@ -40,19 +40,19 @@ One company. Two identity domains. Complete isolation. Full control.
                     ┌────────────────────┴────────────────────────────┐
                     │             Customer (CIAM) Domain              │
                     │                                                 │
-                    │   CIAM Kratos ── CIAM Hydra ── CIAM Medusa     │
-                    │   (identities)   (OAuth2)      (consent)       │
+                    │   CIAM Kratos ── CIAM Hydra ── CIAM Medusa      │
+                    │   (identities)   (OAuth2)      (consent)        │
                     │        │                          │             │
                     │        ▼                          ▼             │
-                    │   CIAM Hera              CIAM Athena           │
-                    │   (authentication)       (Admin Panel)         │
+                    │   CIAM Hera              CIAM Athena            │
+                    │   (authentication)       (Admin Panel)          │
                     │                          "Manage customers"     │
                     └─────────────────────────────────────────────────┘
 ```
 
 ### Two Domains, One Platform
 
-|                    | Customer (CIAM)                     | Employee (IAM)                        |
+|                    | Customer (CIAM)                      | Employee (IAM)                        |
 |--------------------|--------------------------------------|---------------------------------------|
 | **Who**            | Your customers, end users, clients   | Your employees, admins, support staff |
 | **Identity Store** | CIAM Kratos                          | IAM Kratos                            |
@@ -214,36 +214,36 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 ### Authentication
 
-| Feature                                 | OlympusOSS Identity Platform | Ory Network       | Auth0               | Okta                 |
+| Feature                                 | OlympusOSS Identity Platform | Ory Network        | Auth0               | Okta                 |
 |-----------------------------------------|------------------------------|--------------------|---------------------|----------------------|
 | **Email + Password**                    | ✅                           | ✅                 | ✅                  | ✅                   |
 | **Social Login (Google, GitHub, etc.)** | ✅ OIDC providers            | ✅ 15+ providers   | ✅ 30+ providers    | ✅ Extensive catalog |
 | **Passwordless / Passkeys**             | ✅                           | ✅                 | ✅                  | ✅                   |
 | **MFA / TOTP**                          | ✅                           | ✅                 | ✅                  | ✅                   |
-| **Adaptive / Risk-Based MFA**           | ⚠️ In development           | ✅ Step-up MFA     | ✅ Built-in         | ✅ Built-in          |
+| **Adaptive / Risk-Based MFA**           | ⚠️ In development            | ✅ Step-up MFA     | ✅ Built-in         | ✅ Built-in          |
 | **Magic Links**                         | ✅                           | ✅                 | ✅                  | ⚠️ Limited           |
-| **SMS OTP**                             | ⚠️ In development           | ✅ Built-in        | ✅ Built-in         | ✅ Built-in          |
+| **SMS OTP**                             | ⚠️ In development            | ✅ Built-in        | ✅ Built-in         | ✅ Built-in          |
 | **WebAuthn / FIDO2**                    | ✅                           | ✅                 | ✅                  | ✅                   |
 | **Backup / Recovery Codes**             | ✅                           | ✅ Lookup Secrets  | ✅                  | ✅                   |
 | **Biometric Auth**                      | ✅ Via passkeys              | ✅ Via WebAuthn    | ✅ Via Guardian app | ✅ Via Okta Verify   |
 
 ### Federation & Enterprise SSO
 
-| Feature                            | OlympusOSS Identity Platform | Ory Network                 | Auth0        | Okta                       |
+| Feature                            | OlympusOSS Identity Platform | Ory Network                 | Auth0        | Okta                        |
 |------------------------------------|------------------------------|-----------------------------|--------------|-----------------------------|
 | **OIDC Federation**                | ✅                           | ✅                          | ✅           | ✅                          |
 | **Enterprise SSO (OIDC — modern)** | ✅ Via Ory Hydra             | ✅ Via Ory Polis            | ✅           | ✅ Industry-leading         |
-| **SAML 2.0 (legacy)**             | ⚠️ In development           | ✅ Via Ory Polis            | ✅           | ✅                          |
-| **Directory Sync (AD/LDAP)**       | ⚠️ In development           | ⚠️ SCIM-based via Polis    | ✅           | ✅ Native AD agent          |
-| **SCIM Provisioning**              | ⚠️ In development           | ✅ Via Ory Polis            | ✅           | ✅ 7000+ app integrations   |
-| **User Lifecycle Management**      | ⚠️ In development           | ✅ Via SCIM + webhooks      | ✅           | ✅ Best-in-class            |
-| **Pre-built App Integrations**     | ❌                           | ⚠️ Via Zapier (5000+ apps) | ✅ Extensive | ✅ 7000+ OIN catalog        |
+| **SAML 2.0 (legacy)**              | ⚠️ In development            | ✅ Via Ory Polis            | ✅           | ✅                          |
+| **Directory Sync (AD/LDAP)**       | ⚠️ In development            | ⚠️ SCIM-based via Polis     | ✅           | ✅ Native AD agent          |
+| **SCIM Provisioning**              | ⚠️ In development            | ✅ Via Ory Polis            | ✅           | ✅ 7000+ app integrations   |
+| **User Lifecycle Management**      | ⚠️ In development            | ✅ Via SCIM + webhooks      | ✅           | ✅ Best-in-class            |
+| **Pre-built App Integrations**     | ❌                           | ⚠️ Via Zapier (5000+ apps)  | ✅ Extensive | ✅ 7000+ OIN catalog        |
 
 ### OAuth2 & Authorization
 
-| Feature                       | OlympusOSS Identity Platform | Ory Network                   | Auth0                      | Okta                     |
-|-------------------------------|------------------------------|-------------------------------|----------------------------|--------------------------|
-| **Full OAuth2 Server**        | ✅ Ory Hydra (certified)     | ✅ Ory Hydra (certified)      | ✅                         | ✅                       |
+| Feature                       | OlympusOSS Identity Platform | Ory Network                    | Auth0                      | Okta                     |
+|-------------------------------|------------------------------|--------------------------------|----------------------------|--------------------------|
+| **Full OAuth2 Server**        | ✅ Ory Hydra (certified)     | ✅ Ory Hydra (certified)       | ✅                         | ✅                       |
 | **OpenID Connect Provider**   | ✅                           | ✅ OpenID Certified            | ✅                         | ✅                       |
 | **Custom Scopes & Claims**    | ✅ Full control              | ✅ Full control                | ✅                         | ✅                       |
 | **Client Credentials Flow**   | ✅                           | ✅                             | ✅                         | ✅                       |
@@ -251,7 +251,7 @@ An honest, transparent comparison against the major identity platforms. Where co
 | **Token Introspection**       | ✅                           | ✅                             | ✅                         | ✅                       |
 | **Custom Consent Screens**    | ✅ Medusa (full control)     | ✅ Headless (bring your own)   | ⚠️ Limited customization   | ⚠️ Limited customization |
 | **Unlimited OAuth2 Clients**  | ✅                           | ✅                             | ⚠️ Tier-limited            | ⚠️ Tier-limited          |
-| **Permissions (Zanzibar)**    | ❌                           | ✅ Ory Keto (OPL)             | ❌                         | ❌                       |
+| **Permissions (Zanzibar)**    | ❌                           | ✅ Ory Keto (OPL)              | ❌                         | ❌                       |
 
 ### Admin & Management
 
@@ -261,46 +261,46 @@ An honest, transparent comparison against the major identity platforms. Where co
 | **Identity CRUD API**       | ✅ Full REST API             | ✅ Full REST API                       | ✅ Management API            | ✅                           |
 | **Session Management**      | ✅ View + revoke             | ✅ View + revoke + extend              | ✅                           | ✅                           |
 | **Custom Identity Schemas** | ✅ JSON Schema-based         | ✅ JSON Schema-based                   | ⚠️ Custom attributes         | ⚠️ Profile attributes        |
-| **Audit Logging**           | ⚠️ In development           | ✅ Event streaming (Enterprise)        | ✅ Log streaming             | ✅ System Log + SIEM         |
-| **User Migration Tools**    | ⚠️ In development           | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration       | ✅ Import tools              |
-| **Bulk User Import**        | ⚠️ In development           | ✅ Up to 1000/batch                    | ✅                           | ✅ CSV + API                 |
+| **Audit Logging**           | ⚠️ In development            | ✅ Event streaming (Enterprise)        | ✅ Log streaming             | ✅ System Log + SIEM         |
+| **User Migration Tools**    | ⚠️ In development            | ✅ Import API (passwords, social, MFA) | ✅ Automatic migration       | ✅ Import tools              |
+| **Bulk User Import**        | ⚠️ In development            | ✅ Up to 1000/batch                    | ✅                           | ✅ CSV + API                 |
 
 ### Developer Experience
 
-| Feature                    | OlympusOSS Identity Platform | Ory Network                                       | Auth0                              | Okta                          |
-|----------------------------|------------------------------|---------------------------------------------------|------------------------------------|-------------------------------|
+| Feature                    | OlympusOSS Identity Platform | Ory Network                                        | Auth0                              | Okta                          |
+|----------------------------|------------------------------|----------------------------------------------------|------------------------------------|-------------------------------|
 | **Self-Hosted Option**     | ✅ Full control              | ✅ Enterprise License available                    | ❌ SaaS only                       | ❌ SaaS only                  |
-| **Open Source**            | ✅ Apache 2.0               | ✅ Apache 2.0 (core components)                    | ❌                                 | ❌                            |
-| **SDK / Language Support** | ✅ REST API (any language)   | ✅ SDKs for Go, JS, PHP, Java, .NET, Python, Dart | ✅ SDKs for 15+ languages          | ✅ SDKs for 10+ languages    |
+| **Open Source**            | ✅ Apache 2.0                | ✅ Apache 2.0 (core components)                    | ❌                                 | ❌                            |
+| **SDK / Language Support** | ✅ REST API (any language)   | ✅ SDKs for Go, JS, PHP, Java, .NET, Python, Dart  | ✅ SDKs for 15+ languages          | ✅ SDKs for 10+ languages     |
 | **Pre-Built Login UI**     | ✅ Hera (custom-built)       | ✅ Ory Elements (React components)                 | ✅ Universal Login (best-in-class) | ✅ Sign-In Widget             |
 | **UI Customization Depth** | ✅ Full source code control  | ✅ Full source code control (headless)             | ⚠️ Theming + Actions               | ⚠️ Theming + hooks            |
-| **Documentation Quality**  | ⚠️ Good (Ory docs)          | ✅ Comprehensive                                   | ✅ Excellent                       | ✅ Excellent                  |
+| **Documentation Quality**  | ⚠️ Good (Ory docs)           | ✅ Comprehensive                                   | ✅ Excellent                       | ✅ Excellent                  |
 | **Extensibility / Hooks**  | ✅ Webhooks + custom code    | ✅ Ory Actions (any language)                      | ✅ Actions, Rules, Hooks           | ✅ Event Hooks, Inline Hooks  |
-| **Community / Ecosystem**  | ⚠️ Growing (Ory community)  | ✅ Active Slack + GitHub community                 | ✅ Large, mature                   | ✅ Large, enterprise-focused  |
-| **Time to First Auth**     | ⚠️ Hours (Docker setup)     | ✅ Minutes (SaaS + free tier)                      | ✅ Minutes (SaaS)                  | ✅ Minutes (SaaS)             |
+| **Community / Ecosystem**  | ⚠️ Growing (Ory community)   | ✅ Active Slack + GitHub community                 | ✅ Large, mature                   | ✅ Large, enterprise-focused  |
+| **Time to First Auth**     | ⚠️ Hours (Docker setup)      | ✅ Minutes (SaaS + free tier)                      | ✅ Minutes (SaaS)                  | ✅ Minutes (SaaS)             |
 
 ### Infrastructure & Operations
 
-| Feature                       | OlympusOSS Identity Platform | Ory Network                                          | Auth0                  | Okta                                   |
-|-------------------------------|------------------------------|------------------------------------------------------|------------------------|----------------------------------------|
-| **Full Data Ownership**       | ✅ Your database             | ⚠️ Ory-hosted (data residency options)               | ❌ Vendor-hosted       | ❌ Vendor-hosted                       |
+| Feature                       | OlympusOSS Identity Platform | Ory Network                                           | Auth0                  | Okta                                   |
+|-------------------------------|------------------------------|-------------------------------------------------------|------------------------|----------------------------------------|
+| **Full Data Ownership**       | ✅ Your database             | ⚠️ Ory-hosted (data residency options)                | ❌ Vendor-hosted       | ❌ Vendor-hosted                       |
 | **Multi-Tenancy**             | ❌                           | ✅ Enterprise tier                                    | ✅                     | ✅                                     |
-| **Built-in CIAM + IAM Split** | ✅ Core architecture         | ⚠️ Separate projects                                 | ❌ Separate tenants    | ⚠️ Separate products (CIC + WIC)      |
-| **Cloud-Agnostic**            | ✅ Runs anywhere             | ⚠️ GCP-hosted (self-hosted enterprise available)     | ❌ Auth0 cloud         | ❌ Okta cloud                          |
+| **Built-in CIAM + IAM Split** | ✅ Core architecture         | ⚠️ Separate projects                                  | ❌ Separate tenants    | ⚠️ Separate products (CIC + WIC)       |
+| **Cloud-Agnostic**            | ✅ Runs anywhere             | ⚠️ GCP-hosted (self-hosted enterprise available)      | ❌ Auth0 cloud         | ❌ Okta cloud                          |
 | **Managed Service Option**    | ❌ Self-hosted only          | ✅ Fully managed                                      | ✅ Fully managed       | ✅ Fully managed                       |
 | **SLA Guarantee**             | ❌ Self-managed              | ✅ 99.99% (Enterprise)                                | ✅ 99.99% (enterprise) | ✅ 99.99%                              |
-| **Uptime Responsibility**     | ⚠️ Your ops team            | ✅ Ory-managed                                        | ✅ Vendor-managed      | ✅ Vendor-managed                      |
+| **Uptime Responsibility**     | ⚠️ Your ops team             | ✅ Ory-managed                                        | ✅ Vendor-managed      | ✅ Vendor-managed                      |
 
 ### Compliance & Security
 
-| Feature                      | OlympusOSS Identity Platform                     | Ory Network                          | Auth0                            | Okta               |
+| Feature                      | OlympusOSS Identity Platform                      | Ory Network                          | Auth0                            | Okta               |
 |------------------------------|---------------------------------------------------|--------------------------------------|----------------------------------|--------------------|
-| **SOC 2 Certified**          | ⚠️ Accelerated — built on Ory's audited codebase | ✅ SOC 2 Type II                     | ✅                               | ✅                 |
-| **HIPAA Eligible**           | ⚠️ Accelerated — built on Ory's audited codebase | ⚠️ Contact sales                    | ✅ Enterprise tier               | ✅                 |
+| **SOC 2 Certified**          | ⚠️ Accelerated — built on Ory's audited codebase  | ✅ SOC 2 Type II                     | ✅                               | ✅                 |
+| **HIPAA Eligible**           | ⚠️ Accelerated — built on Ory's audited codebase  | ⚠️ Contact sales                     | ✅ Enterprise tier               | ✅                 |
 | **GDPR Ready**               | ✅ Full data control                              | ✅ EU data residency                 | ✅                               | ✅                 |
 | **Brute Force Protection**   | ⚠️ Via rate limiting config                       | ✅ Built-in                          | ✅ Built-in                      | ✅ Built-in        |
-| **Bot Detection**            | ⚠️ In development (CAPTCHA)                      | ✅ Cloudflare WAF + Bot Management   | ✅ Built-in                      | ✅ Built-in        |
-| **Anomaly Detection**        | ❌                                                | ⚠️ Risk-based MFA                   | ✅ Breached password detection   | ✅ ThreatInsight   |
+| **Bot Detection**            | ⚠️ In development (CAPTCHA)                       | ✅ Cloudflare WAF + Bot Management   | ✅ Built-in                      | ✅ Built-in        |
+| **Anomaly Detection**        | ❌                                                | ⚠️ Risk-based MFA                    | ✅ Breached password detection   | ✅ ThreatInsight   |
 | **Pwned Password Detection** | ❌                                                | ✅ Built-in                          | ✅                               | ✅                 |
 | **Rate Limiting**            | ✅ Configurable                                   | ✅ Tiered by plan                    | ✅                               | ✅                 |
 
