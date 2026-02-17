@@ -67,13 +67,13 @@ Wait until you see **"Seed complete!"**, then press `Ctrl+C`.
 
 ## Access Points
 
-| Application | URL | Description |
-|-------------|-----|-------------|
-| **Demo App** | http://localhost:2000 | OAuth2 test client for both domains |
+| Application     | URL                   | Description                                  |
+|-----------------|-----------------------|----------------------------------------------|
+| **Demo App**    | http://localhost:2000 | OAuth2 test client for both domains          |
 | **CIAM Athena** | http://localhost:3003 | Admin panel for customer identity management |
-| **IAM Athena** | http://localhost:4003 | Admin panel for employee identity management |
-| **PgAdmin** | http://localhost:4000 | Database management interface |
-| **Mailslurper** | http://localhost:4436 | Test email inbox |
+| **IAM Athena**  | http://localhost:4003 | Admin panel for employee identity management |
+| **PgAdmin**     | http://localhost:4000 | Database management interface                |
+| **Mailslurper** | http://localhost:4436 | Test email inbox                             |
 
 ---
 
@@ -81,26 +81,26 @@ Wait until you see **"Seed complete!"**, then press `Ctrl+C`.
 
 ### IAM (Employee) Users
 
-| Email | Password | Role |
-|-------|----------|------|
-| `admin@athena.dev` | `admin123!` | Admin — full access to all features |
-| `viewer@athena.dev` | `admin123!` | Viewer — read-only access |
+| Email               | Password    | Role                                |
+|---------------------|-------------|-------------------------------------|
+| `admin@athena.dev`  | `admin123!` | Admin — full access to all features |
+| `viewer@athena.dev` | `admin123!` | Viewer — read-only access           |
 
 Use these to log into **CIAM Athena** (http://localhost:3003) and **IAM Athena** (http://localhost:4003).
 
 ### CIAM (Customer) Users
 
-| Email | Password | Customer ID |
-|-------|----------|-------------|
-| `bobby.nannier@gmail.com` | `admin123!` | CUST-001 |
-| `bobby@nannier.com` | `admin123!` | CUST-002 |
+| Email                     | Password    | Customer ID |
+|---------------------------|-------------|-------------|
+| `bobby.nannier@gmail.com` | `admin123!` | CUST-001    |
+| `bobby@nannier.com`       | `admin123!` | CUST-002    |
 
 These are customer identities managed through CIAM Athena. They cannot log into the admin panels.
 
 ### PgAdmin
 
-| Email | Password |
-|-------|----------|
+| Email              | Password    |
+|--------------------|-------------|
 | `admin@athena.dev` | `admin123!` |
 
 ---
@@ -109,36 +109,36 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 ### Customer Identity (CIAM) — ports 3xxx
 
-| Port | Service | Purpose |
-|------|---------|---------|
-| 3001 | CIAM Hera | Customer authentication UI |
-| 3002 | CIAM Medusa | Customer OAuth2 consent UI |
-| 3003 | CIAM Athena | Customer admin panel |
-| 3100 | CIAM Kratos (public) | Customer identity API |
-| 3101 | CIAM Kratos (admin) | Customer identity admin API |
-| 3102 | CIAM Hydra (public) | Customer OAuth2/OIDC endpoints |
-| 3103 | CIAM Hydra (admin) | Customer OAuth2 admin API |
+| Port | Service              | Purpose                        |
+|------|----------------------|--------------------------------|
+| 3001 | CIAM Hera            | Customer authentication UI     |
+| 3002 | CIAM Medusa          | Customer OAuth2 consent UI     |
+| 3003 | CIAM Athena          | Customer admin panel           |
+| 3100 | CIAM Kratos (public) | Customer identity API          |
+| 3101 | CIAM Kratos (admin)  | Customer identity admin API    |
+| 3102 | CIAM Hydra (public)  | Customer OAuth2/OIDC endpoints |
+| 3103 | CIAM Hydra (admin)   | Customer OAuth2 admin API      |
 
 ### Employee Identity (IAM) — ports 4xxx
 
-| Port | Service | Purpose |
-|------|---------|---------|
-| 4001 | IAM Hera | Employee authentication UI |
-| 4002 | IAM Medusa | Employee OAuth2 consent UI |
-| 4003 | IAM Athena | Employee admin panel |
-| 4100 | IAM Kratos (public) | Employee identity API |
-| 4101 | IAM Kratos (admin) | Employee identity admin API |
-| 4102 | IAM Hydra (public) | Employee OAuth2/OIDC endpoints |
-| 4103 | IAM Hydra (admin) | Employee OAuth2 admin API |
+| Port | Service             | Purpose                        |
+|------|---------------------|--------------------------------|
+| 4001 | IAM Hera            | Employee authentication UI     |
+| 4002 | IAM Medusa          | Employee OAuth2 consent UI     |
+| 4003 | IAM Athena          | Employee admin panel           |
+| 4100 | IAM Kratos (public) | Employee identity API          |
+| 4101 | IAM Kratos (admin)  | Employee identity admin API    |
+| 4102 | IAM Hydra (public)  | Employee OAuth2/OIDC endpoints |
+| 4103 | IAM Hydra (admin)   | Employee OAuth2 admin API      |
 
 ### Shared Services
 
-| Port | Service | Purpose |
-|------|---------|---------|
-| 2000 | Demo App | OAuth2 test client |
-| 4000 | PgAdmin | Database management |
-| 4436 | Mailslurper | Test email service |
-| 5432 | PostgreSQL | Database |
+| Port | Service     | Purpose             |
+|------|-------------|---------------------|
+| 2000 | Demo App    | OAuth2 test client  |
+| 4000 | PgAdmin     | Database management |
+| 4436 | Mailslurper | Test email service  |
+| 5432 | PostgreSQL  | Database            |
 
 ---
 

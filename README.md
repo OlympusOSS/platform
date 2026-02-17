@@ -52,14 +52,14 @@ One company. Two identity domains. Complete isolation. Full control.
 
 ### Two Domains, One Platform
 
-|                    | Customer (CIAM)                    | Employee (IAM)                        |
-|--------------------|-------------------------------------|---------------------------------------|
-| **Who**            | Your customers, end users, clients  | Your employees, admins, support staff |
-| **Identity Store** | CIAM Kratos                         | IAM Kratos                            |
-| **OAuth2 / OIDC**  | CIAM Hydra                          | IAM Hydra                             |
-| **Consent**        | CIAM Medusa                         | IAM Medusa                            |
-| **Authentication** | CIAM Hera                           | IAM Hera                              |
-| **Admin Panel**    | CIAM Athena                         | IAM Athena                            |
+|                    | Customer (CIAM)                     | Employee (IAM)                        |
+|--------------------|--------------------------------------|---------------------------------------|
+| **Who**            | Your customers, end users, clients   | Your employees, admins, support staff |
+| **Identity Store** | CIAM Kratos                          | IAM Kratos                            |
+| **OAuth2 / OIDC**  | CIAM Hydra                           | IAM Hydra                             |
+| **Consent**        | CIAM Medusa                          | IAM Medusa                            |
+| **Authentication** | CIAM Hera                            | IAM Hera                              |
+| **Admin Panel**    | CIAM Athena                          | IAM Athena                            |
 
 Both admin panels are protected by the employee identity store. A customer can never access admin tooling — they exist in a completely separate identity pool.
 
@@ -184,7 +184,7 @@ Running the full platform (both IAM and CIAM domains) in production:
 
 This is a **fixed cost** that does not increase with user count. At scale, the savings are dramatic:
 
-| Monthly Active Users | Managed Provider (avg) | Ory Network (est.) | OlympusOSS Identity Platform | Annual Savings vs Managed |
+| Monthly Active Users | Managed Provider (avg) | Ory Network (est.)  | OlympusOSS Identity Platform | Annual Savings vs Managed |
 |----------------------|------------------------|---------------------|------------------------------|---------------------------|
 | 10,000               | ~$200/mo               | ~$210/mo            | ~$150/mo                     | ~$600                     |
 | 50,000               | ~$1,000/mo             | ~$770/mo            | ~$150/mo                     | ~$10,200                  |
@@ -330,23 +330,23 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 ## Port Allocation
 
-| Port | Service               | Domain                                 | Purpose                                      |
-|------|-----------------------|----------------------------------------|----------------------------------------------|
-| 2000 | Demo App              | —                                    | OAuth2 test client for both domains          |
-| 3001 | CIAM Hera             | Customer                             | Authentication UI for customers              |
-| 3002 | CIAM Medusa           | Customer                             | OAuth2 consent for customer-facing apps      |
-| 3003 | CIAM Athena           | Customer                             | Admin panel for customer identity management |
-| 3100 | CIAM Kratos (public)  | Customer                             | Customer identity API                        |
-| 3101 | CIAM Kratos (admin)   | Customer                             | Customer identity admin API                  |
-| 3102 | CIAM Hydra (public)   | Customer                             | Customer OAuth2/OIDC endpoints               |
-| 3103 | CIAM Hydra (admin)    | Customer                             | Customer OAuth2 admin API                    |
-| 4001 | IAM Hera              | Employee                             | Authentication UI for employees              |
-| 4002 | IAM Medusa            | Employee                             | OAuth2 consent for internal services         |
-| 4003 | IAM Athena            | Employee                             | Employee identity management                 |
-| 4100 | IAM Kratos (public)   | Employee                             | Employee identity API                        |
-| 4101 | IAM Kratos (admin)    | Employee                             | Employee identity admin API                  |
-| 4102 | IAM Hydra (public)    | Employee                             | Internal OAuth2/OIDC endpoints               |
-| 4103 | IAM Hydra (admin)     | Employee                             | Internal OAuth2 admin API                    |
+| Port | Service               | Domain   | Purpose                                      |
+|------|-----------------------|----------|----------------------------------------------|
+| 2000 | Demo App              | —        | OAuth2 test client for both domains          |
+| 3001 | CIAM Hera             | Customer | Authentication UI for customers              |
+| 3002 | CIAM Medusa           | Customer | OAuth2 consent for customer-facing apps      |
+| 3003 | CIAM Athena           | Customer | Admin panel for customer identity management |
+| 3100 | CIAM Kratos (public)  | Customer | Customer identity API                        |
+| 3101 | CIAM Kratos (admin)   | Customer | Customer identity admin API                  |
+| 3102 | CIAM Hydra (public)   | Customer | Customer OAuth2/OIDC endpoints               |
+| 3103 | CIAM Hydra (admin)    | Customer | Customer OAuth2 admin API                    |
+| 4001 | IAM Hera              | Employee | Authentication UI for employees              |
+| 4002 | IAM Medusa            | Employee | OAuth2 consent for internal services         |
+| 4003 | IAM Athena            | Employee | Employee identity management                 |
+| 4100 | IAM Kratos (public)   | Employee | Employee identity API                        |
+| 4101 | IAM Kratos (admin)    | Employee | Employee identity admin API                  |
+| 4102 | IAM Hydra (public)    | Employee | Internal OAuth2/OIDC endpoints               |
+| 4103 | IAM Hydra (admin)     | Employee | Internal OAuth2 admin API                    |
 
 ---
 
@@ -361,8 +361,8 @@ An honest, transparent comparison against the major identity platforms. Where co
 | Authentication UI   | [Hera](./Hera) — Next.js, TypeScript                   |
 | Demo App            | [Demo](./Demo) — Next.js, TypeScript                   |
 | Runtime             | [Bun](https://bun.sh/)                                 |
-| Database            | PostgreSQL                                              |
-| Containerization    | Docker / Docker Compose                                 |
+| Database            | PostgreSQL                                             |
+| Containerization    | Docker / Docker Compose                                |
 
 ---
 
