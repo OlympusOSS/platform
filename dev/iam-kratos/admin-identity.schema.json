@@ -1,7 +1,7 @@
 {
-  "$id": "https://schemas.athena.dev/admin-identity.schema.json",
+  "$id": "https://schemas.olympus.dev/admin-identity.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Athena Admin Identity",
+  "title": "Admin Identity",
   "type": "object",
   "properties": {
     "traits": {

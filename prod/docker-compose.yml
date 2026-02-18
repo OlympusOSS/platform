@@ -179,40 +179,6 @@ services:
       - intranet
 
   # ============================================================
-  # IAM Medusa (OAuth2 consent/logout for iam-hydra)
-  # ============================================================
-
-  iam-medusa:
-    image: medusa:latest
-    ports:
-      - '4002:4002'
-    environment:
-      - PORT=4002
-      - HYDRA_ADMIN_URL=http://iam-hydra:7003
-    networks:
-      - intranet
-    restart: unless-stopped
-    depends_on:
-      - iam-hydra
-
-  # ============================================================
-  # CIAM Medusa (OAuth2 consent/logout for ciam-hydra)
-  # ============================================================
-
-  ciam-medusa:
-    image: medusa:latest
-    ports:
-      - '3002:3002'
-    environment:
-      - PORT=3002
-      - HYDRA_ADMIN_URL=http://ciam-hydra:5003
-    networks:
-      - intranet
-    restart: unless-stopped
-    depends_on:
-      - ciam-hydra
-
-  # ============================================================
   # IAM Hera (Authentication UI for iam-kratos + iam-hydra)
   # ============================================================
 

@@ -26,13 +26,14 @@ One company. Two identity domains. Complete isolation. Full control.
                     ┌─────────────────────────────────────────────────┐
                     │              Employee (IAM) Domain              │
                     │                                                 │
-                    │   IAM Kratos ── IAM Hydra ── IAM Medusa         │
-                    │   (identities)  (OAuth2)     (consent)          │
-                    │        │                        │               │
-                    │        ▼                        ▼               │
-                    │   IAM Hera              IAM Athena              │
-                    │   (authentication)      (Admin Panel)           │
-                    │                         "Manage internal users" │
+                    │   IAM Kratos ── IAM Hydra                       │
+                    │   (identities)  (OAuth2)                        │
+                    │        │            │                           │
+                    │        ▼            ▼                           │
+                    │      IAM Hera              IAM Athena           │
+                    │      (auth + consent)      (Admin Panel)        │
+                    │                            "Manage internal     │
+                    │                             users"              │
                     └────────────────────┬────────────────────────────┘
                                          │
                               admin authentication
@@ -40,13 +41,13 @@ One company. Two identity domains. Complete isolation. Full control.
                     ┌────────────────────┴────────────────────────────┐
                     │             Customer (CIAM) Domain              │
                     │                                                 │
-                    │   CIAM Kratos ── CIAM Hydra ── CIAM Medusa      │
-                    │   (identities)   (OAuth2)      (consent)        │
-                    │        │                          │             │
-                    │        ▼                          ▼             │
-                    │   CIAM Hera              CIAM Athena            │
-                    │   (authentication)       (Admin Panel)          │
-                    │                          "Manage customers"     │
+                    │   CIAM Kratos ── CIAM Hydra                     │
+                    │   (identities)   (OAuth2)                       │
+                    │        │             │                          │
+                    │        ▼             ▼                          │
+                    │      CIAM Hera              CIAM Athena         │
+                    │      (auth + consent)       (Admin Panel)       │
+                    │                             "Manage customers"  │
                     └─────────────────────────────────────────────────┘
 ```
 
@@ -57,8 +58,7 @@ One company. Two identity domains. Complete isolation. Full control.
 | **Who**            | Your customers, end users, clients   | Your employees, admins, support staff |
 | **Identity Store** | CIAM Kratos                          | IAM Kratos                            |
 | **OAuth2 / OIDC**  | CIAM Hydra                           | IAM Hydra                             |
-| **Consent**        | CIAM Medusa                          | IAM Medusa                            |
-| **Authentication** | CIAM Hera                            | IAM Hera                              |
+| **Auth + Consent** | CIAM Hera                            | IAM Hera                              |
 | **Admin Panel**    | CIAM Athena                          | IAM Athena                            |
 
 Both admin panels are protected by the employee identity store. A customer can never access admin tooling — they exist in a completely separate identity pool.
@@ -82,22 +82,9 @@ A modern, full-featured administration interface for managing identities and OAu
 
 Athena is deployed twice: once as **CIAM Athena** (managing customer identities) and once as **IAM Athena** (managing employee identities). Both instances authenticate administrators through the employee identity store.
 
-### Medusa — OAuth2 Consent Provider
+### Hera — Authentication & Consent UI
 
-A lightweight, purpose-built consent interface for Ory Hydra OAuth2 flows. Built with Next.js and TypeScript.
-
-**Capabilities:**
-
-- **Consent Flow** — Presents scope approval screens and handles user consent decisions during OAuth2 authorization requests.
-- **Logout Flow** — Manages OAuth2 logout with proper session cleanup across identity and OAuth2 layers.
-
-Medusa handles the OAuth2 consent step only — when an application requests access to user data, Medusa presents the scope approval screen and records the user's decision. It does not handle authentication; that responsibility belongs to Hera.
-
-Medusa is deployed twice: **CIAM Medusa** handles consent for customer-facing OAuth2 clients, and **IAM Medusa** handles consent for internal tooling and services.
-
-### Hera — Authentication UI
-
-The authentication frontend for Ory Kratos. Handles all user-facing authentication flows including login, registration, and multi-factor authentication. Built with Next.js and TypeScript.
+The authentication and consent frontend for Ory Kratos and Ory Hydra. Handles all user-facing authentication flows including login, registration, and multi-factor authentication, as well as OAuth2 consent and logout flows. Built with Next.js and TypeScript.
 
 **Capabilities:**
 
@@ -106,10 +93,12 @@ The authentication frontend for Ory Kratos. Handles all user-facing authenticati
 - **MFA Flow** — Manages multi-factor authentication challenges (TOTP, WebAuthn, recovery codes).
 - **Account Recovery** — Password reset and account recovery flows.
 - **Account Settings** — Self-service profile updates, password changes, and MFA enrollment.
+- **Consent Flow** — Presents scope approval screens and handles user consent decisions during OAuth2 authorization requests.
+- **Logout Flow** — Manages OAuth2 logout with proper session cleanup across identity and OAuth2 layers.
 
-When Ory Hydra receives an OAuth2 authorization request, it redirects to Hera for authentication. Once the user is authenticated, Hydra redirects to Medusa for consent. This clean separation means authentication logic and consent logic are independently deployable and customizable.
+When Ory Hydra receives an OAuth2 authorization request, it redirects to Hera for both authentication and consent. Hera handles the full OAuth2 flow — authenticating the user, presenting scope approval, and recording the consent decision — in a single application.
 
-Hera is deployed twice: **CIAM Hera** handles customer-facing authentication, and **IAM Hera** handles employee authentication for internal tools and admin panels.
+Hera is deployed twice: **CIAM Hera** handles customer-facing authentication and consent, and **IAM Hera** handles employee authentication and consent for internal tools and admin panels.
 
 ---
 
@@ -166,7 +155,7 @@ Identity is one of the most expensive line items in a modern SaaS stack. Managed
 
 **Shared infrastructure, isolated domains.** Both CIAM and IAM run on a single PostgreSQL instance with logical database separation. You don't need to provision and pay for two completely separate infrastructure stacks. One database server, one container orchestrator, two identity domains.
 
-**One codebase, multiple deployments.** Athena, Medusa, and Hera are each a single project deployed as multiple containers with different environment variables. This means one CI/CD pipeline per project, one set of dependencies to maintain, one codebase to audit — but six distinct services in production. A fraction of the maintenance cost of building separate UIs for customers and employees.
+**One codebase, multiple deployments.** Athena and Hera are each a single project deployed as multiple containers with different environment variables. This means one CI/CD pipeline per project, one set of dependencies to maintain, one codebase to audit — but four distinct services in production. A fraction of the maintenance cost of building separate UIs for customers and employees.
 
 **No OAuth2 add-on costs.** Managed providers often charge extra for OAuth2/OIDC server capabilities, or limit the number of clients and connections. Ory Hydra provides a full-featured, certified OAuth2 and OpenID Connect server with no limits on clients, connections, or token grants.
 
@@ -249,7 +238,7 @@ An honest, transparent comparison against the major identity platforms. Where co
 | **Client Credentials Flow**   | ✅                           | ✅                             | ✅                         | ✅                       |
 | **Device Authorization Flow** | ✅                           | ✅                             | ✅                         | ✅                       |
 | **Token Introspection**       | ✅                           | ✅                             | ✅                         | ✅                       |
-| **Custom Consent Screens**    | ✅ Medusa (full control)     | ✅ Headless (bring your own)   | ⚠️ Limited customization   | ⚠️ Limited customization |
+| **Custom Consent Screens**    | ✅ Hera (full control)       | ✅ Headless (bring your own)   | ⚠️ Limited customization   | ⚠️ Limited customization |
 | **Unlimited OAuth2 Clients**  | ✅                           | ✅                             | ⚠️ Tier-limited            | ⚠️ Tier-limited          |
 | **Permissions (Zanzibar)**    | ❌                           | ✅ Ory Keto (OPL)              | ❌                         | ❌                       |
 
@@ -322,7 +311,7 @@ An honest, transparent comparison against the major identity platforms. Where co
 
 **CIAM + IAM as a unified architecture.** Most providers treat customer identity and workforce identity as separate products with separate billing. Okta literally sells them as two different clouds (Customer Identity Cloud + Workforce Identity Cloud). OlympusOSS Identity Platform provides both in a single, integrated architecture at no additional cost.
 
-**Complete UI ownership.** Managed providers give you theming controls. OlympusOSS Identity Platform gives you the full source code for the admin panel (Athena), consent UI (Medusa), and authentication UI (Hera). Every pixel, every flow, every interaction is yours to modify.
+**Complete UI ownership.** Managed providers give you theming controls. OlympusOSS Identity Platform gives you the full source code for the admin panel (Athena) and authentication + consent UI (Hera). Every pixel, every flow, every interaction is yours to modify.
 
 **No vendor lock-in.** Built on open-source Ory (Apache 2.0). No proprietary APIs, no contracts, no renewal negotiations. If you decide to change approaches, your data is already in PostgreSQL — there's nothing to export or migrate.
 
@@ -333,15 +322,13 @@ An honest, transparent comparison against the major identity platforms. Where co
 | Port | Service               | Domain   | Purpose                                      |
 |------|-----------------------|----------|----------------------------------------------|
 | 2000 | Demo App              | —        | OAuth2 test client for both domains          |
-| 3001 | CIAM Hera             | Customer | Authentication UI for customers              |
-| 3002 | CIAM Medusa           | Customer | OAuth2 consent for customer-facing apps      |
+| 3001 | CIAM Hera             | Customer | Authentication + consent UI for customers    |
 | 3003 | CIAM Athena           | Customer | Admin panel for customer identity management |
 | 3100 | CIAM Kratos (public)  | Customer | Customer identity API                        |
 | 3101 | CIAM Kratos (admin)   | Customer | Customer identity admin API                  |
 | 3102 | CIAM Hydra (public)   | Customer | Customer OAuth2/OIDC endpoints               |
 | 3103 | CIAM Hydra (admin)    | Customer | Customer OAuth2 admin API                    |
-| 4001 | IAM Hera              | Employee | Authentication UI for employees              |
-| 4002 | IAM Medusa            | Employee | OAuth2 consent for internal services         |
+| 4001 | IAM Hera              | Employee | Authentication + consent UI for employees    |
 | 4003 | IAM Athena            | Employee | Employee identity management                 |
 | 4100 | IAM Kratos (public)   | Employee | Employee identity API                        |
 | 4101 | IAM Kratos (admin)    | Employee | Employee identity admin API                  |
@@ -357,8 +344,7 @@ An honest, transparent comparison against the major identity platforms. Where co
 | Identity Management | [Ory Kratos](https://www.ory.sh/kratos/)               |
 | OAuth2 / OIDC       | [Ory Hydra](https://www.ory.sh/hydra/)                 |
 | Admin Interface     | [Athena](./Athena) — Next.js, TypeScript, Material UI  |
-| Consent UI          | [Medusa](./Medusa) — Next.js, TypeScript               |
-| Authentication UI   | [Hera](./Hera) — Next.js, TypeScript                   |
+| Auth + Consent UI   | [Hera](./Hera) — Next.js, TypeScript                   |
 | Demo App            | [Demo](./Demo) — Next.js, TypeScript                   |
 | Runtime             | [Bun](https://bun.sh/)                                 |
 | Database            | PostgreSQL                                             |

@@ -33,6 +33,10 @@ services:
       - PGADMIN_DEFAULT_EMAIL=admin@athena.dev
       - PGADMIN_DEFAULT_PASSWORD=admin123!
       - PGADMIN_CONFIG_SERVER_MODE=True
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGPASSFILE=/pgpass
+    extra_hosts:
+      - "localhost:host-gateway"
     volumes:
       - type: bind
         source: ./pgadmin-servers.json
@@ -40,27 +44,21 @@ services:
       - type: bind
         source: ./pgadmin/config_local.py
         target: /pgadmin4/config_local.py
+      - type: bind
+        source: ./pgadmin/pgpass
+        target: /pgpass
+    entrypoint: >
+      /bin/sh -c "
+      cp /pgpass /tmp/pgpass &&
+      chmod 0600 /tmp/pgpass &&
+      export PGPASSFILE=/tmp/pgpass &&
+      exec /entrypoint.sh
+      "
     networks:
       - intranet
     restart: unless-stopped
     depends_on:
       - postgres
-      - pgadmin-init
-
-  pgadmin-init:
-    image: curlimages/curl:latest
-    depends_on:
-      - iam-hydra
-    volumes:
-      - type: bind
-        source: ./pgadmin/init-pgadmin-client.sh
-        target: /init-pgadmin-client.sh
-    environment:
-      - HYDRA_ADMIN_URL=http://iam-hydra:7003
-    networks:
-      - intranet
-    command: sh /init-pgadmin-client.sh
-    restart: 'no'
 
   # ============================================================
   # Mail Service for Testing
@@ -251,52 +249,6 @@ services:
       - intranet
 
   # ============================================================
-  # IAM Medusa (OAuth2 consent/logout for iam-hydra)
-  # ============================================================
-
-  iam-medusa:
-    build:
-      context: ../Medusa
-      dockerfile: Dockerfile.dev
-    ports:
-      - '4002:4002'
-    environment:
-      - PORT=4002
-      - HYDRA_ADMIN_URL=http://iam-hydra:7003
-    volumes:
-      - ../Medusa:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - intranet
-    restart: unless-stopped
-    depends_on:
-      - iam-hydra
-
-  # ============================================================
-  # CIAM Medusa (OAuth2 consent/logout for ciam-hydra)
-  # ============================================================
-
-  ciam-medusa:
-    build:
-      context: ../Medusa
-      dockerfile: Dockerfile.dev
-    ports:
-      - '3002:3002'
-    environment:
-      - PORT=3002
-      - HYDRA_ADMIN_URL=http://ciam-hydra:5003
-    volumes:
-      - ../Medusa:/app
-      - /app/node_modules
-      - /app/.next
-    networks:
-      - intranet
-    restart: unless-stopped
-    depends_on:
-      - ciam-hydra
-
-  # ============================================================
   # IAM Hera (Authentication UI for iam-kratos + iam-hydra)
   # ============================================================
 
@@ -364,10 +316,14 @@ services:
       - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:3100
       - HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
-      # IAM Kratos (admin authentication)
-      - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
+      # IAM Kratos (for identity lookups during OAuth2 callback)
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
-      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
+      # OAuth2 authentication via IAM Hydra
+      - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=http://localhost:4102
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - OAUTH_CLIENT_ID=athena-ciam-client
+      - OAUTH_CLIENT_SECRET=athena-ciam-secret
+      - NEXT_PUBLIC_APP_URL=http://localhost:3003
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
     volumes:
       - ../Athena:/app
@@ -378,6 +334,7 @@ services:
     depends_on:
       - ciam-kratos
       - iam-kratos
+      - iam-hydra
 
   # ============================================================
   # IAM Athena (IAM Admin Panel)
@@ -395,10 +352,15 @@ services:
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - NEXT_PUBLIC_KRATOS_ADMIN_URL=http://localhost:4101
       - NEXT_PUBLIC_KRATOS_PUBLIC_URL=http://localhost:4100
-      # IAM Kratos (admin authentication)
+      # IAM Kratos (for identity management proxy + OAuth2 callback lookups)
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
-      - NEXT_PUBLIC_IAM_KRATOS_PUBLIC_URL=http://localhost:4100
+      # OAuth2 authentication via IAM Hydra
+      - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=http://localhost:4102
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - OAUTH_CLIENT_ID=athena-iam-client
+      - OAUTH_CLIENT_SECRET=athena-iam-secret
+      - NEXT_PUBLIC_APP_URL=http://localhost:4003
       - NEXT_PUBLIC_APP_INSTANCE=IAM
     volumes:
       - ../Athena:/app
@@ -408,6 +370,7 @@ services:
       - intranet
     depends_on:
       - iam-kratos
+      - iam-hydra
 
   # ============================================================
   # Demo App (OAuth2 test client)

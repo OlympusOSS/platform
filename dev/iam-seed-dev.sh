@@ -139,6 +139,59 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
   }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (customer: CUST-002)" || echo "  bobby@nannier.com already exists or failed"
 
 echo ""
+echo "Creating OAuth2 clients for admin panels..."
+
+# Create OAuth2 client for CIAM Athena (admin panel for customer identities)
+curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "athena-ciam-client",
+    "client_name": "Olympus CIAM Admin",
+    "client_secret": "athena-ciam-secret",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "redirect_uris": ["http://localhost:3003/api/auth/callback"],
+    "post_logout_redirect_uris": ["http://localhost:3003"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "skip_consent": true
+  }' > /dev/null 2>&1 && echo "  Created: athena-ciam-client (IAM Hydra)" || echo "  athena-ciam-client already exists or failed"
+
+# Create OAuth2 client for IAM Athena (admin panel for employee identities)
+curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "athena-iam-client",
+    "client_name": "Olympus IAM Admin",
+    "client_secret": "athena-iam-secret",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "redirect_uris": ["http://localhost:4003/api/auth/callback"],
+    "post_logout_redirect_uris": ["http://localhost:4003"],
+    "scope": "openid profile email",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "skip_consent": true
+  }' > /dev/null 2>&1 && echo "  Created: athena-iam-client (IAM Hydra)" || echo "  athena-iam-client already exists or failed"
+
+echo ""
+echo "Creating OAuth2 client for pgAdmin..."
+
+# Create OAuth2 client for pgAdmin (database management UI)
+curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "client_id": "pgadmin",
+    "client_name": "pgAdmin",
+    "client_secret": "pgadmin-secret",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "response_types": ["code"],
+    "redirect_uris": ["http://localhost:4000/oauth2/authorize"],
+    "scope": "openid email profile",
+    "token_endpoint_auth_method": "client_secret_basic",
+    "skip_consent": true
+  }' > /dev/null 2>&1 && echo "  Created: pgadmin (IAM Hydra)" || echo "  pgadmin already exists or failed"
+
+echo ""
 echo "Creating OAuth2 clients for Demo app..."
 
 # Create CIAM OAuth2 client for Demo app
@@ -168,7 +221,8 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "redirect_uris": ["http://localhost:2000/callback/iam"],
     "post_logout_redirect_uris": ["http://localhost:2000"],
     "scope": "openid profile email",
-    "token_endpoint_auth_method": "client_secret_basic"
+    "token_endpoint_auth_method": "client_secret_basic",
+    "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: demo-iam-client (IAM Hydra)" || echo "  demo-iam-client already exists or failed"
 
 echo ""

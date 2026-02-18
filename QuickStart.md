@@ -111,8 +111,7 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Port | Service              | Purpose                        |
 |------|----------------------|--------------------------------|
-| 3001 | CIAM Hera            | Customer authentication UI     |
-| 3002 | CIAM Medusa          | Customer OAuth2 consent UI     |
+| 3001 | CIAM Hera            | Customer login, consent & logout UI |
 | 3003 | CIAM Athena          | Customer admin panel           |
 | 3100 | CIAM Kratos (public) | Customer identity API          |
 | 3101 | CIAM Kratos (admin)  | Customer identity admin API    |
@@ -123,8 +122,7 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Port | Service             | Purpose                        |
 |------|---------------------|--------------------------------|
-| 4001 | IAM Hera            | Employee authentication UI     |
-| 4002 | IAM Medusa          | Employee OAuth2 consent UI     |
+| 4001 | IAM Hera            | Employee login, consent & logout UI |
 | 4003 | IAM Athena          | Employee admin panel           |
 | 4100 | IAM Kratos (public) | Employee identity API          |
 | 4101 | IAM Kratos (admin)  | Employee identity admin API    |

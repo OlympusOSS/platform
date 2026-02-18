@@ -1,13 +1,56 @@
 {
   "Servers": {
     "1": {
-      "Name": "Athena Dev",
+      "Name": "CIAM Kratos",
       "Group": "Servers",
       "Host": "postgres",
       "Port": 5432,
-      "MaintenanceDB": "postgres",
+      "MaintenanceDB": "ciam_kratos",
       "Username": "postgres",
-      "SSLMode": "prefer"
+      "SSLMode": "prefer",
+      "Shared": true,
+      "SharedUsername": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "DBRestriction": "ciam_kratos"
+    },
+    "2": {
+      "Name": "CIAM Hydra",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "ciam_hydra",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "Shared": true,
+      "SharedUsername": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "DBRestriction": "ciam_hydra"
+    },
+    "3": {
+      "Name": "IAM Kratos",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "iam_kratos",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "Shared": true,
+      "SharedUsername": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "DBRestriction": "iam_kratos"
+    },
+    "4": {
+      "Name": "IAM Hydra",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "iam_hydra",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "Shared": true,
+      "SharedUsername": "postgres",
+      "PassFile": "/tmp/pgpass",
+      "DBRestriction": "iam_hydra"
     }
   }
 }
