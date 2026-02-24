@@ -1,12 +1,49 @@
 # QuickStart Guide
 
+## Production Deployment
+
+Deploy the platform to a DigitalOcean Droplet with the **Olympus CLI**.
+
+### Prerequisites
+
+- [Node.js 20+](https://nodejs.org/)
+- [GitHub CLI](https://cli.github.com/) — run `gh auth login` first
+
+Optional (the CLI will tell you if needed):
+- [doctl](https://docs.digitalocean.com/reference/doctl/) — only if creating a new Droplet
+
+### Run the Olympus CLI
+
+```bash
+cd cli && npm install && npm run octl
+```
+
+The CLI walks you through each step interactively. You'll need:
+
+| What | Where to get it |
+|------|-----------------|
+| Your domain name | e.g., `example.com` |
+| A passphrase | Used to derive all secrets deterministically |
+| Resend API key | [resend.com/api-keys](https://resend.com/api-keys) |
+| Hostinger API token | [hpanel.hostinger.com](https://hpanel.hostinger.com) (optional — can set DNS manually) |
+| GitHub PAT | [github.com/settings/tokens](https://github.com/settings/tokens) — scope: `read:packages` |
+| DigitalOcean API token | [cloud.digitalocean.com/account/api](https://cloud.digitalocean.com/account/api/tokens) (only if creating a new Droplet) |
+
+You can select which steps to run — useful for re-running a single step (e.g., updating DNS after a Droplet IP change).
+
+> For manual setup or reference, see [Secrets.md](./Secrets.md).
+
+---
+
+## Local Development
+
 Get the OlympusOSS Identity Platform running locally in under 5 minutes.
 
 > **macOS Instructions** — All commands below are for macOS using Homebrew.
 
 ---
 
-## Prerequisites
+### Prerequisites
 
 ### 1. Install Homebrew
 
@@ -199,3 +236,4 @@ lsof -i :3003
 # Kill the process
 kill -9 <PID>
 ```
+
