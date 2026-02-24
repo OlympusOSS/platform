@@ -244,7 +244,7 @@ services:
   # ============================================================
 
   ciam-hera:
-    image: ghcr.io/bnannier/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
+    image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
     ports:
       - '3001:3001'
     environment:
@@ -274,7 +274,7 @@ services:
   # ============================================================
 
   iam-hera:
-    image: ghcr.io/bnannier/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
+    image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
     ports:
       - '4001:4001'
     environment:
@@ -304,7 +304,7 @@ services:
   # ============================================================
 
   ciam-athena:
-    image: ghcr.io/bnannier/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
+    image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
       - '3003:3000'
     environment:
@@ -344,7 +344,7 @@ services:
   # ============================================================
 
   iam-athena:
-    image: ghcr.io/bnannier/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
+    image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
       - '4003:3000'
     environment:
@@ -382,7 +382,7 @@ services:
   # ============================================================
 
   demo:
-    image: ghcr.io/bnannier/olympusoss/demo:${DEMO_IMAGE_TAG:-latest}
+    image: ghcr.io/olympusoss/demo:${DEMO_IMAGE_TAG:-latest}
     profiles:
       - demo
     ports:

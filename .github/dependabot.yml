@@ -1,0 +1,26 @@
+version: 2
+
+updates:
+  - package-ecosystem: "docker-compose"
+    directory: "/prod"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/dev"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"

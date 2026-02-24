@@ -1,0 +1,54 @@
+# Local development override — clone repos side-by-side and adjust paths
+# Copy this file to docker-compose.override.yml and update paths to your local clones
+#
+# Example directory structure:
+#   ~/projects/hera/
+#   ~/projects/athena/
+#   ~/projects/demo/
+#   ~/projects/platform/dev/  (this file)
+
+services:
+  iam-hera:
+    build:
+      context: ../../hera
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../hera:/app
+      - /app/node_modules
+      - /app/.next
+
+  ciam-hera:
+    build:
+      context: ../../hera
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../hera:/app
+      - /app/node_modules
+      - /app/.next
+
+  ciam-athena:
+    build:
+      context: ../../athena
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../athena:/app
+      - /app/node_modules
+      - /app/.next
+
+  iam-athena:
+    build:
+      context: ../../athena
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../athena:/app
+      - /app/node_modules
+      - /app/.next
+
+  demo:
+    build:
+      context: ../../demo
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ../../demo:/app
+      - /app/node_modules
+      - /app/.next
