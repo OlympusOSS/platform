@@ -5,6 +5,7 @@ serve:
     base_url: http://ciam-kratos:5000/
     cors:
       enabled: true
+      # allowed_origins set via SERVE_PUBLIC_CORS_ALLOWED_ORIGINS env var
       allowed_methods:
         - POST
         - GET
@@ -22,6 +23,9 @@ serve:
     base_url: http://ciam-kratos:5001/
 
 selfservice:
+  # default_browser_return_url set via SELFSERVICE_DEFAULT_BROWSER_RETURN_URL env var
+  # allowed_return_urls set via SELFSERVICE_ALLOWED_RETURN_URLS_0, _1 etc. env vars
+
   methods:
     password:
       enabled: true
@@ -67,6 +71,9 @@ log:
   format: json
   leak_sensitive_values: false
 
+# secrets.cookie set via SECRETS_COOKIE env var
+# secrets.cipher set via SECRETS_CIPHER env var
+
 ciphers:
   algorithm: xchacha20-poly1305
 
@@ -84,3 +91,5 @@ identity:
       url: file:///etc/config/ciam-kratos/company-identity.schema.json
     - id: customer
       url: file:///etc/config/ciam-kratos/customer.schema.json
+
+# courier.smtp.connection_uri set via COURIER_SMTP_CONNECTION_URI env var

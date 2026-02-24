@@ -151,7 +151,7 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:3003/api/auth/callback"],
-    "post_logout_redirect_uris": ["http://localhost:3003"],
+    "post_logout_redirect_uris": ["http://localhost:3003/api/auth/login"],
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
@@ -167,7 +167,7 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:4003/api/auth/callback"],
-    "post_logout_redirect_uris": ["http://localhost:4003"],
+    "post_logout_redirect_uris": ["http://localhost:4003/api/auth/login"],
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true

@@ -1,4 +1,8 @@
 serve:
+  public:
+    port: 5002
+  admin:
+    port: 5003
   cookies:
     same_site_mode: Lax
 
@@ -11,7 +15,7 @@ urls:
 
 secrets:
   system:
-    - youReallyNeedToChangeThis
+    - ciam-hydra-secret-change-me
 
 oidc:
   subject_identifiers:
@@ -19,4 +23,4 @@ oidc:
       - pairwise
       - public
     pairwise:
-      salt: youReallyNeedToChangeThis
+      salt: ciam-hydra-pairwise-salt

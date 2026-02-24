@@ -20,17 +20,24 @@ services:
     networks:
       - intranet
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
   # ============================================================
-  # CIAM Kratos (Identity Admin)
+  # CIAM Kratos (Customer Identity)
   # ============================================================
 
   ciam-kratos-migrate:
     image: oryd/kratos:v25.4.0
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
     volumes:
       - type: bind
         source: ./ciam-kratos
@@ -42,16 +49,23 @@ services:
 
   ciam-kratos:
     depends_on:
-      - ciam-kratos-migrate
+      ciam-kratos-migrate:
+        condition: service_completed_successfully
     image: oryd/kratos:v25.4.0
     ports:
       - '3100:5000' # public
       - '3101:5001' # admin
     restart: unless-stopped
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
       - SERVE_PUBLIC_PORT=5000
       - SERVE_ADMIN_PORT=5001
+      - SECRETS_COOKIE=${CIAM_KRATOS_SECRET_COOKIE}
+      - SECRETS_CIPHER=${CIAM_KRATOS_SECRET_CIPHER}
+      - SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=${CIAM_CORS_ALLOWED_ORIGINS}
+      - SELFSERVICE_DEFAULT_BROWSER_RETURN_URL=${CIAM_HERA_PUBLIC_URL}/
+      - COURIER_SMTP_CONNECTION_URI=${SMTP_CONNECTION_URI}
+      - COURIER_SMTP_FROM_ADDRESS=${SMTP_FROM_EMAIL}
     command: serve -c /etc/config/ciam-kratos/kratos.yml --watch-courier
     volumes:
       - type: bind
@@ -59,17 +73,24 @@ services:
         target: /etc/config/ciam-kratos
     networks:
       - intranet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:5000/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # ============================================================
-  # IAM Kratos (Internal IAM)
+  # IAM Kratos (Internal/Employee Identity)
   # ============================================================
 
   iam-kratos-migrate:
     image: oryd/kratos:v25.4.0
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
     volumes:
       - type: bind
         source: ./iam-kratos
@@ -81,16 +102,23 @@ services:
 
   iam-kratos:
     depends_on:
-      - iam-kratos-migrate
+      iam-kratos-migrate:
+        condition: service_completed_successfully
     image: oryd/kratos:v25.4.0
     ports:
-      - '4100:7000'
-      - '4101:7001'
+      - '4100:7000' # public
+      - '4101:7001' # admin
     restart: unless-stopped
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
       - SERVE_PUBLIC_PORT=7000
       - SERVE_ADMIN_PORT=7001
+      - SECRETS_COOKIE=${IAM_KRATOS_SECRET_COOKIE}
+      - SECRETS_CIPHER=${IAM_KRATOS_SECRET_CIPHER}
+      - SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=${IAM_CORS_ALLOWED_ORIGINS}
+      - SELFSERVICE_DEFAULT_BROWSER_RETURN_URL=${IAM_ATHENA_PUBLIC_URL}/
+      - COURIER_SMTP_CONNECTION_URI=${SMTP_CONNECTION_URI}
+      - COURIER_SMTP_FROM_ADDRESS=${SMTP_FROM_EMAIL}
     command: serve -c /etc/config/iam-kratos/kratos.yml --watch-courier
     volumes:
       - type: bind
@@ -98,17 +126,24 @@ services:
         target: /etc/config/iam-kratos
     networks:
       - intranet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:7000/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # ============================================================
-  # CIAM Hydra OAuth2
+  # CIAM Hydra (Customer OAuth2)
   # ============================================================
 
   ciam-hydra-migrate:
     image: oryd/hydra:v25.4.0
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
     command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -123,21 +158,33 @@ services:
     ports:
       - '3102:5002' # public
       - '3103:5003' # admin
-      - '3104:5004' # token user
     command: serve -c /etc/config/ciam-hydra/hydra.yml all
     volumes:
       - type: bind
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
       - SERVE_PUBLIC_PORT=5002
       - SERVE_ADMIN_PORT=5003
+      - URLS_SELF_ISSUER=${CIAM_HYDRA_PUBLIC_URL}
+      - URLS_CONSENT=${CIAM_HERA_PUBLIC_URL}/consent
+      - URLS_LOGIN=${CIAM_HERA_PUBLIC_URL}/login
+      - URLS_LOGOUT=${CIAM_HERA_PUBLIC_URL}/logout
+      - SECRETS_SYSTEM=${CIAM_HYDRA_SECRET_SYSTEM}
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=${CIAM_HYDRA_PAIRWISE_SALT}
     restart: unless-stopped
     depends_on:
-      - ciam-hydra-migrate
+      ciam-hydra-migrate:
+        condition: service_completed_successfully
     networks:
       - intranet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:5002/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # ============================================================
   # IAM Hydra (Internal OAuth2)
@@ -146,9 +193,10 @@ services:
   iam-hydra-migrate:
     image: oryd/hydra:v25.4.0
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
     command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -161,14 +209,21 @@ services:
   iam-hydra:
     image: oryd/hydra:v25.4.0
     depends_on:
-      - iam-hydra-migrate
+      iam-hydra-migrate:
+        condition: service_completed_successfully
     ports:
-      - '4102:7002'
-      - '4103:7003'
+      - '4102:7002' # public
+      - '4103:7003' # admin
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=disable
+      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
       - SERVE_PUBLIC_PORT=7002
       - SERVE_ADMIN_PORT=7003
+      - URLS_SELF_ISSUER=${IAM_HYDRA_PUBLIC_URL}
+      - URLS_CONSENT=${IAM_HERA_PUBLIC_URL}/consent
+      - URLS_LOGIN=${IAM_HERA_PUBLIC_URL}/login
+      - URLS_LOGOUT=${IAM_HERA_PUBLIC_URL}/logout
+      - SECRETS_SYSTEM=${IAM_HYDRA_SECRET_SYSTEM}
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=${IAM_HYDRA_PAIRWISE_SALT}
     command: serve -c /etc/config/iam-hydra/hydra.yml all
     volumes:
       - type: bind
@@ -177,87 +232,228 @@ services:
     restart: unless-stopped
     networks:
       - intranet
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:7002/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # ============================================================
-  # IAM Hera (Authentication UI for iam-kratos + iam-hydra)
-  # ============================================================
-
-  iam-hera:
-    image: hera:latest
-    ports:
-      - '4001:4001'
-    environment:
-      - PORT=4001
-      - HYDRA_ADMIN_URL=http://iam-hydra:7003
-      - KRATOS_PUBLIC_URL=http://iam-kratos:7000
-    networks:
-      - intranet
-    restart: unless-stopped
-    depends_on:
-      - iam-hydra
-      - iam-kratos
-
-  # ============================================================
-  # CIAM Hera (Authentication UI for ciam-kratos + ciam-hydra)
+  # CIAM Hera (Login/Consent/Logout UI for CIAM)
   # ============================================================
 
   ciam-hera:
-    image: hera:latest
+    image: ghcr.io/bnannier/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
     ports:
       - '3001:3001'
     environment:
       - PORT=3001
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
+      - KRATOS_ADMIN_URL=http://ciam-kratos:5001
+      - DEFAULT_OAUTH2_CLIENT_ID=demo-ciam-client
+      - HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
     networks:
       - intranet
     restart: unless-stopped
     depends_on:
-      - ciam-hydra
-      - ciam-kratos
+      ciam-hydra:
+        condition: service_healthy
+      ciam-kratos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   # ============================================================
-  # CIAM Athena (CIAM Admin Panel)
+  # IAM Hera (Login/Consent/Logout UI for IAM)
+  # ============================================================
+
+  iam-hera:
+    image: ghcr.io/bnannier/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
+    ports:
+      - '4001:4001'
+    environment:
+      - PORT=4001
+      - HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - KRATOS_PUBLIC_URL=http://iam-kratos:7000
+      - KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - DEFAULT_OAUTH2_CLIENT_ID=athena-iam-client
+      - HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      iam-hydra:
+        condition: service_healthy
+      iam-kratos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:4001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ============================================================
+  # CIAM Athena (Admin Panel for Customer Identities)
   # ============================================================
 
   ciam-athena:
-    image: athena:latest
+    image: ghcr.io/bnannier/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
       - '3003:3000'
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - NEXT_PUBLIC_APP_URL=${CIAM_ATHENA_PUBLIC_URL}
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
       - HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
-      # IAM Kratos (admin authentication)
+      # IAM Kratos (admin authentication via OAuth2)
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
     networks:
       - intranet
     depends_on:
-      - ciam-kratos
-      - iam-kratos
+      ciam-kratos:
+        condition: service_healthy
+      iam-kratos:
+        condition: service_healthy
+      iam-hydra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
 
   # ============================================================
-  # IAM Athena (IAM Admin Panel)
+  # IAM Athena (Admin Panel for Employee Identities)
   # ============================================================
 
   iam-athena:
-    image: athena:latest
+    image: ghcr.io/bnannier/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
       - '4003:3000'
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - NEXT_PUBLIC_APP_URL=${IAM_ATHENA_PUBLIC_URL}
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
-      # IAM Kratos (admin authentication)
+      - HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - HYDRA_ADMIN_URL=http://iam-hydra:7003
+      # IAM Kratos (admin authentication via OAuth2)
       - IAM_KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
     networks:
       - intranet
     depends_on:
-      - iam-kratos
+      iam-kratos:
+        condition: service_healthy
+      iam-hydra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  # ============================================================
+  # Demo App (optional — start with: docker compose --profile demo up -d)
+  # ============================================================
+
+  demo:
+    image: ghcr.io/bnannier/olympusoss/demo:${DEMO_IMAGE_TAG:-latest}
+    profiles:
+      - demo
+    ports:
+      - '2000:3000'
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=${DEMO_PUBLIC_URL}
+      - NEXT_PUBLIC_CIAM_HYDRA_URL=${CIAM_HYDRA_PUBLIC_URL}
+      - NEXT_PUBLIC_IAM_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
+      - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - CIAM_CLIENT_ID=${DEMO_CIAM_CLIENT_ID}
+      - CIAM_CLIENT_SECRET=${DEMO_CIAM_CLIENT_SECRET}
+      - IAM_CLIENT_ID=${DEMO_IAM_CLIENT_ID}
+      - IAM_CLIENT_SECRET=${DEMO_IAM_CLIENT_SECRET}
+    networks:
+      - intranet
+    depends_on:
+      ciam-hydra:
+        condition: service_healthy
+      iam-hydra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ============================================================
+  # Seed (one-shot — run with: docker compose --profile seed run --rm seed)
+  # ============================================================
+
+  seed:
+    image: curlimages/curl:latest
+    profiles:
+      - seed
+    volumes:
+      - type: bind
+        source: ./seed-prod.sh
+        target: /seed-prod.sh
+    entrypoint: ["sh", "/seed-prod.sh"]
+    environment:
+      - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      - CIAM_KRATOS_ADMIN_URL=http://ciam-kratos:5001
+      - CIAM_HYDRA_ADMIN_URL=http://ciam-hydra:5003
+      - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CIAM_ATHENA_PUBLIC_URL=${CIAM_ATHENA_PUBLIC_URL}
+      - IAM_ATHENA_PUBLIC_URL=${IAM_ATHENA_PUBLIC_URL}
+      - DEMO_PUBLIC_URL=${DEMO_PUBLIC_URL}
+      - ATHENA_CIAM_OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
+      - ATHENA_CIAM_OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
+      - ATHENA_IAM_OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
+      - ATHENA_IAM_OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
+      - DEMO_CIAM_CLIENT_ID=${DEMO_CIAM_CLIENT_ID}
+      - DEMO_CIAM_CLIENT_SECRET=${DEMO_CIAM_CLIENT_SECRET}
+      - DEMO_IAM_CLIENT_ID=${DEMO_IAM_CLIENT_ID}
+      - DEMO_IAM_CLIENT_SECRET=${DEMO_IAM_CLIENT_SECRET}
+    networks:
+      - intranet
+    depends_on:
+      ciam-kratos:
+        condition: service_healthy
+      iam-kratos:
+        condition: service_healthy
+      ciam-hydra:
+        condition: service_healthy
+      iam-hydra:
+        condition: service_healthy
 
 networks:
   intranet:

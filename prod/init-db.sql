@@ -1,4 +1,7 @@
-CREATE DATABASE IF NOT EXISTS ciam_kratos;
-CREATE DATABASE IF NOT EXISTS ciam_hydra;
-CREATE DATABASE IF NOT EXISTS iam_kratos;
-CREATE DATABASE IF NOT EXISTS iam_hydra;
+-- These databases are created on first PostgreSQL start only
+-- (docker-entrypoint-initdb.d scripts run when the data volume is empty).
+
+CREATE DATABASE ciam_kratos;
+CREATE DATABASE ciam_hydra;
+CREATE DATABASE iam_kratos;
+CREATE DATABASE iam_hydra;

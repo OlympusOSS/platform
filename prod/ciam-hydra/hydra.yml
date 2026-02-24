@@ -2,9 +2,15 @@ serve:
   cookies:
     same_site_mode: Lax
 
-urls:
-  self:
-    issuer: http://localhost:3102
-  consent: http://localhost:3001/consent
-  login: http://localhost:3001/login
-  logout: http://localhost:3001/logout
+# urls.self.issuer, urls.consent, urls.login, urls.logout
+# are set via environment variables in docker-compose.yml:
+#   URLS_SELF_ISSUER, URLS_CONSENT, URLS_LOGIN, URLS_LOGOUT
+
+# secrets.system is set via SECRETS_SYSTEM env var
+# oidc.subject_identifiers.pairwise.salt is set via OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT env var
+
+oidc:
+  subject_identifiers:
+    supported_types:
+      - pairwise
+      - public
