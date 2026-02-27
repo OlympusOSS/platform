@@ -1,43 +1,12 @@
 services:
   # ============================================================
-  # PostgreSQL (shared database)
-  # ============================================================
-
-  postgres:
-    image: postgres:16-alpine
-    ports:
-      - '5432:5432'
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - type: volume
-        source: postgres
-        target: /var/lib/postgresql/data
-      - type: bind
-        source: ./init-db.sql
-        target: /docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - intranet
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      start_period: 10s
-      retries: 5
-
-  # ============================================================
   # CIAM Kratos (Customer Identity)
   # ============================================================
 
   ciam-kratos-migrate:
     image: oryd/kratos:v25.4.0
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_CIAM_KRATOS_DSN}
     volumes:
       - type: bind
         source: ./ciam-kratos
@@ -57,7 +26,7 @@ services:
       - '3101:5001' # admin
     restart: unless-stopped
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_CIAM_KRATOS_DSN}
       - SERVE_PUBLIC_PORT=5000
       - SERVE_ADMIN_PORT=5001
       - SECRETS_COOKIE=${CIAM_KRATOS_SECRET_COOKIE}
@@ -86,11 +55,8 @@ services:
 
   iam-kratos-migrate:
     image: oryd/kratos:v25.4.0
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_IAM_KRATOS_DSN}
     volumes:
       - type: bind
         source: ./iam-kratos
@@ -110,7 +76,7 @@ services:
       - '4101:7001' # admin
     restart: unless-stopped
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_kratos?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_IAM_KRATOS_DSN}
       - SERVE_PUBLIC_PORT=7000
       - SERVE_ADMIN_PORT=7001
       - SECRETS_COOKIE=${IAM_KRATOS_SECRET_COOKIE}
@@ -139,11 +105,8 @@ services:
 
   ciam-hydra-migrate:
     image: oryd/hydra:v25.4.0
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_CIAM_HYDRA_DSN}
     command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -164,7 +127,7 @@ services:
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/ciam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_CIAM_HYDRA_DSN}
       - SERVE_PUBLIC_PORT=5002
       - SERVE_ADMIN_PORT=5003
       - URLS_SELF_ISSUER=${CIAM_HYDRA_PUBLIC_URL}
@@ -192,11 +155,8 @@ services:
 
   iam-hydra-migrate:
     image: oryd/hydra:v25.4.0
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_IAM_HYDRA_DSN}
     command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -215,7 +175,7 @@ services:
       - '4102:7002' # public
       - '4103:7003' # admin
     environment:
-      - DSN=postgres://postgres:${POSTGRES_PASSWORD}@postgres:5432/iam_hydra?sslmode=${POSTGRES_SSLMODE:-disable}
+      - DSN=${NEON_IAM_HYDRA_DSN}
       - SERVE_PUBLIC_PORT=7002
       - SERVE_ADMIN_PORT=7003
       - URLS_SELF_ISSUER=${IAM_HYDRA_PUBLIC_URL}
@@ -457,6 +417,3 @@ services:
 
 networks:
   intranet:
-
-volumes:
-  postgres:
