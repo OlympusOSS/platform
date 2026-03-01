@@ -114,8 +114,29 @@ create_oauth2_client() {
 echo ""
 echo "=== IAM Identity (Initial Admin) ==="
 
-if identity_exists "${IAM_KRATOS_ADMIN_URL}" "${ADMIN_EMAIL}"; then
-  echo "  Exists: ${ADMIN_EMAIL} — skipping"
+EXISTING_ID=$(curl -sf "${IAM_KRATOS_ADMIN_URL}/admin/identities?credentials_identifier=${ADMIN_EMAIL}" 2>/dev/null \
+  | sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
+
+if [ -n "${EXISTING_ID}" ]; then
+  echo "  Exists: ${ADMIN_EMAIL} (${EXISTING_ID}) — updating password"
+  curl -sf -X PUT "${IAM_KRATOS_ADMIN_URL}/admin/identities/${EXISTING_ID}" \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"schema_id\": \"admin\",
+      \"traits\": {
+        \"email\": \"${ADMIN_EMAIL}\",
+        \"name\": { \"first\": \"Admin\", \"last\": \"User\" },
+        \"role\": \"admin\"
+      },
+      \"credentials\": {
+        \"password\": {
+          \"config\": {
+            \"password\": \"${ADMIN_PASSWORD}\"
+          }
+        }
+      },
+      \"state\": \"active\"
+    }" > /dev/null 2>&1 && echo "  Updated: ${ADMIN_EMAIL}" || echo "  WARN: failed to update password for ${ADMIN_EMAIL}"
 else
   curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
     -H "Content-Type: application/json" \
