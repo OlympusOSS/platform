@@ -7,7 +7,7 @@ OAUTH2_AUTO_CREATE_USER = True
 OAUTH2_CONFIG = [
     {
         'OAUTH2_NAME': 'olympus',
-        'OAUTH2_DISPLAY_NAME': 'Login with Olympus',
+        'OAUTH2_DISPLAY_NAME': 'Olympus',
         'OAUTH2_CLIENT_ID': os.environ.get('PGADMIN_OAUTH_CLIENT_ID', 'pgadmin'),
         'OAUTH2_CLIENT_SECRET': os.environ.get('PGADMIN_OAUTH_CLIENT_SECRET', ''),
         'OAUTH2_TOKEN_URL': 'http://iam-hydra:7002/oauth2/token',
