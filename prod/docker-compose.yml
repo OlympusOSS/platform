@@ -236,6 +236,7 @@ services:
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - DEFAULT_OAUTH2_CLIENT_ID=site-ciam-client
       - HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
+      - DEMO_ACCOUNTS=${DEMO_ACCOUNTS_CIAM:-}
     networks:
       - intranet
     restart: unless-stopped
@@ -266,6 +267,7 @@ services:
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - DEFAULT_OAUTH2_CLIENT_ID=athena-iam-client
       - HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - DEMO_ACCOUNTS=${DEMO_ACCOUNTS_IAM:-}
     networks:
       - intranet
     restart: unless-stopped

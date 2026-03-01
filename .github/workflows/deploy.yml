@@ -127,6 +127,10 @@ jobs:
           # Admin identity (used by seed)
           ADMIN_EMAIL=${{ vars.ADMIN_EMAIL || 'admin@example.com' }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+
+          # Demo mode (optional — set by octl when demo=yes)
+          DEMO_ACCOUNTS_IAM=${{ vars.DEMO_ACCOUNTS_IAM }}
+          DEMO_ACCOUNTS_CIAM=${{ vars.DEMO_ACCOUNTS_CIAM }}
           ENVEOF"
 
       - name: Login to GHCR on Droplet

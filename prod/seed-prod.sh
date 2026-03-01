@@ -135,6 +135,7 @@ if [ -n "${EXISTING_ID}" ]; then
           }
         }
       },
+      \"metadata_admin\": {\"demo\": true},
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Updated: ${ADMIN_EMAIL}" || echo "  WARN: failed to update password for ${ADMIN_EMAIL}"
 else
@@ -154,8 +155,74 @@ else
           }
         }
       },
+      \"metadata_admin\": {\"demo\": true},
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Created: ${ADMIN_EMAIL} (role: admin)" || { echo "  ERROR: failed to create identity ${ADMIN_EMAIL}"; exit 1; }
+fi
+
+# -----------------------------------------------------------------------------
+# Demo identities — viewer (IAM) + customer (CIAM)
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Demo Identities ==="
+
+# Viewer identity (IAM)
+if ! identity_exists "${IAM_KRATOS_ADMIN_URL}" "viewer@athena.dev"; then
+  curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "schema_id": "admin",
+      "traits": {
+        "email": "viewer@athena.dev",
+        "name": { "first": "Demo", "last": "Viewer" },
+        "role": "viewer"
+      },
+      "credentials": {
+        "password": {
+          "config": {
+            "password": "admin123!"
+          }
+        }
+      },
+      "metadata_admin": {"demo": true},
+      "state": "active"
+    }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" \
+    || echo "  viewer@athena.dev already exists or failed"
+else
+  echo "  Exists: viewer@athena.dev — skipping"
+fi
+
+# Wait for CIAM Kratos (needed for CIAM demo identity)
+wait_for_service "CIAM Kratos" "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}"
+
+# CIAM demo customer
+if ! identity_exists "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}" "demo@demo.user"; then
+  curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}/admin/identities" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "schema_id": "customer",
+      "traits": {
+        "email": "demo@demo.user",
+        "customer_id": "DEMO-001",
+        "first_name": "Demo",
+        "last_name": "User",
+        "loyalty_tier": "gold",
+        "account_status": "active"
+      },
+      "credentials": {
+        "password": {
+          "config": {
+            "password": "admin123!"
+          }
+        }
+      },
+      "metadata_admin": {"demo": true},
+      "state": "active"
+    }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" \
+    || echo "  demo@demo.user already exists or failed"
+else
+  echo "  Exists: demo@demo.user — skipping"
 fi
 
 # -----------------------------------------------------------------------------

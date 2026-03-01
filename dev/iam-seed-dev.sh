@@ -66,8 +66,9 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
         }
       }
     },
+    "metadata_admin": {"demo": true},
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: admin@athena.dev (role: admin)" || echo "  admin@athena.dev already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: admin@athena.dev (role: admin, demo)" || echo "  admin@athena.dev already exists or failed"
 
 # Create viewer user: viewer@athena.dev
 curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
@@ -86,8 +87,36 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
         }
       }
     },
+    "metadata_admin": {"demo": true},
     "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer)" || echo "  viewer@athena.dev already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" || echo "  viewer@athena.dev already exists or failed"
+
+echo ""
+echo "=== CIAM Demo Identity ==="
+
+# Create demo customer: demo@demo.user
+curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema_id": "customer",
+    "traits": {
+      "email": "demo@demo.user",
+      "customer_id": "DEMO-001",
+      "first_name": "Demo",
+      "last_name": "User",
+      "loyalty_tier": "gold",
+      "account_status": "active"
+    },
+    "credentials": {
+      "password": {
+        "config": {
+          "password": "admin123!"
+        }
+      }
+    },
+    "metadata_admin": {"demo": true},
+    "state": "active"
+  }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" || echo "  demo@demo.user already exists or failed"
 
 echo ""
 echo "=== CIAM Identities (Customers) ==="
