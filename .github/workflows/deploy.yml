@@ -15,8 +15,6 @@ on:
         required: false
         default: 'all'
         type: string
-  repository_dispatch:
-    types: [image-pushed]
 
 concurrency:
   group: deploy-production
@@ -153,7 +151,7 @@ jobs:
 
       - name: Deploy services
         run: |
-          SERVICES="${{ github.event.inputs.services || github.event.client_payload.services || 'all' }}"
+          SERVICES="${{ github.event.inputs.services || 'all' }}"
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
              if [ '${SERVICES}' = 'all' ]; then \
