@@ -25,7 +25,7 @@ Once you see **"Seed complete!"**, the platform is ready.
 
 | App | URL | Description |
 |-----|-----|-------------|
-| Demo | http://localhost:2000 | OAuth2 test client |
+| Site | http://localhost:2000 | Brochure site & OAuth2 playground |
 | CIAM Athena | http://localhost:3003 | Customer identity admin |
 | IAM Athena | http://localhost:4003 | Employee identity admin |
 | pgAdmin | http://localhost:4000 | Database management |
@@ -59,7 +59,7 @@ Docker Compose with 15 services, all on a single `intranet` network:
 | IAM Hydra | 4102/4103 | Employee OAuth2 server |
 | IAM Hera | 4001 | Employee login/consent UI |
 | IAM Athena | 4003 | Employee admin panel |
-| Demo | 2000 | OAuth2 test client |
+| Site | 2000 | Brochure site & OAuth2 playground |
 | pgAdmin | 4000 | Database UI (OAuth2 SSO via IAM) |
 | Mailslurper | 4436 | Test email service |
 
@@ -68,7 +68,7 @@ Docker Compose with 15 services, all on a single `intranet` network:
 Same services with:
 - Environment variable substitution (`.env` file)
 - Health checks on all services
-- Optional profiles (`demo`, `seed`)
+- Optional profiles (`migration`, `seed`)
 - No hardcoded secrets
 
 ### Ory Configs
@@ -108,7 +108,7 @@ App repos are sibling directories mounted as volumes for hot reload. Copy the ov
 cp docker-compose.override.example.yml docker-compose.override.yml
 ```
 
-This mounts `../../athena/`, `../../hera/`, and `../../demo/` into their containers.
+This mounts `../../athena/`, `../../hera/`, and `../../site/` into their containers.
 
 ---
 

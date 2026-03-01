@@ -106,7 +106,7 @@ Wait until you see **"Seed complete!"**, then press `Ctrl+C`.
 
 | Application     | URL                   | Description                                  |
 |-----------------|-----------------------|----------------------------------------------|
-| **Demo App**    | http://localhost:2000 | OAuth2 test client for both domains          |
+| **Site**        | http://localhost:2000 | Brochure site & OAuth2 playground            |
 | **CIAM Athena** | http://localhost:3003 | Admin panel for customer identity management |
 | **IAM Athena**  | http://localhost:4003 | Admin panel for employee identity management |
 | **PgAdmin**     | http://localhost:4000 | Database management interface                |
@@ -170,7 +170,7 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Port | Service     | Purpose             |
 |------|-------------|---------------------|
-| 2000 | Demo App    | OAuth2 test client  |
+| 2000 | Site        | Brochure site & OAuth2 playground |
 | 4000 | PgAdmin     | Database management |
 | 4436 | Mailslurper | Test email service  |
 | 5432 | PostgreSQL  | Database            |

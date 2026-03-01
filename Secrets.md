@@ -125,8 +125,9 @@ Set these under **Settings → Environments → production → Environment secre
 |--------|-----------------|
 | `ATHENA_CIAM_OAUTH_CLIENT_SECRET` | `openssl rand -hex 32` |
 | `ATHENA_IAM_OAUTH_CLIENT_SECRET` | `openssl rand -hex 32` |
-| `DEMO_CIAM_CLIENT_SECRET` | `openssl rand -hex 32` (optional — demo only) |
-| `DEMO_IAM_CLIENT_SECRET` | `openssl rand -hex 32` (optional — demo only) |
+| `SITE_CIAM_CLIENT_SECRET` | `openssl rand -hex 32` |
+| `SITE_IAM_CLIENT_SECRET` | `openssl rand -hex 32` |
+| `PGADMIN_OAUTH_CLIENT_SECRET` | `openssl rand -hex 32` |
 
 ### Admin
 
@@ -158,7 +159,8 @@ Set these under **Settings → Environments → production → Environment varia
 | `IAM_HYDRA_PUBLIC_URL` | `https://oauth.iam.example.com` |
 | `CIAM_ATHENA_PUBLIC_URL` | `https://admin.ciam.example.com` |
 | `IAM_ATHENA_PUBLIC_URL` | `https://admin.iam.example.com` |
-| `DEMO_PUBLIC_URL` | `https://olympus.example.com` |
+| `SITE_PUBLIC_URL` | `https://olympus.example.com` |
+| `PGADMIN_PUBLIC_URL` | `https://pgadmin.example.com` |
 
 ### Email
 
@@ -172,8 +174,9 @@ Set these under **Settings → Environments → production → Environment varia
 |----------|---------|
 | `ATHENA_CIAM_OAUTH_CLIENT_ID` | `athena-ciam-client` |
 | `ATHENA_IAM_OAUTH_CLIENT_ID` | `athena-iam-client` |
-| `DEMO_CIAM_CLIENT_ID` | `demo-ciam-client` |
-| `DEMO_IAM_CLIENT_ID` | `demo-iam-client` |
+| `SITE_CIAM_CLIENT_ID` | `site-ciam-client` |
+| `SITE_IAM_CLIENT_ID` | `site-iam-client` |
+| `PGADMIN_OAUTH_CLIENT_ID` | `pgadmin` |
 
 ### Admin & Image Tags
 
@@ -182,7 +185,7 @@ Set these under **Settings → Environments → production → Environment varia
 | `ADMIN_EMAIL` | `admin@example.com` |
 | `HERA_IMAGE_TAG` | `latest` |
 | `ATHENA_IMAGE_TAG` | `latest` |
-| `DEMO_IMAGE_TAG` | `latest` |
+| `SITE_IMAGE_TAG` | `latest` |
 
 ---
 

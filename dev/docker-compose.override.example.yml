@@ -4,7 +4,7 @@
 # Example directory structure:
 #   ~/projects/hera/
 #   ~/projects/athena/
-#   ~/projects/demo/
+#   ~/projects/site/
 #   ~/projects/platform/dev/  (this file)
 
 services:
@@ -44,11 +44,11 @@ services:
       - /app/node_modules
       - /app/.next
 
-  demo:
+  site:
     build:
-      context: ../../demo
+      context: ../../site
       dockerfile: Dockerfile.dev
     volumes:
-      - ../../demo:/app
+      - ../../site:/app
       - /app/node_modules
       - /app/.next

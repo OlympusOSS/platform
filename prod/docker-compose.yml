@@ -234,7 +234,7 @@ services:
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
-      - DEFAULT_OAUTH2_CLIENT_ID=demo-ciam-client
+      - DEFAULT_OAUTH2_CLIENT_ID=site-ciam-client
       - HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
     networks:
       - intranet
@@ -422,41 +422,6 @@ services:
         condition: service_healthy
 
   # ============================================================
-  # Demo App (optional — start with: docker compose --profile demo up -d)
-  # ============================================================
-
-  demo:
-    image: ghcr.io/olympusoss/demo:${DEMO_IMAGE_TAG:-latest}
-    profiles:
-      - demo
-    ports:
-      - '2001:3000'
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_APP_URL=${DEMO_PUBLIC_URL:-}
-      - NEXT_PUBLIC_CIAM_HYDRA_URL=${CIAM_HYDRA_PUBLIC_URL}
-      - NEXT_PUBLIC_IAM_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
-      - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
-      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
-      - CIAM_CLIENT_ID=${DEMO_CIAM_CLIENT_ID:-}
-      - CIAM_CLIENT_SECRET=${DEMO_CIAM_CLIENT_SECRET:-}
-      - IAM_CLIENT_ID=${DEMO_IAM_CLIENT_ID:-}
-      - IAM_CLIENT_SECRET=${DEMO_IAM_CLIENT_SECRET:-}
-    networks:
-      - intranet
-    depends_on:
-      ciam-hydra:
-        condition: service_healthy
-      iam-hydra:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      start_period: 20s
-      retries: 3
-
-  # ============================================================
   # Seed (one-shot — run with: docker compose --profile seed run --rm seed)
   # ============================================================
 
@@ -492,12 +457,6 @@ services:
       - PGADMIN_PUBLIC_URL=${PGADMIN_PUBLIC_URL}
       - PGADMIN_OAUTH_CLIENT_ID=${PGADMIN_OAUTH_CLIENT_ID}
       - PGADMIN_OAUTH_CLIENT_SECRET=${PGADMIN_OAUTH_CLIENT_SECRET}
-      # Demo (optional)
-      - DEMO_PUBLIC_URL=${DEMO_PUBLIC_URL:-}
-      - DEMO_CIAM_CLIENT_ID=${DEMO_CIAM_CLIENT_ID:-}
-      - DEMO_CIAM_CLIENT_SECRET=${DEMO_CIAM_CLIENT_SECRET:-}
-      - DEMO_IAM_CLIENT_ID=${DEMO_IAM_CLIENT_ID:-}
-      - DEMO_IAM_CLIENT_SECRET=${DEMO_IAM_CLIENT_SECRET:-}
     networks:
       - intranet
     depends_on:

@@ -92,7 +92,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
 echo ""
 echo "=== CIAM Identities (Customers) ==="
 
-# Create demo customer: bobby.nannier@gmail.com
+# Create test customer: bobby.nannier@gmail.com
 curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
@@ -115,7 +115,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: bobby.nannier@gmail.com (customer: CUST-001)" || echo "  bobby.nannier@gmail.com already exists or failed"
 
-# Create demo customer: bobby@nannier.com
+# Create test customer: bobby@nannier.com
 curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
   -H "Content-Type: application/json" \
   -d '{
@@ -192,30 +192,30 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   }' > /dev/null 2>&1 && echo "  Created: pgadmin (IAM Hydra)" || echo "  pgadmin already exists or failed"
 
 echo ""
-echo "Creating OAuth2 clients for Demo app..."
+echo "Creating OAuth2 clients for Site..."
 
-# Create CIAM OAuth2 client for Demo app
+# Create CIAM OAuth2 client for Site
 curl -sf -X POST "${CIAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{
-    "client_id": "demo-ciam-client",
-    "client_name": "Demo App (CIAM)",
-    "client_secret": "demo-ciam-secret",
+    "client_id": "site-ciam-client",
+    "client_name": "Olympus Site (CIAM)",
+    "client_secret": "site-ciam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:2000/callback/ciam"],
     "post_logout_redirect_uris": ["http://localhost:2000"],
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic"
-  }' > /dev/null 2>&1 && echo "  Created: demo-ciam-client (CIAM Hydra)" || echo "  demo-ciam-client already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: site-ciam-client (CIAM Hydra)" || echo "  site-ciam-client already exists or failed"
 
-# Create IAM OAuth2 client for Demo app
+# Create IAM OAuth2 client for Site
 curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{
-    "client_id": "demo-iam-client",
-    "client_name": "Demo App (IAM)",
-    "client_secret": "demo-iam-secret",
+    "client_id": "site-iam-client",
+    "client_name": "Olympus Site (IAM)",
+    "client_secret": "site-iam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:2000/callback/iam"],
@@ -223,7 +223,7 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
-  }' > /dev/null 2>&1 && echo "  Created: demo-iam-client (IAM Hydra)" || echo "  demo-iam-client already exists or failed"
+  }' > /dev/null 2>&1 && echo "  Created: site-iam-client (IAM Hydra)" || echo "  site-iam-client already exists or failed"
 
 echo ""
 echo "Seed complete!"

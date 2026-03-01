@@ -26,13 +26,6 @@ set -e
 : "${ATHENA_IAM_OAUTH_CLIENT_ID:?Required: ATHENA_IAM_OAUTH_CLIENT_ID}"
 : "${ATHENA_IAM_OAUTH_CLIENT_SECRET:?Required: ATHENA_IAM_OAUTH_CLIENT_SECRET}"
 
-# Optional (only needed if demo profile is used)
-DEMO_PUBLIC_URL="${DEMO_PUBLIC_URL:-}"
-DEMO_CIAM_CLIENT_ID="${DEMO_CIAM_CLIENT_ID:-}"
-DEMO_CIAM_CLIENT_SECRET="${DEMO_CIAM_CLIENT_SECRET:-}"
-DEMO_IAM_CLIENT_ID="${DEMO_IAM_CLIENT_ID:-}"
-DEMO_IAM_CLIENT_SECRET="${DEMO_IAM_CLIENT_SECRET:-}"
-
 # -----------------------------------------------------------------------------
 # Wait for services
 # -----------------------------------------------------------------------------
@@ -215,35 +208,6 @@ if [ -n "${PGADMIN_PUBLIC_URL}" ] && [ -n "${PGADMIN_OAUTH_CLIENT_ID}" ]; then
     "${PGADMIN_OAUTH_CLIENT_SECRET}" \
     "${PGADMIN_PUBLIC_URL}/oauth2/authorize" \
     "${PGADMIN_PUBLIC_URL}" \
-    true
-fi
-
-# -----------------------------------------------------------------------------
-# Demo app OAuth2 clients (optional)
-# -----------------------------------------------------------------------------
-
-if [ -n "${DEMO_PUBLIC_URL}" ] && [ -n "${DEMO_CIAM_CLIENT_ID}" ]; then
-  echo ""
-  echo "=== Demo App OAuth2 Clients ==="
-
-  # Demo CIAM — authenticates via CIAM Hydra
-  create_oauth2_client \
-    "${CIAM_HYDRA_ADMIN_URL}" \
-    "${DEMO_CIAM_CLIENT_ID}" \
-    "Demo App (CIAM)" \
-    "${DEMO_CIAM_CLIENT_SECRET}" \
-    "${DEMO_PUBLIC_URL}/callback/ciam" \
-    "${DEMO_PUBLIC_URL}" \
-    false
-
-  # Demo IAM — authenticates via IAM Hydra
-  create_oauth2_client \
-    "${IAM_HYDRA_ADMIN_URL}" \
-    "${DEMO_IAM_CLIENT_ID}" \
-    "Demo App (IAM)" \
-    "${DEMO_IAM_CLIENT_SECRET}" \
-    "${DEMO_PUBLIC_URL}/callback/iam" \
-    "${DEMO_PUBLIC_URL}" \
     true
 fi
 
