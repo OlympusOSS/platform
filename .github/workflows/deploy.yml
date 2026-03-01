@@ -43,22 +43,6 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -T 10 -p ${{ vars.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Verify SSH key
-        run: |
-          echo "Key file size: $(wc -c < ~/.ssh/deploy_key)"
-          echo "Key file lines: $(wc -l < ~/.ssh/deploy_key)"
-          echo "Key md5: $(md5sum ~/.ssh/deploy_key)"
-          echo "Expected md5: ef02782a3b3503f15cfc01592d49deea"
-          echo "Key hex dump (last 32 bytes):"
-          xxd ~/.ssh/deploy_key | tail -3
-          ssh-keygen -lf ~/.ssh/deploy_key || echo "Invalid key format"
-          echo "--- Derived public key ---"
-          ssh-keygen -y -f ~/.ssh/deploy_key
-          echo "--- Expected public key ---"
-          echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKZQrRwAQTnYARQnMP/6wv+JySoUUSJEDI6ZMfH14a9k olympusoss-deploy"
-          echo "--- SSH test ---"
-          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "echo SSH_OK" 2>&1 || echo "ssh exit: $?"
-
       - name: Ensure deploy directory exists
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
