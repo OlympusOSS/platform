@@ -43,6 +43,16 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -T 10 -p ${{ vars.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
+      - name: Verify SSH key
+        run: |
+          echo "Key file size: $(wc -c < ~/.ssh/deploy_key)"
+          echo "Key file lines: $(wc -l < ~/.ssh/deploy_key)"
+          head -1 ~/.ssh/deploy_key
+          tail -1 ~/.ssh/deploy_key
+          ssh-keygen -lf ~/.ssh/deploy_key || echo "Invalid key format"
+          echo "--- testing SSH ---"
+          ssh -vvv ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "echo SSH_OK" 2>&1 | grep -E "Offering|Accepted|denied|identity|Trying" || true
+
       - name: Ensure deploy directory exists
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
