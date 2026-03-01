@@ -50,8 +50,8 @@ jobs:
           head -1 ~/.ssh/deploy_key
           tail -1 ~/.ssh/deploy_key
           ssh-keygen -lf ~/.ssh/deploy_key || echo "Invalid key format"
-          echo "--- testing SSH ---"
-          ssh -vvv ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "echo SSH_OK" 2>&1 | grep -E "Offering|Accepted|denied|identity|Trying" || true
+          echo "--- full SSH verbose output ---"
+          ssh -vvv ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "echo SSH_OK" 2>&1 || echo "ssh exit: $?"
 
       - name: Ensure deploy directory exists
         run: |
