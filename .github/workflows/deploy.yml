@@ -23,7 +23,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'production' }}
 
     env:
       SSH_OPTS: -i ~/.ssh/deploy_key -p ${{ vars.DEPLOY_SSH_PORT || 22 }} -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 -o ServerAliveInterval=30
