@@ -1,0 +1,39 @@
+{
+	email {$ACME_EMAIL:noreply@example.com}
+}
+
+# Site
+{$SITE_PUBLIC_URL} {
+	reverse_proxy site:3000
+}
+
+# CIAM — Customer Identity
+{$CIAM_HERA_PUBLIC_URL} {
+	reverse_proxy ciam-hera:3001
+}
+
+{$CIAM_HYDRA_PUBLIC_URL} {
+	reverse_proxy ciam-hydra:5002
+}
+
+{$CIAM_ATHENA_PUBLIC_URL} {
+	reverse_proxy ciam-athena:3000
+}
+
+# IAM — Internal Identity
+{$IAM_HERA_PUBLIC_URL} {
+	reverse_proxy iam-hera:4001
+}
+
+{$IAM_HYDRA_PUBLIC_URL} {
+	reverse_proxy iam-hydra:7002
+}
+
+{$IAM_ATHENA_PUBLIC_URL} {
+	reverse_proxy iam-athena:3000
+}
+
+# pgAdmin
+{$PGADMIN_PUBLIC_URL} {
+	reverse_proxy pgadmin:80
+}

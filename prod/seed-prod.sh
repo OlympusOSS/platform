@@ -172,6 +172,53 @@ create_oauth2_client \
   true
 
 # -----------------------------------------------------------------------------
+# Site OAuth2 clients
+# -----------------------------------------------------------------------------
+
+if [ -n "${SITE_PUBLIC_URL}" ] && [ -n "${SITE_CIAM_CLIENT_ID}" ]; then
+  echo ""
+  echo "=== Site OAuth2 Clients ==="
+
+  # Site CIAM — authenticates via CIAM Hydra
+  create_oauth2_client \
+    "${CIAM_HYDRA_ADMIN_URL}" \
+    "${SITE_CIAM_CLIENT_ID}" \
+    "Olympus Site (CIAM)" \
+    "${SITE_CIAM_CLIENT_SECRET}" \
+    "${SITE_PUBLIC_URL}/callback/ciam" \
+    "${SITE_PUBLIC_URL}" \
+    false
+
+  # Site IAM — authenticates via IAM Hydra
+  create_oauth2_client \
+    "${IAM_HYDRA_ADMIN_URL}" \
+    "${SITE_IAM_CLIENT_ID}" \
+    "Olympus Site (IAM)" \
+    "${SITE_IAM_CLIENT_SECRET}" \
+    "${SITE_PUBLIC_URL}/callback/iam" \
+    "${SITE_PUBLIC_URL}" \
+    true
+fi
+
+# -----------------------------------------------------------------------------
+# pgAdmin OAuth2 client
+# -----------------------------------------------------------------------------
+
+if [ -n "${PGADMIN_PUBLIC_URL}" ] && [ -n "${PGADMIN_OAUTH_CLIENT_ID}" ]; then
+  echo ""
+  echo "=== pgAdmin OAuth2 Client ==="
+
+  create_oauth2_client \
+    "${IAM_HYDRA_ADMIN_URL}" \
+    "${PGADMIN_OAUTH_CLIENT_ID}" \
+    "pgAdmin" \
+    "${PGADMIN_OAUTH_CLIENT_SECRET}" \
+    "${PGADMIN_PUBLIC_URL}/oauth2/authorize" \
+    "${PGADMIN_PUBLIC_URL}" \
+    true
+fi
+
+# -----------------------------------------------------------------------------
 # Demo app OAuth2 clients (optional)
 # -----------------------------------------------------------------------------
 

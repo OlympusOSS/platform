@@ -71,6 +71,7 @@ jobs:
           CIAM_ATHENA_PUBLIC_URL=${{ vars.CIAM_ATHENA_PUBLIC_URL }}
           IAM_ATHENA_PUBLIC_URL=${{ vars.IAM_ATHENA_PUBLIC_URL }}
           SITE_PUBLIC_URL=${{ vars.SITE_PUBLIC_URL }}
+          PGADMIN_PUBLIC_URL=${{ vars.PGADMIN_PUBLIC_URL }}
 
           # Neon PostgreSQL (managed)
           NEON_CIAM_KRATOS_DSN=${{ secrets.NEON_CIAM_KRATOS_DSN }}
@@ -111,11 +112,15 @@ jobs:
           ATHENA_IAM_OAUTH_CLIENT_ID=${{ vars.ATHENA_IAM_OAUTH_CLIENT_ID || 'athena-iam-client' }}
           ATHENA_IAM_OAUTH_CLIENT_SECRET=${{ secrets.ATHENA_IAM_OAUTH_CLIENT_SECRET }}
 
-          # OAuth2 — Site (optional)
+          # OAuth2 — Site
           SITE_CIAM_CLIENT_ID=${{ vars.SITE_CIAM_CLIENT_ID || 'site-ciam-client' }}
           SITE_CIAM_CLIENT_SECRET=${{ secrets.SITE_CIAM_CLIENT_SECRET }}
           SITE_IAM_CLIENT_ID=${{ vars.SITE_IAM_CLIENT_ID || 'site-iam-client' }}
           SITE_IAM_CLIENT_SECRET=${{ secrets.SITE_IAM_CLIENT_SECRET }}
+
+          # OAuth2 — pgAdmin
+          PGADMIN_OAUTH_CLIENT_ID=${{ vars.PGADMIN_OAUTH_CLIENT_ID || 'pgadmin' }}
+          PGADMIN_OAUTH_CLIENT_SECRET=${{ secrets.PGADMIN_OAUTH_CLIENT_SECRET }}
 
           # Image tags
           HERA_IMAGE_TAG=${{ vars.HERA_IMAGE_TAG || 'latest' }}

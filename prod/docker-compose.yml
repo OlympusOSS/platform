@@ -1,5 +1,35 @@
 services:
   # ============================================================
+  # Caddy (Reverse Proxy + Automatic HTTPS)
+  # ============================================================
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - ACME_EMAIL=${SMTP_FROM_EMAIL}
+      - SITE_PUBLIC_URL=${SITE_PUBLIC_URL}
+      - CIAM_HERA_PUBLIC_URL=${CIAM_HERA_PUBLIC_URL}
+      - CIAM_HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
+      - CIAM_ATHENA_PUBLIC_URL=${CIAM_ATHENA_PUBLIC_URL}
+      - IAM_HERA_PUBLIC_URL=${IAM_HERA_PUBLIC_URL}
+      - IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - IAM_ATHENA_PUBLIC_URL=${IAM_ATHENA_PUBLIC_URL}
+      - PGADMIN_PUBLIC_URL=${PGADMIN_PUBLIC_URL}
+    networks:
+      - intranet
+    restart: unless-stopped
+
+  # ============================================================
   # CIAM Kratos (Customer Identity)
   # ============================================================
 
@@ -338,6 +368,68 @@ services:
       retries: 3
 
   # ============================================================
+  # Site (Brochure Site & OAuth2 Playground)
+  # ============================================================
+
+  site:
+    image: ghcr.io/olympusoss/site:${SITE_IMAGE_TAG:-latest}
+    ports:
+      - '2000:3000'
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=${SITE_PUBLIC_URL}
+      - NEXT_PUBLIC_CIAM_HYDRA_URL=${CIAM_HYDRA_PUBLIC_URL}
+      - NEXT_PUBLIC_IAM_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
+      # Server-side token exchange (internal network)
+      - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - CIAM_CLIENT_ID=${SITE_CIAM_CLIENT_ID}
+      - CIAM_CLIENT_SECRET=${SITE_CIAM_CLIENT_SECRET}
+      - IAM_CLIENT_ID=${SITE_IAM_CLIENT_ID}
+      - IAM_CLIENT_SECRET=${SITE_IAM_CLIENT_SECRET}
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      ciam-hydra:
+        condition: service_healthy
+      iam-hydra:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # ============================================================
+  # pgAdmin (Database Administration)
+  # ============================================================
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - '4000:80'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${ADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=unused
+      - PGADMIN_CONFIG_SERVER_MODE=True
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_OAUTH_CLIENT_ID=${PGADMIN_OAUTH_CLIENT_ID}
+      - PGADMIN_OAUTH_CLIENT_SECRET=${PGADMIN_OAUTH_CLIENT_SECRET}
+      - IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+    volumes:
+      - type: bind
+        source: ./pgadmin/config_local.py
+        target: /pgadmin4/config_local.py
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      iam-hydra:
+        condition: service_healthy
+
+  # ============================================================
   # Demo App (optional — start with: docker compose --profile demo up -d)
   # ============================================================
 
@@ -346,7 +438,7 @@ services:
     profiles:
       - demo
     ports:
-      - '2000:3000'
+      - '2001:3000'
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_URL=${DEMO_PUBLIC_URL}
@@ -394,11 +486,22 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - CIAM_ATHENA_PUBLIC_URL=${CIAM_ATHENA_PUBLIC_URL}
       - IAM_ATHENA_PUBLIC_URL=${IAM_ATHENA_PUBLIC_URL}
-      - DEMO_PUBLIC_URL=${DEMO_PUBLIC_URL}
       - ATHENA_CIAM_OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
       - ATHENA_CIAM_OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
       - ATHENA_IAM_OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
       - ATHENA_IAM_OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
+      # Site OAuth2
+      - SITE_PUBLIC_URL=${SITE_PUBLIC_URL}
+      - SITE_CIAM_CLIENT_ID=${SITE_CIAM_CLIENT_ID}
+      - SITE_CIAM_CLIENT_SECRET=${SITE_CIAM_CLIENT_SECRET}
+      - SITE_IAM_CLIENT_ID=${SITE_IAM_CLIENT_ID}
+      - SITE_IAM_CLIENT_SECRET=${SITE_IAM_CLIENT_SECRET}
+      # pgAdmin OAuth2
+      - PGADMIN_PUBLIC_URL=${PGADMIN_PUBLIC_URL}
+      - PGADMIN_OAUTH_CLIENT_ID=${PGADMIN_OAUTH_CLIENT_ID}
+      - PGADMIN_OAUTH_CLIENT_SECRET=${PGADMIN_OAUTH_CLIENT_SECRET}
+      # Demo (optional)
+      - DEMO_PUBLIC_URL=${DEMO_PUBLIC_URL}
       - DEMO_CIAM_CLIENT_ID=${DEMO_CIAM_CLIENT_ID}
       - DEMO_CIAM_CLIENT_SECRET=${DEMO_CIAM_CLIENT_SECRET}
       - DEMO_IAM_CLIENT_ID=${DEMO_IAM_CLIENT_ID}
@@ -417,3 +520,7 @@ services:
 
 networks:
   intranet:
+
+volumes:
+  caddy_data:
+  caddy_config:
