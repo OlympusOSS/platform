@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SSH_OPTS: -i ~/.ssh/deploy_key -p ${{ vars.DEPLOY_SSH_PORT || 22 }} -o StrictHostKeyChecking=accept-new
+  SSH_OPTS: -i ~/.ssh/deploy_key -p ${{ vars.DEPLOY_SSH_PORT || 22 }} -o StrictHostKeyChecking=accept-new -o ConnectTimeout=30 -o ServerAliveInterval=30
   SSH_TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER_IP }}
   DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/olympusoss/prod' }}
 
@@ -42,14 +42,6 @@ jobs:
           echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -T 10 -p ${{ vars.DEPLOY_SSH_PORT || 22 }} ${{ secrets.DEPLOY_SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Debug connectivity
-        run: |
-          echo "Target: ${{ secrets.DEPLOY_SERVER_IP }}"
-          echo "--- nc test ---"
-          nc -zv -w 10 ${{ secrets.DEPLOY_SERVER_IP }} 22 2>&1 || echo "nc failed"
-          echo "--- ssh verbose ---"
-          ssh -vvv ${{ env.SSH_OPTS }} -o ConnectTimeout=30 ${{ env.SSH_TARGET }} "echo SSH_OK" 2>&1 || echo "ssh failed with $?"
 
       - name: Ensure deploy directory exists
         run: |
