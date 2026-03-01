@@ -137,17 +137,19 @@ jobs:
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin"
 
-      - name: Stop and remove postgres container
-        run: |
-          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
-             docker compose stop postgres 2>/dev/null || true && \
-             docker compose rm -f postgres 2>/dev/null || true"
-
       - name: Pull latest images
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && docker compose pull"
+
+      - name: Run database migrations
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "cd ${{ env.DEPLOY_PATH }} && \
+             docker compose --profile migration run --rm ciam-kratos-migrate && \
+             docker compose --profile migration run --rm iam-kratos-migrate && \
+             docker compose --profile migration run --rm ciam-hydra-migrate && \
+             docker compose --profile migration run --rm iam-hydra-migrate"
 
       - name: Deploy services
         run: |
@@ -164,7 +166,7 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
-             docker compose --profile seed run --rm seed"
+             docker compose --profile seed run --rm --no-deps seed"
 
       - name: Wait for services to be healthy
         run: |
