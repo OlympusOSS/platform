@@ -372,6 +372,8 @@ services:
       - NEXT_PUBLIC_APP_URL=${SITE_PUBLIC_URL}
       - NEXT_PUBLIC_CIAM_HYDRA_URL=${CIAM_HYDRA_PUBLIC_URL}
       - NEXT_PUBLIC_IAM_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
+      - NEXT_PUBLIC_CIAM_ATHENA_URL=${CIAM_ATHENA_PUBLIC_URL}
+      - NEXT_PUBLIC_IAM_ATHENA_URL=${IAM_ATHENA_PUBLIC_URL}
       # Server-side token exchange (internal network)
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002

@@ -364,6 +364,8 @@ services:
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
+      - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3003
+      - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4003
     networks:
       - intranet
     restart: unless-stopped

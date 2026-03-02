@@ -66,7 +66,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
         }
       }
     },
-    "metadata_admin": {"demo": true},
+    "metadata_admin": {"demo": true, "password": "admin123!"},
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: admin@athena.dev (role: admin, demo)" || echo "  admin@athena.dev already exists or failed"
 
@@ -87,7 +87,7 @@ curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
         }
       }
     },
-    "metadata_admin": {"demo": true},
+    "metadata_admin": {"demo": true, "password": "admin123!"},
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" || echo "  viewer@athena.dev already exists or failed"
 
@@ -114,7 +114,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
         }
       }
     },
-    "metadata_admin": {"demo": true},
+    "metadata_admin": {"demo": true, "password": "admin123!"},
     "state": "active"
   }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" || echo "  demo@demo.user already exists or failed"
 

@@ -135,7 +135,7 @@ if [ -n "${EXISTING_ID}" ]; then
           }
         }
       },
-      \"metadata_admin\": {\"demo\": true},
+      \"metadata_admin\": {\"demo\": true, \"password\": \"${ADMIN_PASSWORD}\"},
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Updated: ${ADMIN_EMAIL}" || echo "  WARN: failed to update password for ${ADMIN_EMAIL}"
 else
@@ -155,7 +155,7 @@ else
           }
         }
       },
-      \"metadata_admin\": {\"demo\": true},
+      \"metadata_admin\": {\"demo\": true, \"password\": \"${ADMIN_PASSWORD}\"},
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Created: ${ADMIN_EMAIL} (role: admin)" || { echo "  ERROR: failed to create identity ${ADMIN_EMAIL}"; exit 1; }
 fi
@@ -185,7 +185,7 @@ if ! identity_exists "${IAM_KRATOS_ADMIN_URL}" "viewer@athena.dev"; then
           }
         }
       },
-      "metadata_admin": {"demo": true},
+      "metadata_admin": {"demo": true, "password": "admin123!"},
       "state": "active"
     }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" \
     || echo "  viewer@athena.dev already exists or failed"
@@ -217,7 +217,7 @@ if ! identity_exists "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}" "demo@d
           }
         }
       },
-      "metadata_admin": {"demo": true},
+      "metadata_admin": {"demo": true, "password": "admin123!"},
       "state": "active"
     }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" \
     || echo "  demo@demo.user already exists or failed"
