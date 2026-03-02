@@ -1,0 +1,68 @@
+# Local development override — mount local source for live reload
+# Canvas is mounted at /canvas for @source directive resolution
+
+services:
+  iam-hera:
+    build:
+      context: ../../hera
+      dockerfile: Dockerfile.dev
+      secrets:
+        - npmrc
+    volumes:
+      - ../../hera:/app
+      - /app/node_modules
+      - /app/.next
+
+  ciam-hera:
+    build:
+      context: ../../hera
+      dockerfile: Dockerfile.dev
+      secrets:
+        - npmrc
+    volumes:
+      - ../../hera:/app
+      - /app/node_modules
+      - /app/.next
+
+  ciam-athena:
+    build:
+      context: ../../athena
+      dockerfile: Dockerfile.dev
+      secrets:
+        - npmrc
+    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && bun run dev"]
+    volumes:
+      - ../../athena:/app
+      - ../../canvas:/canvas
+      - /app/node_modules
+      - /app/.next
+
+  iam-athena:
+    build:
+      context: ../../athena
+      dockerfile: Dockerfile.dev
+      secrets:
+        - npmrc
+    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && bun run dev"]
+    volumes:
+      - ../../athena:/app
+      - ../../canvas:/canvas
+      - /app/node_modules
+      - /app/.next
+
+  site:
+    build:
+      context: ../../site
+      dockerfile: Dockerfile.dev
+      secrets:
+        - npmrc
+    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && bun run dev"]
+    volumes:
+      - ../../site:/app
+      - ../../canvas:/canvas
+      - /app/node_modules
+      - /app/.next
+
+secrets:
+  npmrc:
+    file: .npmrc
