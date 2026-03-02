@@ -127,9 +127,6 @@ jobs:
           ADMIN_EMAIL=${{ vars.ADMIN_EMAIL || 'admin@example.com' }}
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
 
-          # Demo mode (optional — set by octl when demo=yes)
-          DEMO_ACCOUNTS_IAM=${{ vars.DEMO_ACCOUNTS_IAM }}
-          DEMO_ACCOUNTS_CIAM=${{ vars.DEMO_ACCOUNTS_CIAM }}
           ENVEOF
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "cat > ${{ env.DEPLOY_PATH }}/.env" < /tmp/.env.deploy
           rm -f /tmp/.env.deploy

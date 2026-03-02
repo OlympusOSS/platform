@@ -262,7 +262,6 @@ services:
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - DEFAULT_OAUTH2_CLIENT_ID=athena-iam-client
       - HYDRA_PUBLIC_URL=http://localhost:4102
-      - 'DEMO_ACCOUNTS=[{"email":"admin@athena.dev","name":"Bobby Nannier","role":"Admin"},{"email":"viewer@athena.dev","name":"Marine Nannier","role":"Viewer"}]'
     networks:
       - intranet
     restart: unless-stopped
@@ -285,7 +284,6 @@ services:
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - DEFAULT_OAUTH2_CLIENT_ID=site-ciam-client
       - HYDRA_PUBLIC_URL=http://localhost:3102
-      - 'DEMO_ACCOUNTS=[{"email":"demo@demo.user","name":"Demo User","role":"Customer"}]'
     networks:
       - intranet
     restart: unless-stopped
