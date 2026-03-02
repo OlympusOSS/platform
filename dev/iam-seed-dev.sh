@@ -101,7 +101,7 @@ curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
     "schema_id": "customer",
     "traits": {
       "email": "demo@demo.user",
-      "customer_id": "DEMO-001",
+      "customer_id": "CUST-999",
       "first_name": "Demo",
       "last_name": "User",
       "loyalty_tier": "gold",

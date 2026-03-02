@@ -362,6 +362,10 @@ services:
     image: dev-site
     ports:
       - '2000:3000'
+    environment:
+      - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
+      - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - NEXT_PUBLIC_APP_URL=http://localhost:2000
     networks:
       - intranet
     restart: unless-stopped
