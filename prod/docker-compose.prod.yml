@@ -236,6 +236,12 @@ services:
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - DEFAULT_OAUTH2_CLIENT_ID=site-ciam-client
       - HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
+      - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
+      - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
+      - CAPTCHA_SECRET_KEY=${CIAM_CAPTCHA_SECRET_KEY:-}
+      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - SETTINGS_TABLE=ciam_settings
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     networks:
       - intranet
     restart: unless-stopped
@@ -266,6 +272,12 @@ services:
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - DEFAULT_OAUTH2_CLIENT_ID=athena-iam-client
       - HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
+      - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
+      - CAPTCHA_SECRET_KEY=${IAM_CAPTCHA_SECRET_KEY:-}
+      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - SETTINGS_TABLE=iam_settings
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     networks:
       - intranet
     restart: unless-stopped
@@ -305,6 +317,16 @@ services:
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
       - OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
+      - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
+      - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
+      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - SETTINGS_TABLE=ciam_settings
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # Cross-service health checks
+      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
+      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
+      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
+      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
     networks:
       - intranet
     depends_on:
@@ -345,6 +367,16 @@ services:
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
       - OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
+      - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
+      - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
+      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - SETTINGS_TABLE=iam_settings
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # Cross-service health checks
+      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
+      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
+      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
+      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
     networks:
       - intranet
     depends_on:
