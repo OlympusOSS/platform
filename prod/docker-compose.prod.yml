@@ -322,11 +322,9 @@ services:
       - DATABASE_URL=${NEON_OLYMPUS_DSN}
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      # Cross-service health checks
-      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
-      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
-      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
+      # Stack health checks (own domain only)
+      - ATHENA_INTERNAL_URL=http://ciam-athena:3000
+      - HERA_INTERNAL_URL=http://ciam-hera:3001
     networks:
       - intranet
     depends_on:
@@ -372,11 +370,9 @@ services:
       - DATABASE_URL=${NEON_OLYMPUS_DSN}
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
-      # Cross-service health checks
-      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
-      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
-      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
+      # Stack health checks (own domain only)
+      - ATHENA_INTERNAL_URL=http://iam-athena:3000
+      - HERA_INTERNAL_URL=http://iam-hera:4001
     networks:
       - intranet
     depends_on:

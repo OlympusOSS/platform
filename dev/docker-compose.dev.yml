@@ -341,11 +341,9 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
-      # Cross-service health checks
-      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
-      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
-      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
+      # Stack health checks (own domain only)
+      - ATHENA_INTERNAL_URL=http://ciam-athena:3000
+      - HERA_INTERNAL_URL=http://ciam-hera:3001
     command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../athena:/app
@@ -395,11 +393,9 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
-      # Cross-service health checks
-      - CIAM_HERA_INTERNAL_URL=http://ciam-hera:3001
-      - IAM_HERA_INTERNAL_URL=http://iam-hera:4001
-      - CIAM_ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - IAM_ATHENA_INTERNAL_URL=http://iam-athena:3000
+      # Stack health checks (own domain only)
+      - ATHENA_INTERNAL_URL=http://iam-athena:3000
+      - HERA_INTERNAL_URL=http://iam-hera:4001
     command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../athena:/app
