@@ -335,6 +335,7 @@ services:
       - OAUTH_CLIENT_SECRET=athena-ciam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:3003
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - APP_INSTANCE=CIAM
       - DEFAULT_CLIENT_ID=site-ciam-client
       - CAPTCHA_ENABLED=false
       - CAPTCHA_SITE_KEY=
@@ -387,6 +388,7 @@ services:
       - OAUTH_CLIENT_SECRET=athena-iam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:4003
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - APP_INSTANCE=IAM
       - DEFAULT_CLIENT_ID=athena-iam-client
       - CAPTCHA_ENABLED=false
       - CAPTCHA_SITE_KEY=

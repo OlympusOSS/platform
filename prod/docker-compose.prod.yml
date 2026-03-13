@@ -304,6 +304,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - APP_INSTANCE=CIAM
       - NEXT_PUBLIC_APP_URL=${CIAM_ATHENA_PUBLIC_URL}
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
@@ -352,6 +353,7 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - APP_INSTANCE=IAM
       - NEXT_PUBLIC_APP_URL=${IAM_ATHENA_PUBLIC_URL}
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
