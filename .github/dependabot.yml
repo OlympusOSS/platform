@@ -7,7 +7,7 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "docker"
+      - "containers"
 
   - package-ecosystem: "docker-compose"
     directory: "/dev"
@@ -15,7 +15,7 @@ updates:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "docker"
+      - "containers"
 
   - package-ecosystem: "github-actions"
     directory: "/"

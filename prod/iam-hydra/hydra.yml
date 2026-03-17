@@ -3,7 +3,7 @@ serve:
     same_site_mode: Lax
 
 # urls.self.issuer, urls.consent, urls.login, urls.logout
-# are set via environment variables in docker-compose.yml:
+# are set via environment variables in compose.prod.yml:
 #   URLS_SELF_ISSUER, URLS_CONSENT, URLS_LOGIN, URLS_LOGOUT
 
 # secrets.system is set via SECRETS_SYSTEM env var

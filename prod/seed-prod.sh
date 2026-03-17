@@ -5,7 +5,7 @@ set -e
 # OlympusOSS Production Seed Script
 # =============================================================================
 # Creates the initial admin identity and OAuth2 clients.
-# Run via: docker compose --profile seed run --rm seed
+# Run via: podman compose --profile seed run --rm seed
 #
 # All credentials are read from environment variables (no hardcoded secrets).
 #
@@ -108,6 +108,13 @@ create_oauth2_client() {
 }
 
 # -----------------------------------------------------------------------------
+# Default dashboard layout — seeded into metadata_public for all IAM identities
+# so Athena loads with a pre-configured dashboard on first login.
+# -----------------------------------------------------------------------------
+
+DEFAULT_LAYOUT='{"widgets":[{"h":3,"i":"stat-total-users","w":2,"x":0,"y":0},{"h":3,"i":"stat-active-sessions","w":2,"x":2,"y":0},{"h":3,"i":"stat-avg-session","w":2,"x":4,"y":0},{"h":3,"i":"stat-user-growth","w":2,"x":6,"y":0},{"h":3,"i":"chart-security-insights","w":4,"x":8,"y":0,"minH":3,"minW":2},{"h":4,"i":"chart-combined-activity","w":12,"x":0,"y":3,"minH":2,"minW":4},{"h":4,"i":"chart-users-by-schema","w":3,"x":0,"y":13,"minH":3,"minW":2},{"h":4,"i":"chart-verification-gauge","w":3,"x":9,"y":7,"minH":3,"minW":2},{"h":6,"i":"chart-peak-hours","w":6,"x":6,"y":11,"minH":3,"minW":3},{"h":6,"i":"chart-session-locations","w":6,"x":0,"y":7,"minH":4,"minW":4},{"h":4,"i":"chart-activity-feed","w":3,"x":6,"y":7,"minH":3,"minW":2},{"h":4,"i":"chart-oauth2-grant-types","w":3,"x":3,"y":13,"minH":3,"minW":2}],"hiddenWidgets":[]}'
+
+# -----------------------------------------------------------------------------
 # Create initial admin identity in IAM Kratos
 # -----------------------------------------------------------------------------
 
@@ -135,7 +142,9 @@ if [ -n "${EXISTING_ID}" ]; then
           }
         }
       },
-      \"metadata_admin\": {\"demo\": true, \"password\": \"${ADMIN_PASSWORD}\"},
+      \"metadata_public\": {
+        \"dashboardLayout\": ${DEFAULT_LAYOUT}
+      },
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Updated: ${ADMIN_EMAIL}" || echo "  WARN: failed to update password for ${ADMIN_EMAIL}"
 else
@@ -155,74 +164,11 @@ else
           }
         }
       },
-      \"metadata_admin\": {\"demo\": true, \"password\": \"${ADMIN_PASSWORD}\"},
+      \"metadata_public\": {
+        \"dashboardLayout\": ${DEFAULT_LAYOUT}
+      },
       \"state\": \"active\"
     }" > /dev/null 2>&1 && echo "  Created: ${ADMIN_EMAIL} (role: admin)" || { echo "  ERROR: failed to create identity ${ADMIN_EMAIL}"; exit 1; }
-fi
-
-# -----------------------------------------------------------------------------
-# Demo identities — viewer (IAM) + customer (CIAM)
-# -----------------------------------------------------------------------------
-
-echo ""
-echo "=== Demo Identities ==="
-
-# Viewer identity (IAM)
-if ! identity_exists "${IAM_KRATOS_ADMIN_URL}" "viewer@athena.dev"; then
-  curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "schema_id": "admin",
-      "traits": {
-        "email": "viewer@athena.dev",
-        "name": { "first": "Demo", "last": "Viewer" },
-        "role": "viewer"
-      },
-      "credentials": {
-        "password": {
-          "config": {
-            "password": "admin123!"
-          }
-        }
-      },
-      "metadata_admin": {"demo": true, "password": "admin123!"},
-      "state": "active"
-    }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" \
-    || echo "  viewer@athena.dev already exists or failed"
-else
-  echo "  Exists: viewer@athena.dev — skipping"
-fi
-
-# Wait for CIAM Kratos (needed for CIAM demo identity)
-wait_for_service "CIAM Kratos" "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}"
-
-# CIAM demo customer
-if ! identity_exists "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}" "demo@demo.user"; then
-  curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL:-http://ciam-kratos:5001}/admin/identities" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "schema_id": "customer",
-      "traits": {
-        "email": "demo@demo.user",
-        "customer_id": "DEMO-001",
-        "first_name": "Demo",
-        "last_name": "User",
-        "loyalty_tier": "gold",
-        "account_status": "active"
-      },
-      "credentials": {
-        "password": {
-          "config": {
-            "password": "admin123!"
-          }
-        }
-      },
-      "metadata_admin": {"demo": true, "password": "admin123!"},
-      "state": "active"
-    }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" \
-    || echo "  demo@demo.user already exists or failed"
-else
-  echo "  Exists: demo@demo.user — skipping"
 fi
 
 # -----------------------------------------------------------------------------

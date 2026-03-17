@@ -3,6 +3,7 @@ version: v0.13.0
 serve:
   public:
     port: 7000
+    host: 0.0.0.0
     cors:
       enabled: true
       # allowed_origins set via SERVE_PUBLIC_CORS_ALLOWED_ORIGINS env var
@@ -22,6 +23,7 @@ serve:
       allow_credentials: true
   admin:
     port: 7001
+    host: 0.0.0.0
 
 selfservice:
   # default_browser_return_url set via SELFSERVICE_DEFAULT_BROWSER_RETURN_URL env var
@@ -30,6 +32,11 @@ selfservice:
   methods:
     password:
       enabled: true
+      config:
+        min_password_length: 12
+        haveibeenpwned_enabled: true
+        max_breaches: 0
+        identifier_similarity_check_enabled: true
 
   flows:
     login:

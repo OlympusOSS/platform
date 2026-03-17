@@ -15,7 +15,8 @@ Optional (the CLI will tell you if needed):
 ### Run the Olympus CLI
 
 ```bash
-cd cli && npm install && npm run octl
+cd octl && bun install && bun link
+octl
 ```
 
 The CLI walks you through each step interactively. You'll need:
@@ -57,21 +58,13 @@ Get the OlympusOSS Identity Platform running locally in under 5 minutes.
 brew install git
 ```
 
-### 3. Install Docker Desktop
-
-```bash
-brew install --cask docker
-```
-
-After installation, open **Docker Desktop** from Applications and ensure it is running. Allocate at least **4 GB of RAM** in Docker Desktop settings (Settings > Resources) — the platform runs 15 containers simultaneously.
-
-### 4. Install Bun (optional)
-
-Only needed if you plan to develop outside of Docker.
+### 3. Install Bun
 
 ```bash
 brew install oven-sh/bun/bun
 ```
+
+> **Note:** Podman, podman-compose, and kubectl are auto-installed by `octl dev` via Homebrew. No manual installation needed.
 
 ---
 
@@ -84,21 +77,19 @@ git clone git@github.com:bnannier/OlympusOSS.git
 cd OlympusOSS
 ```
 
-### 2. Start the platform
+### 2. Install the CLI
 
 ```bash
-cd dev && docker compose up -d
+cd octl && bun install && bun link
 ```
 
-This pulls all images, builds the application containers, runs database migrations, starts all services, and seeds test data. The first run takes a few minutes.
-
-### 3. Wait for the seed to complete
+### 3. Start the platform
 
 ```bash
-docker compose logs -f athena-seed-dev
+octl dev
 ```
 
-Wait until you see **"Seed complete!"**, then press `Ctrl+C`.
+The CLI installs Podman and podman-compose (if needed), initializes the Podman machine, builds images, starts all services in the correct order, runs migrations, seeds test data, and verifies health. The first run takes a few minutes.
 
 ---
 
@@ -120,8 +111,8 @@ Wait until you see **"Seed complete!"**, then press `Ctrl+C`.
 
 | Email               | Password    | Role                                |
 |---------------------|-------------|-------------------------------------|
-| `admin@athena.dev`  | `admin123!` | Admin — full access to all features |
-| `viewer@athena.dev` | `admin123!` | Viewer — read-only access           |
+| `admin@demo.user`   | `admin123!` | Admin — full access to all features |
+| `viewer@demo.user`  | `admin123!` | Viewer — read-only access           |
 
 Use these to log into **CIAM Athena** (http://localhost:3003) and **IAM Athena** (http://localhost:4003).
 
@@ -138,7 +129,7 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Email              | Password    |
 |--------------------|-------------|
-| `admin@athena.dev` | `admin123!` |
+| `admin@demo.user` | `admin123!` |
 
 ---
 
@@ -183,22 +174,22 @@ All commands should be run from the `dev/` directory.
 
 ```bash
 # Restart all containers
-docker compose restart
+podman compose -f compose.dev.yml restart
 
 # Rebuild from scratch (wipes all data)
-docker compose down -v && docker compose up -d --build
+podman compose -f compose.dev.yml down -v && podman compose -f compose.dev.yml up -d --build
 
 # View logs for a specific service
-docker compose logs -f <service-name>
+podman compose -f compose.dev.yml logs -f <service-name>
 
 # Check seed status
-docker compose logs athena-seed-dev
+podman compose -f compose.dev.yml logs athena-seed-dev
 
 # Stop everything
-docker compose down
+podman compose -f compose.dev.yml down
 
 # Stop everything and wipe all data
-docker compose down -v --remove-orphans
+podman compose -f compose.dev.yml down -v --remove-orphans
 ```
 
 ---
@@ -207,26 +198,26 @@ docker compose down -v --remove-orphans
 
 **Container keeps crashing:**
 ```bash
-docker compose restart <service-name>
+podman compose -f compose.dev.yml restart <service-name>
 ```
 
 **Seed didn't run or failed:**
 ```bash
-docker compose restart athena-seed-dev
-docker compose logs -f athena-seed-dev
+podman compose -f compose.dev.yml restart athena-seed-dev
+podman compose -f compose.dev.yml logs -f athena-seed-dev
 ```
 
 **Login not working after fresh deploy:**
 
 Wait 30 seconds for the seed script to finish creating test users. Check with:
 ```bash
-docker compose logs athena-seed-dev
+podman compose -f compose.dev.yml logs athena-seed-dev
 ```
 
 **Clean slate — start completely fresh:**
 ```bash
-docker compose down -v --remove-orphans
-docker compose up -d
+podman compose -f compose.dev.yml down -v --remove-orphans
+octl dev
 ```
 
 **Port already in use:**

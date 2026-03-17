@@ -4,7 +4,7 @@ services:
   # ============================================================
 
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/postgres:16-alpine
     ports:
       - '5432:5432'
     environment:
@@ -26,7 +26,7 @@ services:
   # ============================================================
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: docker.io/dpage/pgadmin4:latest
     ports:
       - '4000:80'
     environment:
@@ -65,7 +65,7 @@ services:
   # ============================================================
 
   mailslurper:
-    image: oryd/mailslurper:latest-smtps
+    image: docker.io/oryd/mailslurper:latest-smtps
     ports:
       - '4436:4436'
     networks:
@@ -76,7 +76,7 @@ services:
   # ============================================================
 
   ciam-kratos-migrate:
-    image: oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v25.4.0
     depends_on:
       - postgres
     environment:
@@ -93,7 +93,7 @@ services:
   ciam-kratos:
     depends_on:
       - ciam-kratos-migrate
-    image: oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v25.4.0
     ports:
       - '3100:5000' # public
       - '3101:5001' # admin
@@ -116,7 +116,7 @@ services:
   # ============================================================
 
   iam-kratos-migrate:
-    image: oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v25.4.0
     depends_on:
       - postgres
     environment:
@@ -133,7 +133,7 @@ services:
   iam-kratos:
     depends_on:
       - iam-kratos-migrate
-    image: oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v25.4.0
     ports:
       - '4100:7000'
       - '4101:7001'
@@ -156,7 +156,7 @@ services:
   # ============================================================
 
   ciam-hydra-migrate:
-    image: oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v25.4.0
     depends_on:
       - postgres
     environment:
@@ -171,7 +171,7 @@ services:
       - intranet
 
   ciam-hydra:
-    image: oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v25.4.0
     ports:
       - '3102:5002' # public
       - '3103:5003' # admin
@@ -195,7 +195,7 @@ services:
   # ============================================================
 
   iam-hydra-migrate:
-    image: oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v25.4.0
     depends_on:
       - postgres
     environment:
@@ -210,7 +210,7 @@ services:
       - intranet
 
   iam-hydra:
-    image: oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v25.4.0
     depends_on:
       - iam-hydra-migrate
     ports:
@@ -237,7 +237,7 @@ services:
     image: dev-hera
     build:
       context: ../../hera
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       secrets:
         - npmrc
     ports:
@@ -255,12 +255,13 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
-    command: ["sh", "-c", "cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/sdk && mkdir -p /app/node_modules/@olympusoss/sdk && tar -C /app/.sdk --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../hera:/app
-      - ../../sdk:/sdk
-      - /app/node_modules
+      - ../../sdk:/app/.sdk
+      - /app/node_modules/.cache
       - /app/.next
+      - ./.npmrc:/tmp/.npmrc:ro
     networks:
       - intranet
     restart: unless-stopped
@@ -276,7 +277,7 @@ services:
     image: dev-hera
     build:
       context: ../../hera
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       secrets:
         - npmrc
     ports:
@@ -294,12 +295,13 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
-    command: ["sh", "-c", "cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/sdk && mkdir -p /app/node_modules/@olympusoss/sdk && tar -C /app/.sdk --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../hera:/app
-      - ../../sdk:/sdk
-      - /app/node_modules
+      - ../../sdk:/app/.sdk
+      - /app/node_modules/.cache
       - /app/.next
+      - ./.npmrc:/tmp/.npmrc:ro
     networks:
       - intranet
     restart: unless-stopped
@@ -315,7 +317,7 @@ services:
     image: dev-athena
     build:
       context: ../../athena
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       secrets:
         - npmrc
     ports:
@@ -345,13 +347,14 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
       - HERA_INTERNAL_URL=http://ciam-hera:3001
-    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app/.sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && rm -rf /app/node_modules/@olympusoss/sdk && mkdir -p /app/node_modules/@olympusoss/sdk && tar -C /app/.sdk --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../athena:/app
-      - ../../canvas:/canvas
-      - ../../sdk:/sdk
-      - /app/node_modules
+      - ../../canvas:/app/.canvas
+      - ../../sdk:/app/.sdk
+      - /app/node_modules/.cache
       - /app/.next
+      - ./.npmrc:/tmp/.npmrc:ro
     networks:
       - intranet
     restart: unless-stopped
@@ -368,7 +371,7 @@ services:
     image: dev-athena
     build:
       context: ../../athena
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       secrets:
         - npmrc
     ports:
@@ -398,13 +401,14 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
       - HERA_INTERNAL_URL=http://iam-hera:4001
-    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && rm -rf node_modules/@olympusoss/sdk && ln -s /sdk node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app/.sdk && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && rm -rf /app/node_modules/@olympusoss/sdk && mkdir -p /app/node_modules/@olympusoss/sdk && tar -C /app/.sdk --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/sdk && bun run dev"]
     volumes:
       - ../../athena:/app
-      - ../../canvas:/canvas
-      - ../../sdk:/sdk
-      - /app/node_modules
+      - ../../canvas:/app/.canvas
+      - ../../sdk:/app/.sdk
+      - /app/node_modules/.cache
       - /app/.next
+      - ./.npmrc:/tmp/.npmrc:ro
     networks:
       - intranet
     restart: unless-stopped
@@ -420,7 +424,7 @@ services:
     image: dev-site
     build:
       context: ../../site
-      dockerfile: Dockerfile.dev
+      dockerfile: Containerfile.dev
       secrets:
         - npmrc
     ports:
@@ -431,12 +435,13 @@ services:
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
       - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3003
       - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4003
-    command: ["sh", "-c", "cd /canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && rm -rf node_modules/@olympusoss/canvas && ln -s /canvas node_modules/@olympusoss/canvas && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && bun run dev"]
     volumes:
       - ../../site:/app
-      - ../../canvas:/canvas
-      - /app/node_modules
+      - ../../canvas:/app/.canvas
+      - /app/node_modules/.cache
       - /app/.next
+      - ./.npmrc:/tmp/.npmrc:ro
     networks:
       - intranet
     restart: unless-stopped
@@ -446,7 +451,7 @@ services:
   # ============================================================
 
   athena-seed-dev:
-    image: curlimages/curl:latest
+    image: docker.io/curlimages/curl:latest
     depends_on:
       - iam-kratos
       - ciam-kratos

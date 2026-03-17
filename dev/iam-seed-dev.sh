@@ -46,126 +46,87 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+# ── Helper: upsert identity (create or update if exists) ──────────
+# Usage: upsert_identity <KRATOS_URL> <EMAIL> <JSON_PAYLOAD> <LABEL>
+#
+# Tries POST first. If the identity already exists (409), looks it up
+# by email and PUTs the updated traits + metadata_admin so the seed
+# script is fully idempotent across restarts.
+upsert_identity() {
+  _url="$1"
+  _email="$2"
+  _payload="$3"
+  _label="$4"
+
+  # Try creating first
+  _status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${_url}/admin/identities" \
+    -H "Content-Type: application/json" \
+    -d "${_payload}")
+
+  if [ "$_status" = "201" ]; then
+    echo "  Created: ${_label}"
+    return 0
+  fi
+
+  # Identity likely exists — look it up by email and PUT to update
+  _existing=$(curl -sf "${_url}/admin/identities?credentials_identifier=$(printf '%s' "${_email}" | sed 's/@/%40/g')" 2>/dev/null)
+  # Extract the top-level identity ID (first "id" after the opening '[{')
+  _id=$(echo "${_existing}" | grep -o '"id":"[^"]*"' | head -1 | sed 's/"id":"//;s/"//')
+
+  if [ -z "$_id" ]; then
+    echo "  WARN: ${_email} — could not create or find identity"
+    return 1
+  fi
+
+  # PUT with full payload (Kratos admin API accepts credentials in PUT)
+  _put_status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "${_url}/admin/identities/${_id}" \
+    -H "Content-Type: application/json" \
+    -d "${_payload}")
+
+  if [ "$_put_status" = "200" ]; then
+    echo "  Updated: ${_label}"
+  else
+    echo "  WARN: ${_email} — PUT returned ${_put_status}"
+  fi
+}
+
 echo ""
 echo "=== IAM Identities (Employee/Admin) ==="
 
-# Create admin user: admin@athena.dev
-curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "admin",
-    "traits": {
-      "email": "admin@athena.dev",
-      "name": { "first": "Bobby", "last": "Nannier" },
-      "role": "admin"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "metadata_admin": {"demo": true, "password": "admin123!"},
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: admin@athena.dev (role: admin, demo)" || echo "  admin@athena.dev already exists or failed"
+# Default dashboard layout — seeded into metadata_public for all IAM identities
+# so Athena loads with a pre-configured dashboard on first login.
+DEFAULT_LAYOUT='{"widgets":[{"h":3,"i":"stat-total-users","w":2,"x":0,"y":0},{"h":3,"i":"stat-active-sessions","w":2,"x":2,"y":0},{"h":3,"i":"stat-avg-session","w":2,"x":4,"y":0},{"h":3,"i":"stat-user-growth","w":2,"x":6,"y":0},{"h":3,"i":"chart-security-insights","w":4,"x":8,"y":0,"minH":3,"minW":2},{"h":4,"i":"chart-combined-activity","w":12,"x":0,"y":3,"minH":2,"minW":4},{"h":4,"i":"chart-users-by-schema","w":3,"x":0,"y":13,"minH":3,"minW":2},{"h":4,"i":"chart-verification-gauge","w":3,"x":9,"y":7,"minH":3,"minW":2},{"h":6,"i":"chart-peak-hours","w":6,"x":6,"y":11,"minH":3,"minW":3},{"h":6,"i":"chart-session-locations","w":6,"x":0,"y":7,"minH":4,"minW":4},{"h":4,"i":"chart-activity-feed","w":3,"x":6,"y":7,"minH":3,"minW":2},{"h":4,"i":"chart-oauth2-grant-types","w":3,"x":3,"y":13,"minH":3,"minW":2}],"hiddenWidgets":[]}'
 
-# Create viewer user: viewer@athena.dev
-curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "admin",
-    "traits": {
-      "email": "viewer@athena.dev",
-      "name": { "first": "Marine", "last": "Nannier" },
-      "role": "viewer"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "metadata_admin": {"demo": true, "password": "admin123!"},
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: viewer@athena.dev (role: viewer, demo)" || echo "  viewer@athena.dev already exists or failed"
+# Create/update admin user: admin@demo.user
+upsert_identity "${IAM_KRATOS_ADMIN_URL}" "admin@demo.user" \
+  '{"schema_id":"admin","traits":{"email":"admin@demo.user","name":{"first":"Bobby","last":"Nannier"},"role":"admin"},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
+  "admin@demo.user (role: admin, demo)"
+
+# Create/update viewer user: viewer@demo.user
+upsert_identity "${IAM_KRATOS_ADMIN_URL}" "viewer@demo.user" \
+  '{"schema_id":"admin","traits":{"email":"viewer@demo.user","name":{"first":"Marine","last":"Nannier"},"role":"viewer"},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
+  "viewer@demo.user (role: viewer, demo)"
 
 echo ""
 echo "=== CIAM Demo Identity ==="
 
-# Create demo customer: demo@demo.user
-curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "customer",
-    "traits": {
-      "email": "demo@demo.user",
-      "customer_id": "CUST-999",
-      "first_name": "Demo",
-      "last_name": "User",
-      "loyalty_tier": "gold",
-      "account_status": "active"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "metadata_admin": {"demo": true, "password": "admin123!"},
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: demo@demo.user (customer, demo)" || echo "  demo@demo.user already exists or failed"
+# Create/update demo customer: demo@demo.user
+upsert_identity "${CIAM_KRATOS_ADMIN_URL}" "demo@demo.user" \
+  '{"schema_id":"customer","traits":{"email":"demo@demo.user","customer_id":"CUST-999","first_name":"Demo","last_name":"User","loyalty_tier":"gold","account_status":"active"},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"state":"active"}' \
+  "demo@demo.user (customer, demo)"
 
 echo ""
 echo "=== CIAM Identities (Customers) ==="
 
-# Create test customer: bobby.nannier@gmail.com
-curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "customer",
-    "traits": {
-      "email": "bobby.nannier@gmail.com",
-      "customer_id": "CUST-001",
-      "first_name": "Bobby",
-      "last_name": "Nannier",
-      "loyalty_tier": "gold",
-      "account_status": "active"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: bobby.nannier@gmail.com (customer: CUST-001)" || echo "  bobby.nannier@gmail.com already exists or failed"
+# Create/update test customer: bobby.nannier@gmail.com
+upsert_identity "${CIAM_KRATOS_ADMIN_URL}" "bobby.nannier@gmail.com" \
+  '{"schema_id":"customer","traits":{"email":"bobby.nannier@gmail.com","customer_id":"CUST-001","first_name":"Bobby","last_name":"Nannier","loyalty_tier":"gold","account_status":"active"},"credentials":{"password":{"config":{"password":"admin123!"}}},"state":"active"}' \
+  "bobby.nannier@gmail.com (customer: CUST-001)"
 
-# Create test customer: bobby@nannier.com
-curl -sf -X POST "${CIAM_KRATOS_ADMIN_URL}/admin/identities" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "schema_id": "customer",
-    "traits": {
-      "email": "bobby@nannier.com",
-      "customer_id": "CUST-002",
-      "first_name": "Bobby",
-      "last_name": "Nannier",
-      "loyalty_tier": "silver",
-      "account_status": "active"
-    },
-    "credentials": {
-      "password": {
-        "config": {
-          "password": "admin123!"
-        }
-      }
-    },
-    "state": "active"
-  }' > /dev/null 2>&1 && echo "  Created: bobby@nannier.com (customer: CUST-002)" || echo "  bobby@nannier.com already exists or failed"
+# Create/update test customer: bobby@nannier.com
+upsert_identity "${CIAM_KRATOS_ADMIN_URL}" "bobby@nannier.com" \
+  '{"schema_id":"customer","traits":{"email":"bobby@nannier.com","customer_id":"CUST-002","first_name":"Bobby","last_name":"Nannier","loyalty_tier":"silver","account_status":"active"},"credentials":{"password":{"config":{"password":"admin123!"}}},"state":"active"}' \
+  "bobby@nannier.com (customer: CUST-002)"
 
 echo ""
 echo "Creating OAuth2 clients for admin panels..."

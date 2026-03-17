@@ -36,6 +36,11 @@ selfservice:
   methods:
     password:
       enabled: true
+      config:
+        min_password_length: 12
+        haveibeenpwned_enabled: true
+        max_breaches: 0
+        identifier_similarity_check_enabled: true
     totp:
       config:
         issuer: Kratos
@@ -58,7 +63,7 @@ selfservice:
 
     recovery:
       enabled: true
-      ui_url: http://localhost:4455/recovery
+      ui_url: http://localhost:3001/recovery
       use: code
 
     verification:
@@ -73,12 +78,15 @@ selfservice:
         default_browser_return_url: http://localhost:4455/login
 
     login:
-      ui_url: http://localhost:4455/login
+      ui_url: http://localhost:3001/login
       lifespan: 10m
+      after:
+        hooks:
+          - hook: require_verified_address
 
     registration:
       lifespan: 10m
-      ui_url: http://localhost:4455/registration
+      ui_url: http://localhost:3001/registration
       after:
         password:
           hooks:

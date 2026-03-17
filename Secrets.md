@@ -2,7 +2,7 @@
 
 Everything is configured through external dashboards and GitHub. The deploy workflow handles directory creation, config syncing, `.env` generation, GHCR authentication, service startup, and seeding automatically. All steps are idempotent — running the workflow multiple times is safe.
 
-**Prerequisites:** A DigitalOcean Droplet with Docker and Docker Compose installed, accessible via SSH.
+**Prerequisites:** A DigitalOcean Droplet with Podman and Podman Compose installed, accessible via SSH.
 
 > **Prefer automation?** Run `cd cli && npm install && npm run octl` — see [QuickStart Guide](./QuickStart.md#production-deployment).
 
@@ -199,9 +199,9 @@ Once steps 1–6 are complete:
 
 The workflow will automatically:
 - Create the deploy directory on the Droplet
-- Sync all configs (docker-compose, Ory configs, seed script)
+- Sync all configs (compose files, Ory configs, seed script)
 - Generate `.env` from your GitHub secrets and variables
-- Authenticate Docker with GHCR
+- Authenticate Podman with GHCR
 - Pull and start all services
 - Run the seed script (creates admin identity + OAuth2 clients if they don't already exist)
 - Report health status
