@@ -2,21 +2,24 @@
 
 Infrastructure and orchestration for the [OlympusOSS Identity Platform](https://github.com/OlympusOSS).
 
-Docker Compose configs, Ory configs, identity schemas, seed scripts, and CI/CD workflows.
+Podman Compose configs, Ory configs, identity schemas, seed scripts, and CI/CD workflows.
 
 ---
 
 ## Quick Start
 
 ```bash
-cd dev
-docker compose up -d
+octl dev
 ```
 
-Wait for the seed to complete:
+The CLI installs Podman (if needed), starts all containers in the correct order, and seeds test data.
+
+Alternatively, start manually:
 
 ```bash
-docker compose logs -f athena-seed-dev
+cd dev
+podman compose -f compose.dev.yml up -d
+podman compose -f compose.dev.yml logs -f athena-seed-dev
 ```
 
 Once you see **"Seed complete!"**, the platform is ready.
@@ -35,8 +38,8 @@ Once you see **"Seed complete!"**, the platform is ready.
 
 | Email | Password | Domain |
 |-------|----------|--------|
-| `admin@athena.dev` | `admin123!` | IAM (admin) |
-| `viewer@athena.dev` | `admin123!` | IAM (viewer) |
+| `admin@demo.user` | `admin123!` | IAM (admin) |
+| `viewer@demo.user` | `admin123!` | IAM (viewer) |
 | `bobby.nannier@gmail.com` | `admin123!` | CIAM (customer) |
 | `bobby@nannier.com` | `admin123!` | CIAM (customer) |
 
@@ -46,7 +49,7 @@ Once you see **"Seed complete!"**, the platform is ready.
 
 ### `dev/` — Development Environment
 
-Docker Compose with 15 services, all on a single `intranet` network:
+Podman Compose with 15 services, all on a single `intranet` network:
 
 | Service | Port | Purpose |
 |---------|------|---------|
@@ -96,7 +99,7 @@ Same services with:
 
 - **`.github/workflows/deploy.yml`** — Manual deployment to a DigitalOcean Droplet via SSH
   - Syncs configs, generates `.env`, authenticates to GHCR, pulls images, starts services, seeds data
-- **`.github/dependabot.yml`** — Automated dependency updates for Docker images and GitHub Actions
+- **`.github/dependabot.yml`** — Automated dependency updates for container images and GitHub Actions
 
 ---
 
@@ -105,7 +108,7 @@ Same services with:
 App repos are sibling directories mounted as volumes for hot reload. Copy the override template:
 
 ```bash
-cp docker-compose.override.example.yml docker-compose.override.yml
+cp compose.override.example.yml compose.override.yml
 ```
 
 This mounts `../../athena/`, `../../hera/`, and `../../site/` into their containers.
@@ -115,20 +118,23 @@ This mounts `../../athena/`, `../../hera/`, and `../../site/` into their contain
 ## Common Commands
 
 ```bash
-# Start everything
-docker compose up -d
+# Start everything (recommended)
+octl dev
+
+# Or start manually
+podman compose -f compose.dev.yml up -d
 
 # Rebuild from scratch (wipes data)
-docker compose down -v && docker compose up -d --build
+podman compose -f compose.dev.yml down -v && podman compose -f compose.dev.yml up -d --build
 
 # View logs for a service
-docker compose logs -f ciam-athena
+podman compose -f compose.dev.yml logs -f ciam-athena
 
 # Stop everything
-docker compose down
+podman compose -f compose.dev.yml down
 
 # Stop and wipe all data
-docker compose down -v --remove-orphans
+podman compose -f compose.dev.yml down -v --remove-orphans
 ```
 
 ---
