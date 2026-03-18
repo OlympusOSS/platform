@@ -1,5 +1,5 @@
 -- These databases are created on first PostgreSQL start only
--- (docker-entrypoint-initdb.d scripts run when the data volume is empty).
+-- (entrypoint initdb scripts run when the data volume is empty).
 
 CREATE DATABASE ciam_kratos;
 CREATE DATABASE ciam_hydra;
