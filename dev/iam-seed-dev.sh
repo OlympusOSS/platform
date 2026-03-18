@@ -88,6 +88,31 @@ upsert_identity() {
   else
     echo "  WARN: ${_email} — PUT returned ${_put_status}"
   fi
+
+  # Mark email as verified (Kratos resets verification on credential changes)
+  verify_email "${_url}" "${_email}"
+}
+
+# ── Helper: mark email as verified via PATCH ─────────────────────────
+# Looks up identity by email and patches verifiable_addresses to verified.
+verify_email() {
+  _url="$1"
+  _email="$2"
+
+  _existing=$(curl -sf "${_url}/admin/identities?credentials_identifier=$(printf '%s' "${_email}" | sed 's/@/%40/g')" 2>/dev/null)
+  _id=$(echo "${_existing}" | grep -o '"id":"[^"]*"' | head -1 | sed 's/"id":"//;s/"//')
+
+  if [ -z "$_id" ]; then
+    return 0
+  fi
+
+  # Get current verifiable addresses and mark as verified
+  _va=$(curl -sf "${_url}/admin/identities/${_id}" 2>/dev/null | grep -o '"verifiable_addresses":\[[^]]*\]')
+
+  # PATCH to set verified=true
+  curl -sf -X PATCH "${_url}/admin/identities/${_id}" \
+    -H "Content-Type: application/json" \
+    -d "[{\"op\":\"replace\",\"path\":\"/verifiable_addresses/0/verified\",\"value\":true},{\"op\":\"replace\",\"path\":\"/verifiable_addresses/0/status\",\"value\":\"completed\"}]" > /dev/null 2>&1
 }
 
 echo ""
