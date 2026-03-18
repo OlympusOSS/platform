@@ -145,14 +145,14 @@ jobs:
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "echo '${{ secrets.GHCR_PAT }}' | podman login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin"
 
-      - name: Run database migrations
+      - name: Run Ory schema migrations
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
-             ${{ env.COMPOSE }} --profile migration run --rm ciam-kratos-migrate && \
-             ${{ env.COMPOSE }} --profile migration run --rm iam-kratos-migrate && \
-             ${{ env.COMPOSE }} --profile migration run --rm ciam-hydra-migrate && \
-             ${{ env.COMPOSE }} --profile migration run --rm iam-hydra-migrate"
+             ${{ env.COMPOSE }} run --rm ciam-kratos-migrate && \
+             ${{ env.COMPOSE }} run --rm iam-kratos-migrate && \
+             ${{ env.COMPOSE }} run --rm ciam-hydra-migrate && \
+             ${{ env.COMPOSE }} run --rm iam-hydra-migrate"
 
       - name: Deploy infrastructure services
         run: |
@@ -168,7 +168,7 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
-             ${{ env.COMPOSE }} --profile seed run --rm --no-deps seed"
+             ${{ env.COMPOSE }} run --rm seed"
 
       - name: Wait for services to be healthy
         run: |
