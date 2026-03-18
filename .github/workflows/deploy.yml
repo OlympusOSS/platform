@@ -170,20 +170,14 @@ jobs:
             "cd ${{ env.DEPLOY_PATH }} && \
              ${{ env.COMPOSE }} run --rm seed"
 
-      - name: Wait for services to be healthy
+      - name: Health check
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
-             echo 'Waiting for services to stabilize...' && \
+            "echo 'Waiting for services to stabilize...' && \
              sleep 15 && \
-             ${{ env.COMPOSE }} ps --format 'table {{.Name}}\t{{.Status}}'"
-
-      - name: Health check summary
-        run: |
-          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
+             cd ${{ env.DEPLOY_PATH }} && \
              echo '=== Service Health ===' && \
-             ${{ env.COMPOSE }} ps --format 'table {{.Name}}\t{{.Status}}\t{{.Ports}}'"
+             ${{ env.COMPOSE }} ps"
 
       - name: Cleanup SSH key
         if: always()
