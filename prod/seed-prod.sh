@@ -5,7 +5,7 @@ set -e
 # OlympusOSS Production Seed Script
 # =============================================================================
 # Creates the initial admin identity and OAuth2 clients.
-# Run via: podman compose --profile seed run --rm seed
+# Run via: podman compose -f compose.prod.yml run --rm --no-deps seed
 #
 # All credentials are read from environment variables (no hardcoded secrets).
 #
@@ -125,8 +125,8 @@ EXISTING_ID=$(curl -sf "${IAM_KRATOS_ADMIN_URL}/admin/identities?credentials_ide
   | sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
 
 if [ -n "${EXISTING_ID}" ]; then
-  echo "  Exists: ${ADMIN_EMAIL} (${EXISTING_ID}) — updating password"
-  curl -sf -X PUT "${IAM_KRATOS_ADMIN_URL}/admin/identities/${EXISTING_ID}" \
+  echo "  Exists: ${ADMIN_EMAIL} (${EXISTING_ID}) — updating"
+  UPDATE_RESP=$(curl -s -w "\n%{http_code}" -X PUT "${IAM_KRATOS_ADMIN_URL}/admin/identities/${EXISTING_ID}" \
     -H "Content-Type: application/json" \
     -d "{
       \"schema_id\": \"admin\",
@@ -146,7 +146,14 @@ if [ -n "${EXISTING_ID}" ]; then
         \"dashboardLayout\": ${DEFAULT_LAYOUT}
       },
       \"state\": \"active\"
-    }" > /dev/null 2>&1 && echo "  Updated: ${ADMIN_EMAIL}" || echo "  WARN: failed to update password for ${ADMIN_EMAIL}"
+    }" 2>&1)
+  UPDATE_CODE=$(echo "${UPDATE_RESP}" | tail -1)
+  if [ "${UPDATE_CODE}" = "200" ]; then
+    echo "  Updated: ${ADMIN_EMAIL}"
+  else
+    UPDATE_BODY=$(echo "${UPDATE_RESP}" | sed '$d')
+    echo "  WARN: failed to update ${ADMIN_EMAIL} (HTTP ${UPDATE_CODE}): ${UPDATE_BODY}"
+  fi
 else
   curl -sf -X POST "${IAM_KRATOS_ADMIN_URL}/admin/identities" \
     -H "Content-Type: application/json" \
