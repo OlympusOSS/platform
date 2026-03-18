@@ -45,7 +45,7 @@ jobs:
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "mkdir -p ${{ env.DEPLOY_PATH }}"
 
-      - name: Sync configs to Droplet
+      - name: Sync configs to server
         run: |
           rsync -avz --delete \
             --exclude '.env' \
