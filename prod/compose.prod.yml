@@ -35,8 +35,6 @@ services:
 
   ciam-kratos-migrate:
     image: docker.io/oryd/kratos:v25.4.0
-    profiles:
-      - migration
     environment:
       - DSN=${NEON_CIAM_KRATOS_DSN}
     volumes:
@@ -83,8 +81,6 @@ services:
 
   iam-kratos-migrate:
     image: docker.io/oryd/kratos:v25.4.0
-    profiles:
-      - migration
     environment:
       - DSN=${NEON_IAM_KRATOS_DSN}
     volumes:
@@ -131,8 +127,6 @@ services:
 
   ciam-hydra-migrate:
     image: docker.io/oryd/hydra:v25.4.0
-    profiles:
-      - migration
     environment:
       - DSN=${NEON_CIAM_HYDRA_DSN}
     command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
@@ -179,8 +173,6 @@ services:
 
   iam-hydra-migrate:
     image: docker.io/oryd/hydra:v25.4.0
-    profiles:
-      - migration
     environment:
       - DSN=${NEON_IAM_HYDRA_DSN}
     command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
@@ -454,13 +446,11 @@ services:
         condition: service_healthy
 
   # ============================================================
-  # Seed (one-shot — run with: podman compose --profile seed run --rm seed)
+  # Seed (one-shot — run with: podman compose -f compose.prod.yml run --rm seed)
   # ============================================================
 
   seed:
     image: docker.io/curlimages/curl:latest
-    profiles:
-      - seed
     volumes:
       - type: bind
         source: ./seed-prod.sh
