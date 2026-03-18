@@ -168,7 +168,7 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
-             ${{ env.COMPOSE }} run --rm seed"
+             ${{ env.COMPOSE }} run --rm --no-deps seed"
 
       - name: Health check
         run: |
