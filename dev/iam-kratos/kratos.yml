@@ -58,7 +58,9 @@ selfservice:
       enabled: false
 
     recovery:
-      enabled: false
+      enabled: true
+      ui_url: http://localhost:4001/recovery
+      use: code
 
     settings:
       ui_url: http://localhost:4003/settings
