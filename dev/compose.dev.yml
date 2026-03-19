@@ -255,6 +255,8 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
+      - APP_INSTANCE=IAM
+      - NEXT_PUBLIC_APP_INSTANCE=IAM
     command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../hera:/app
@@ -294,6 +296,8 @@ services:
       - DATABASE_URL=postgres://postgres:secret@postgres:5432/olympus?sslmode=disable
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
+      - APP_INSTANCE=CIAM
+      - NEXT_PUBLIC_APP_INSTANCE=CIAM
     command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../hera:/app

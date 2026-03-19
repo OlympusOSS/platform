@@ -234,6 +234,8 @@ services:
       - DATABASE_URL=${NEON_OLYMPUS_DSN}
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - APP_INSTANCE=CIAM
+      - NEXT_PUBLIC_APP_INSTANCE=CIAM
     networks:
       - intranet
     restart: unless-stopped
@@ -270,6 +272,8 @@ services:
       - DATABASE_URL=${NEON_OLYMPUS_DSN}
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - APP_INSTANCE=IAM
+      - NEXT_PUBLIC_APP_INSTANCE=IAM
     networks:
       - intranet
     restart: unless-stopped

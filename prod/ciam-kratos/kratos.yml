@@ -62,6 +62,8 @@ selfservice:
     verification:
       enabled: true
       use: code
+      after:
+        default_browser_return_url: /login
 
     login:
       lifespan: 10m
@@ -73,8 +75,7 @@ selfservice:
       lifespan: 10m
       after:
         password:
-          hooks:
-            - hook: session
+          hooks: []
 
 log:
   level: info

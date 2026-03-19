@@ -68,10 +68,10 @@ selfservice:
 
     verification:
       enabled: true
-      ui_url: http://localhost:4455/verification
+      ui_url: http://localhost:3001/verification
       use: code
       after:
-        default_browser_return_url: http://localhost:4455/
+        default_browser_return_url: http://localhost:3001/login
 
     logout:
       after:
@@ -89,8 +89,7 @@ selfservice:
       ui_url: http://localhost:3001/registration
       after:
         password:
-          hooks:
-            - hook: session
+          hooks: []
 
 log:
   level: debug
