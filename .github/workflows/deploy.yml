@@ -172,6 +172,17 @@ jobs:
              ${{ env.COMPOSE }} run --rm --no-deps ciam-hydra-migrate && \
              ${{ env.COMPOSE }} run --rm --no-deps iam-hydra-migrate"
 
+      - name: Clean up stale containers
+        run: |
+          # podman-compose 1.0.6 can't `rm` containers that have --requires
+          # dependents (e.g. migration containers create deps on Kratos/Hydra).
+          # Force-remove everything except postgres so `up -d` can recreate fresh.
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "podman ps -a --filter label=com.docker.compose.project=prod \
+               --format '{{.Names}}' | \
+             grep -v prod_postgres_1 | \
+             xargs -r podman rm -f 2>/dev/null || true"
+
       - name: Deploy infrastructure services
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
@@ -180,7 +191,11 @@ jobs:
                postgres caddy \
                ciam-kratos iam-kratos \
                ciam-hydra iam-hydra \
-               pgadmin"
+               pgadmin && \
+             echo 'Waiting for Ory services to be healthy...' && \
+             sleep 20 && \
+             podman ps --filter label=com.docker.compose.project=prod \
+               --format 'table {{.Names}} {{.Status}}'"
 
       - name: Seed (idempotent)
         run: |
