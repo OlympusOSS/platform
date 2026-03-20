@@ -185,15 +185,22 @@ jobs:
 
       - name: Deploy infrastructure services
         run: |
+          # postgres is already running from "Start PostgreSQL" — don't include it
+          # here or podman-compose will recreate it and lose the healthy state.
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
              ${{ env.COMPOSE }} up -d \
-               postgres caddy \
+               caddy \
                ciam-kratos iam-kratos \
                ciam-hydra iam-hydra \
                pgadmin && \
              echo 'Waiting for Ory services to be healthy...' && \
-             sleep 20 && \
+             for i in \$(seq 1 30); do \
+               podman healthcheck run prod_ciam-kratos_1 >/dev/null 2>&1 && \
+               podman healthcheck run prod_iam-kratos_1 >/dev/null 2>&1 && \
+               break; \
+               sleep 3; \
+             done && \
              podman ps --filter label=com.docker.compose.project=prod \
                --format 'table {{.Names}} {{.Status}}'"
 
