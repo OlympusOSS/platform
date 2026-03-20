@@ -158,10 +158,10 @@ jobs:
              ${{ env.COMPOSE }} up -d postgres && \
              echo 'Waiting for PostgreSQL to be healthy...' && \
              for i in \$(seq 1 30); do \
-               ${{ env.COMPOSE }} ps postgres 2>/dev/null | grep -q '(healthy)' && break; \
+               podman healthcheck run prod_postgres_1 >/dev/null 2>&1 && break; \
                sleep 2; \
              done && \
-             ${{ env.COMPOSE }} ps postgres"
+             podman ps --filter name=prod_postgres_1 --format 'table {{.Names}} {{.Status}}'"
 
       - name: Run Ory schema migrations
         run: |
