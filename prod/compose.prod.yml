@@ -36,7 +36,7 @@ services:
   ciam-kratos-migrate:
     image: docker.io/oryd/kratos:v25.4.0
     environment:
-      - DSN=${NEON_CIAM_KRATOS_DSN}
+      - DSN=${PG_CIAM_KRATOS_DSN}
     volumes:
       - type: bind
         source: ./ciam-kratos
@@ -52,7 +52,7 @@ services:
       - '3101:5001' # admin
     restart: unless-stopped
     environment:
-      - DSN=${NEON_CIAM_KRATOS_DSN}
+      - DSN=${PG_CIAM_KRATOS_DSN}
       - SERVE_PUBLIC_PORT=5000
       - SERVE_ADMIN_PORT=5001
       - SECRETS_COOKIE=${CIAM_KRATOS_SECRET_COOKIE}
@@ -82,7 +82,7 @@ services:
   iam-kratos-migrate:
     image: docker.io/oryd/kratos:v25.4.0
     environment:
-      - DSN=${NEON_IAM_KRATOS_DSN}
+      - DSN=${PG_IAM_KRATOS_DSN}
     volumes:
       - type: bind
         source: ./iam-kratos
@@ -98,7 +98,7 @@ services:
       - '4101:7001' # admin
     restart: unless-stopped
     environment:
-      - DSN=${NEON_IAM_KRATOS_DSN}
+      - DSN=${PG_IAM_KRATOS_DSN}
       - SERVE_PUBLIC_PORT=7000
       - SERVE_ADMIN_PORT=7001
       - SECRETS_COOKIE=${IAM_KRATOS_SECRET_COOKIE}
@@ -128,7 +128,7 @@ services:
   ciam-hydra-migrate:
     image: docker.io/oryd/hydra:v25.4.0
     environment:
-      - DSN=${NEON_CIAM_HYDRA_DSN}
+      - DSN=${PG_CIAM_HYDRA_DSN}
     command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -148,7 +148,7 @@ services:
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
     environment:
-      - DSN=${NEON_CIAM_HYDRA_DSN}
+      - DSN=${PG_CIAM_HYDRA_DSN}
       - SERVE_PUBLIC_PORT=5002
       - SERVE_ADMIN_PORT=5003
       - URLS_SELF_ISSUER=${CIAM_HYDRA_PUBLIC_URL}
@@ -174,7 +174,7 @@ services:
   iam-hydra-migrate:
     image: docker.io/oryd/hydra:v25.4.0
     environment:
-      - DSN=${NEON_IAM_HYDRA_DSN}
+      - DSN=${PG_IAM_HYDRA_DSN}
     command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
     volumes:
       - type: bind
@@ -189,7 +189,7 @@ services:
       - '4102:7002' # public
       - '4103:7003' # admin
     environment:
-      - DSN=${NEON_IAM_HYDRA_DSN}
+      - DSN=${PG_IAM_HYDRA_DSN}
       - SERVE_PUBLIC_PORT=7002
       - SERVE_ADMIN_PORT=7003
       - URLS_SELF_ISSUER=${IAM_HYDRA_PUBLIC_URL}
@@ -231,7 +231,7 @@ services:
       - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
       - CAPTCHA_SECRET_KEY=${CIAM_CAPTCHA_SECRET_KEY:-}
-      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=CIAM
@@ -269,7 +269,7 @@ services:
       - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
       - CAPTCHA_SECRET_KEY=${IAM_CAPTCHA_SECRET_KEY:-}
-      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=IAM
@@ -312,11 +312,9 @@ services:
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
-      - OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
-      - OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
       - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
-      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       # Stack health checks (own domain only)
@@ -361,11 +359,9 @@ services:
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
-      - OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
-      - OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
       - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
-      - DATABASE_URL=${NEON_OLYMPUS_DSN}
+      - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       # Stack health checks (own domain only)
