@@ -91,9 +91,9 @@ Set these under **Settings → Environments → production → Environment secre
 
 ### PostgreSQL
 
-| Secret | How to generate |
-|--------|-----------------|
-| `POSTGRES_PASSWORD` | `openssl rand -hex 32` |
+| Secret | Description | How to generate |
+|--------|-------------|-----------------|
+| `PG_DSN_BASE` | Base PostgreSQL connection string. User and password are parsed from this to configure the postgres container and pgAdmin. | Self-hosted: `postgres://olympus:<password>@postgres:5432` — External (e.g., Neon): `postgres://user:pass@host:5432` |
 
 ### Ory Kratos
 
@@ -177,6 +177,12 @@ Set these under **Settings → Environments → production → Environment varia
 | `SITE_CIAM_CLIENT_ID` | `site-ciam-client` |
 | `SITE_IAM_CLIENT_ID` | `site-iam-client` |
 | `PGADMIN_OAUTH_CLIENT_ID` | `pgadmin` |
+
+### PostgreSQL
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PG_SSLMODE` | SSL mode for database connections. Use `disable` for self-hosted postgres container, `require` for external providers (Neon, RDS, etc.) | `disable` |
 
 ### Admin & Image Tags
 

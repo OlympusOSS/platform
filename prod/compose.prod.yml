@@ -1,5 +1,31 @@
 services:
   # ============================================================
+  # PostgreSQL (shared database)
+  # ============================================================
+
+  postgres:
+    image: docker.io/postgres:18-alpine
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./init-db.sql
+        target: /docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - intranet
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $PG_USER"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  # ============================================================
   # Caddy (Reverse Proxy + Automatic HTTPS)
   # ============================================================
 
@@ -44,6 +70,9 @@ services:
     command: -c /etc/config/ciam-kratos/kratos.yml migrate sql -e --yes
     networks:
       - intranet
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   ciam-kratos:
     image: docker.io/oryd/kratos:v25.4.0
@@ -90,6 +119,9 @@ services:
     command: -c /etc/config/iam-kratos/kratos.yml migrate sql -e --yes
     networks:
       - intranet
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   iam-kratos:
     image: docker.io/oryd/kratos:v25.4.0
@@ -136,6 +168,9 @@ services:
         target: /etc/config/ciam-hydra
     networks:
       - intranet
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   ciam-hydra:
     image: docker.io/oryd/hydra:v25.4.0
@@ -182,6 +217,9 @@ services:
         target: /etc/config/iam-hydra
     networks:
       - intranet
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   iam-hydra:
     image: docker.io/oryd/hydra:v25.4.0
@@ -434,14 +472,30 @@ services:
       - PGADMIN_OAUTH_CLIENT_ID=${PGADMIN_OAUTH_CLIENT_ID}
       - PGADMIN_OAUTH_CLIENT_SECRET=${PGADMIN_OAUTH_CLIENT_SECRET}
       - IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - PGPASSFILE=/pgpass
     volumes:
       - type: bind
         source: ./pgadmin/config_local.py
         target: /pgadmin4/config_local.py
+      - type: bind
+        source: ./pgadmin-servers.json
+        target: /pgadmin4/servers.json
+      - type: bind
+        source: ./pgadmin/pgpass
+        target: /pgpass
+    entrypoint: >
+      /bin/sh -c "
+      cp /pgpass /tmp/pgpass &&
+      chmod 0600 /tmp/pgpass &&
+      export PGPASSFILE=/tmp/pgpass &&
+      exec /entrypoint.sh
+      "
     networks:
       - intranet
     restart: unless-stopped
     depends_on:
+      postgres:
+        condition: service_healthy
       iam-hydra:
         condition: service_healthy
 
@@ -495,5 +549,6 @@ networks:
   intranet:
 
 volumes:
+  postgres:
   caddy_data:
   caddy_config:
