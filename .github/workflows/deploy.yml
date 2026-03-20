@@ -151,14 +151,26 @@ jobs:
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "echo '${{ secrets.GHCR_PAT }}' | podman login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin"
 
+      - name: Start PostgreSQL
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "cd ${{ env.DEPLOY_PATH }} && \
+             ${{ env.COMPOSE }} up -d postgres && \
+             echo 'Waiting for PostgreSQL to be healthy...' && \
+             for i in \$(seq 1 30); do \
+               ${{ env.COMPOSE }} ps postgres 2>/dev/null | grep -q '(healthy)' && break; \
+               sleep 2; \
+             done && \
+             ${{ env.COMPOSE }} ps postgres"
+
       - name: Run Ory schema migrations
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
-             ${{ env.COMPOSE }} run --rm ciam-kratos-migrate && \
-             ${{ env.COMPOSE }} run --rm iam-kratos-migrate && \
-             ${{ env.COMPOSE }} run --rm ciam-hydra-migrate && \
-             ${{ env.COMPOSE }} run --rm iam-hydra-migrate"
+             ${{ env.COMPOSE }} run --rm --no-deps ciam-kratos-migrate && \
+             ${{ env.COMPOSE }} run --rm --no-deps iam-kratos-migrate && \
+             ${{ env.COMPOSE }} run --rm --no-deps ciam-hydra-migrate && \
+             ${{ env.COMPOSE }} run --rm --no-deps iam-hydra-migrate"
 
       - name: Deploy infrastructure services
         run: |
