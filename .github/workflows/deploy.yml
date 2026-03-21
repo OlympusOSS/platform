@@ -210,6 +210,15 @@ jobs:
             "cd ${{ env.DEPLOY_PATH }} && \
              ${{ env.COMPOSE }} run --rm --no-deps seed"
 
+      - name: Deploy application services
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "cd ${{ env.DEPLOY_PATH }} && \
+             ${{ env.COMPOSE }} up -d \
+               ciam-hera iam-hera \
+               ciam-athena iam-athena \
+               site"
+
       - name: Health check
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
