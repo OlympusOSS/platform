@@ -156,7 +156,7 @@ services:
   # ============================================================
 
   ciam-hydra-migrate:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     depends_on:
       - postgres
     environment:
@@ -171,7 +171,7 @@ services:
       - intranet
 
   ciam-hydra:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     ports:
       - '3102:5002' # public
       - '3103:5003' # admin
@@ -195,7 +195,7 @@ services:
   # ============================================================
 
   iam-hydra-migrate:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     depends_on:
       - postgres
     environment:
@@ -210,7 +210,7 @@ services:
       - intranet
 
   iam-hydra:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     depends_on:
       - iam-hydra-migrate
     ports:
