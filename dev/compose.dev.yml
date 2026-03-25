@@ -76,7 +76,7 @@ services:
   # ============================================================
 
   ciam-kratos-migrate:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     depends_on:
       - postgres
     environment:
@@ -93,7 +93,7 @@ services:
   ciam-kratos:
     depends_on:
       - ciam-kratos-migrate
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     ports:
       - '3100:5000' # public
       - '3101:5001' # admin
@@ -116,7 +116,7 @@ services:
   # ============================================================
 
   iam-kratos-migrate:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     depends_on:
       - postgres
     environment:
@@ -133,7 +133,7 @@ services:
   iam-kratos:
     depends_on:
       - iam-kratos-migrate
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     ports:
       - '4100:7000' # public
       - '4101:7001' # admin
