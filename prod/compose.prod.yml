@@ -350,6 +350,10 @@ services:
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - NEXT_PUBLIC_AUTH_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
+      - AUTH_HYDRA_URL=http://iam-hydra:7002
+      - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
       - DATABASE_URL=${PG_OLYMPUS_DSN}
@@ -397,6 +401,10 @@ services:
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      - NEXT_PUBLIC_AUTH_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
+      - AUTH_HYDRA_URL=http://iam-hydra:7002
+      - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
       - DATABASE_URL=${PG_OLYMPUS_DSN}
