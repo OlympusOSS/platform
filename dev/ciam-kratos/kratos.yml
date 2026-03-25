@@ -10,7 +10,7 @@ serve:
       allowed_origins:
         - http://localhost:3000
         - http://localhost:4455
-        - http://localhost:3001
+        - http://localhost:3000
       allowed_methods:
         - POST
         - GET
@@ -31,14 +31,14 @@ selfservice:
   default_browser_return_url: http://localhost:4455/
   allowed_return_urls:
     - http://localhost:4455
-    - http://localhost:3001
+    - http://localhost:3000
 
   methods:
     password:
       enabled: true
       config:
-        min_password_length: 12
-        haveibeenpwned_enabled: true
+        min_password_length: 8
+        haveibeenpwned_enabled: false
         max_breaches: 0
         identifier_similarity_check_enabled: true
     totp:
@@ -63,22 +63,22 @@ selfservice:
 
     recovery:
       enabled: true
-      ui_url: http://localhost:3001/recovery
+      ui_url: http://localhost:3000/recovery
       use: code
 
     verification:
       enabled: true
-      ui_url: http://localhost:3001/verification
+      ui_url: http://localhost:3000/verification
       use: code
       after:
-        default_browser_return_url: http://localhost:3001/login
+        default_browser_return_url: http://localhost:3000/login
 
     logout:
       after:
         default_browser_return_url: http://localhost:4455/login
 
     login:
-      ui_url: http://localhost:3001/login
+      ui_url: http://localhost:3000/login
       lifespan: 10m
       after:
         hooks:
@@ -86,7 +86,7 @@ selfservice:
 
     registration:
       lifespan: 10m
-      ui_url: http://localhost:3001/registration
+      ui_url: http://localhost:3000/registration
       after:
         password:
           hooks: []

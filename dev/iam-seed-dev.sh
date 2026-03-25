@@ -165,8 +165,8 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "client_secret": "athena-ciam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
-    "redirect_uris": ["http://localhost:3003/api/auth/callback"],
-    "post_logout_redirect_uris": ["http://localhost:3003/api/auth/login"],
+    "redirect_uris": ["http://localhost:3001/api/auth/callback"],
+    "post_logout_redirect_uris": ["http://localhost:3001/api/auth/login"],
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
@@ -181,8 +181,8 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "client_secret": "athena-iam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
-    "redirect_uris": ["http://localhost:4003/api/auth/callback"],
-    "post_logout_redirect_uris": ["http://localhost:4003/api/auth/login"],
+    "redirect_uris": ["http://localhost:4001/api/auth/callback"],
+    "post_logout_redirect_uris": ["http://localhost:4001/api/auth/login"],
     "scope": "openid profile email",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
@@ -200,7 +200,7 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "client_secret": "pgadmin-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
-    "redirect_uris": ["http://localhost:4000/oauth2/authorize"],
+    "redirect_uris": ["http://localhost:5433/oauth2/authorize"],
     "scope": "openid email profile",
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true

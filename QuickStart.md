@@ -98,10 +98,10 @@ The CLI installs Podman and podman-compose (if needed), initializes the Podman m
 | Application     | URL                   | Description                                  |
 |-----------------|-----------------------|----------------------------------------------|
 | **Site**        | http://localhost:2000 | Brochure site & OAuth2 playground            |
-| **CIAM Athena** | http://localhost:3003 | Admin panel for customer identity management |
-| **IAM Athena**  | http://localhost:4003 | Admin panel for employee identity management |
-| **PgAdmin**     | http://localhost:4000 | Database management interface                |
-| **Mailslurper** | http://localhost:4436 | Test email inbox                             |
+| **CIAM Athena** | http://localhost:3001 | Admin panel for customer identity management |
+| **IAM Athena**  | http://localhost:4001 | Admin panel for employee identity management |
+| **PgAdmin**     | http://localhost:5433 | Database management interface                |
+| **Mailslurper** | http://localhost:5434 | Test email inbox                             |
 
 ---
 
@@ -114,7 +114,7 @@ The CLI installs Podman and podman-compose (if needed), initializes the Podman m
 | `admin@demo.user`   | `admin123!` | Admin — full access to all features |
 | `viewer@demo.user`  | `admin123!` | Viewer — read-only access           |
 
-Use these to log into **CIAM Athena** (http://localhost:3003) and **IAM Athena** (http://localhost:4003).
+Use these to log into **CIAM Athena** (http://localhost:3001) and **IAM Athena** (http://localhost:4001).
 
 ### CIAM (Customer) Users
 
@@ -139,8 +139,8 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Port | Service              | Purpose                        |
 |------|----------------------|--------------------------------|
-| 3001 | CIAM Hera            | Customer login, consent & logout UI |
-| 3003 | CIAM Athena          | Customer admin panel           |
+| 3000 | CIAM Hera            | Customer login, consent & logout UI |
+| 3001 | CIAM Athena          | Customer admin panel           |
 | 3100 | CIAM Kratos (public) | Customer identity API          |
 | 3101 | CIAM Kratos (admin)  | Customer identity admin API    |
 | 3102 | CIAM Hydra (public)  | Customer OAuth2/OIDC endpoints |
@@ -150,8 +150,8 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 
 | Port | Service             | Purpose                        |
 |------|---------------------|--------------------------------|
-| 4001 | IAM Hera            | Employee login, consent & logout UI |
-| 4003 | IAM Athena          | Employee admin panel           |
+| 4000 | IAM Hera            | Employee login, consent & logout UI |
+| 4001 | IAM Athena          | Employee admin panel           |
 | 4100 | IAM Kratos (public) | Employee identity API          |
 | 4101 | IAM Kratos (admin)  | Employee identity admin API    |
 | 4102 | IAM Hydra (public)  | Employee OAuth2/OIDC endpoints |
@@ -162,9 +162,9 @@ These are customer identities managed through CIAM Athena. They cannot log into 
 | Port | Service     | Purpose             |
 |------|-------------|---------------------|
 | 2000 | Site        | Brochure site & OAuth2 playground |
-| 4000 | PgAdmin     | Database management |
-| 4436 | Mailslurper | Test email service  |
 | 5432 | PostgreSQL  | Database            |
+| 5433 | PgAdmin     | Database management |
+| 5434 | Mailslurper | Test email service  |
 
 ---
 
@@ -222,8 +222,8 @@ octl dev
 
 **Port already in use:**
 ```bash
-# Find what's using the port (e.g., 3003)
-lsof -i :3003
+# Find what's using the port (e.g., 3001)
+lsof -i :3001
 # Kill the process
 kill -9 <PID>
 ```

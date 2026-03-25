@@ -9,7 +9,7 @@
 
 # CIAM — Customer Identity
 {$CIAM_HERA_PUBLIC_URL} {
-	reverse_proxy ciam-hera:3001
+	reverse_proxy ciam-hera:3000
 }
 
 {$CIAM_HYDRA_PUBLIC_URL} {
@@ -22,7 +22,7 @@
 
 # IAM — Internal Identity
 {$IAM_HERA_PUBLIC_URL} {
-	reverse_proxy iam-hera:4001
+	reverse_proxy iam-hera:4000
 }
 
 {$IAM_HYDRA_PUBLIC_URL} {

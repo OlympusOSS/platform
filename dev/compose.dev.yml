@@ -28,7 +28,7 @@ services:
   pgadmin:
     image: docker.io/dpage/pgadmin4:latest
     ports:
-      - '4000:80'
+      - '5433:80'
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@demo.user
       - PGADMIN_DEFAULT_PASSWORD=admin123!
@@ -67,7 +67,7 @@ services:
   mailslurper:
     image: docker.io/oryd/mailslurper:latest-smtps
     ports:
-      - '4436:4436'
+      - '5434:4436'
     networks:
       - intranet
 
@@ -135,8 +135,8 @@ services:
       - iam-kratos-migrate
     image: docker.io/oryd/kratos:v25.4.0
     ports:
-      - '4100:7000'
-      - '4101:7001'
+      - '4100:7000' # public
+      - '4101:7001' # admin
     restart: unless-stopped
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/iam_kratos?sslmode=disable
@@ -214,8 +214,8 @@ services:
     depends_on:
       - iam-hydra-migrate
     ports:
-      - '4102:7002'
-      - '4103:7003'
+      - '4102:7002' # public
+      - '4103:7003' # admin
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/iam_hydra?sslmode=disable
       - SERVE_PUBLIC_PORT=7002
@@ -241,9 +241,9 @@ services:
       secrets:
         - npmrc
     ports:
-      - '4001:4001'
+      - '4000:4000'
     environment:
-      - PORT=4001
+      - PORT=4000
       - HYDRA_ADMIN_URL=http://iam-hydra:7003
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
@@ -282,9 +282,9 @@ services:
       secrets:
         - npmrc
     ports:
-      - '3001:3001'
+      - '3000:3000'
     environment:
-      - PORT=3001
+      - PORT=3000
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
@@ -323,7 +323,7 @@ services:
       secrets:
         - npmrc
     ports:
-      - '3003:3000'
+      - '3001:3000'
     environment:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
@@ -337,7 +337,7 @@ services:
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - OAUTH_CLIENT_ID=athena-ciam-client
       - OAUTH_CLIENT_SECRET=athena-ciam-secret
-      - NEXT_PUBLIC_APP_URL=http://localhost:3003
+      - NEXT_PUBLIC_APP_URL=http://localhost:3001
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
       - APP_INSTANCE=CIAM
       - DEFAULT_CLIENT_ID=site-ciam-client
@@ -348,8 +348,8 @@ services:
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - HERA_INTERNAL_URL=http://ciam-hera:3001
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && bun run dev"]
+      - HERA_INTERNAL_URL=http://ciam-hera:3000
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sfn /app/.canvas /app/node_modules/@olympusoss/canvas && bun run dev"]
     volumes:
       - ../../athena:/app
       - ../../canvas:/app/.canvas
@@ -376,7 +376,7 @@ services:
       secrets:
         - npmrc
     ports:
-      - '4003:3000'
+      - '4001:3000'
     environment:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
@@ -390,7 +390,7 @@ services:
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - OAUTH_CLIENT_ID=athena-iam-client
       - OAUTH_CLIENT_SECRET=athena-iam-secret
-      - NEXT_PUBLIC_APP_URL=http://localhost:4003
+      - NEXT_PUBLIC_APP_URL=http://localhost:4001
       - NEXT_PUBLIC_APP_INSTANCE=IAM
       - APP_INSTANCE=IAM
       - DEFAULT_CLIENT_ID=athena-iam-client
@@ -401,8 +401,8 @@ services:
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
-      - HERA_INTERNAL_URL=http://iam-hera:4001
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && bun run dev"]
+      - HERA_INTERNAL_URL=http://iam-hera:4000
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sfn /app/.canvas /app/node_modules/@olympusoss/canvas && bun run dev"]
     volumes:
       - ../../athena:/app
       - ../../canvas:/app/.canvas
@@ -433,9 +433,9 @@ services:
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
-      - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3003
-      - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4003
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss/canvas && mkdir -p /app/node_modules/@olympusoss/canvas && tar -C /app/.canvas --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C /app/node_modules/@olympusoss/canvas && bun run dev"]
+      - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3001
+      - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4001
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sfn /app/.canvas /app/node_modules/@olympusoss/canvas && bun run dev"]
     volumes:
       - ../../site:/app
       - ../../canvas:/app/.canvas

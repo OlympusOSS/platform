@@ -9,9 +9,9 @@ serve:
 urls:
   self:
     issuer: http://localhost:3102
-  consent: http://localhost:3001/consent
-  login: http://localhost:3001/login
-  logout: http://localhost:3001/logout
+  consent: http://localhost:3000/consent
+  login: http://localhost:3000/login
+  logout: http://localhost:3000/logout
 
 secrets:
   system:
