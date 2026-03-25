@@ -33,8 +33,8 @@ selfservice:
     password:
       enabled: true
       config:
-        min_password_length: 12
-        haveibeenpwned_enabled: true
+        min_password_length: 8
+        haveibeenpwned_enabled: false
         max_breaches: 0
         identifier_similarity_check_enabled: true
 

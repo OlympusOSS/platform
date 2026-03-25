@@ -258,9 +258,9 @@ services:
   ciam-hera:
     image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
     ports:
-      - '3001:3001'
+      - '3000:3000'
     environment:
-      - PORT=3001
+      - PORT=3000
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
       - KRATOS_PUBLIC_URL=http://ciam-kratos:5000
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
@@ -283,7 +283,7 @@ services:
       ciam-kratos:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3001/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:3000/health || exit 1"]
       interval: 15s
       timeout: 5s
       start_period: 20s
@@ -296,9 +296,9 @@ services:
   iam-hera:
     image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
     ports:
-      - '4001:4001'
+      - '4000:4000'
     environment:
-      - PORT=4001
+      - PORT=4000
       - HYDRA_ADMIN_URL=http://iam-hydra:7003
       - KRATOS_PUBLIC_URL=http://iam-kratos:7000
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
@@ -321,7 +321,7 @@ services:
       iam-kratos:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:4001/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:4000/health || exit 1"]
       interval: 15s
       timeout: 5s
       start_period: 20s
@@ -334,7 +334,7 @@ services:
   ciam-athena:
     image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
-      - '3003:3000'
+      - '3001:3000'
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
@@ -357,7 +357,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
-      - HERA_INTERNAL_URL=http://ciam-hera:3001
+      - HERA_INTERNAL_URL=http://ciam-hera:3000
     networks:
       - intranet
     depends_on:
@@ -381,7 +381,7 @@ services:
   iam-athena:
     image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
     ports:
-      - '4003:3000'
+      - '4001:3000'
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=IAM
@@ -404,7 +404,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
-      - HERA_INTERNAL_URL=http://iam-hera:4001
+      - HERA_INTERNAL_URL=http://iam-hera:4000
     networks:
       - intranet
     depends_on:
@@ -463,7 +463,7 @@ services:
   pgadmin:
     image: docker.io/dpage/pgadmin4:latest
     ports:
-      - '4000:80'
+      - '5433:80'
     environment:
       - PGADMIN_DEFAULT_EMAIL=${ADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=unused

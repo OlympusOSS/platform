@@ -9,9 +9,9 @@ serve:
 urls:
   self:
     issuer: http://localhost:4102
-  consent: http://localhost:4001/consent
-  login: http://localhost:4001/login
-  logout: http://localhost:4001/logout
+  consent: http://localhost:4000/consent
+  login: http://localhost:4000/login
+  logout: http://localhost:4000/logout
 
 secrets:
   system:

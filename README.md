@@ -29,10 +29,10 @@ Once you see **"Seed complete!"**, the platform is ready.
 | App | URL | Description |
 |-----|-----|-------------|
 | Site | http://localhost:2000 | Brochure site & OAuth2 playground |
-| CIAM Athena | http://localhost:3003 | Customer identity admin |
-| IAM Athena | http://localhost:4003 | Employee identity admin |
-| pgAdmin | http://localhost:4000 | Database management |
-| Mailslurper | http://localhost:4436 | Test email inbox |
+| CIAM Athena | http://localhost:3001 | Customer identity admin |
+| IAM Athena | http://localhost:4001 | Employee identity admin |
+| pgAdmin | http://localhost:5433 | Database management |
+| Mailslurper | http://localhost:5434 | Test email inbox |
 
 ### Test Credentials
 
@@ -54,17 +54,17 @@ Podman Compose with 15 services, all on a single `intranet` network:
 | Service | Port | Purpose |
 |---------|------|---------|
 | PostgreSQL | 5432 | Shared database (4 logical databases) |
+| CIAM Hera | 3000 | Customer login/consent UI |
+| CIAM Athena | 3001 | Customer admin panel |
 | CIAM Kratos | 3100/3101 | Customer identity API |
 | CIAM Hydra | 3102/3103 | Customer OAuth2 server |
-| CIAM Hera | 3001 | Customer login/consent UI |
-| CIAM Athena | 3003 | Customer admin panel |
+| IAM Hera | 4000 | Employee login/consent UI |
+| IAM Athena | 4001 | Employee admin panel |
 | IAM Kratos | 4100/4101 | Employee identity API |
 | IAM Hydra | 4102/4103 | Employee OAuth2 server |
-| IAM Hera | 4001 | Employee login/consent UI |
-| IAM Athena | 4003 | Employee admin panel |
 | Site | 2000 | Brochure site & OAuth2 playground |
-| pgAdmin | 4000 | Database UI (OAuth2 SSO via IAM) |
-| Mailslurper | 4436 | Test email service |
+| pgAdmin | 5433 | Database UI (OAuth2 SSO via IAM) |
+| Mailslurper | 5434 | Test email service |
 
 ### `prod/` — Production Environment
 

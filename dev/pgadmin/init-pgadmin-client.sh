@@ -30,7 +30,7 @@ curl -sf -X POST "${HYDRA_ADMIN_URL}/admin/clients" \
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "scope": "openid email profile",
-    "redirect_uris": ["http://localhost:4000/oauth2/authorize"],
+    "redirect_uris": ["http://localhost:5433/oauth2/authorize"],
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
   }'

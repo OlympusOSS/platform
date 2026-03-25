@@ -9,9 +9,9 @@ serve:
     cors:
       enabled: true
       allowed_origins:
-        - http://localhost:3003
-        - http://localhost:4003
+        - http://localhost:3001
         - http://localhost:4001
+        - http://localhost:4000
       allowed_methods:
         - POST
         - GET
@@ -31,24 +31,24 @@ serve:
     port: 7001
 
 selfservice:
-  default_browser_return_url: http://localhost:4003/
+  default_browser_return_url: http://localhost:4001/
   allowed_return_urls:
-    - http://localhost:3003
-    - http://localhost:4003
+    - http://localhost:3001
     - http://localhost:4001
+    - http://localhost:4000
 
   methods:
     password:
       enabled: true
       config:
-        min_password_length: 12
-        haveibeenpwned_enabled: true
+        min_password_length: 8
+        haveibeenpwned_enabled: false
         max_breaches: 0
         identifier_similarity_check_enabled: true
 
   flows:
     login:
-      ui_url: http://localhost:4003/login
+      ui_url: http://localhost:4001/login
       lifespan: 10m
 
     registration:
@@ -59,14 +59,14 @@ selfservice:
 
     recovery:
       enabled: true
-      ui_url: http://localhost:4001/recovery
+      ui_url: http://localhost:4000/recovery
       use: code
 
     settings:
-      ui_url: http://localhost:4003/settings
+      ui_url: http://localhost:4001/settings
 
     error:
-      ui_url: http://localhost:4003/error
+      ui_url: http://localhost:4001/error
 
 log:
   level: debug
