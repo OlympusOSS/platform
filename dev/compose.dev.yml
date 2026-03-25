@@ -335,6 +335,10 @@ services:
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=http://localhost:4102
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - NEXT_PUBLIC_AUTH_HYDRA_URL=http://localhost:4102
+      - AUTH_HYDRA_URL=http://iam-hydra:7002
+      - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - OAUTH_CLIENT_ID=athena-ciam-client
       - OAUTH_CLIENT_SECRET=athena-ciam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:3001
@@ -388,6 +392,10 @@ services:
       - NEXT_PUBLIC_IAM_HYDRA_PUBLIC_URL=http://localhost:4102
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
       - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - NEXT_PUBLIC_AUTH_HYDRA_URL=http://localhost:4102
+      - AUTH_HYDRA_URL=http://iam-hydra:7002
+      - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - OAUTH_CLIENT_ID=athena-iam-client
       - OAUTH_CLIENT_SECRET=athena-iam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:4001
