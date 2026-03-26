@@ -359,6 +359,8 @@ services:
       - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=ciam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
       - HERA_INTERNAL_URL=http://ciam-hera:3000
@@ -410,6 +412,8 @@ services:
       - DATABASE_URL=${PG_OLYMPUS_DSN}
       - SETTINGS_TABLE=iam_settings
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
       - HERA_INTERNAL_URL=http://iam-hera:4000
