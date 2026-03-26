@@ -205,6 +205,7 @@ jobs:
                --format 'table {{.Names}} {{.Status}}'"
 
       - name: Seed (idempotent)
+        continue-on-error: true
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
