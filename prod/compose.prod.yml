@@ -60,7 +60,7 @@ services:
   # ============================================================
 
   ciam-kratos-migrate:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     environment:
       - DSN=${PG_CIAM_KRATOS_DSN}
     volumes:
@@ -75,7 +75,7 @@ services:
         condition: service_healthy
 
   ciam-kratos:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     ports:
       - '3100:5000' # public
       - '3101:5001' # admin
@@ -109,7 +109,7 @@ services:
   # ============================================================
 
   iam-kratos-migrate:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     environment:
       - DSN=${PG_IAM_KRATOS_DSN}
     volumes:
@@ -124,7 +124,7 @@ services:
         condition: service_healthy
 
   iam-kratos:
-    image: docker.io/oryd/kratos:v25.4.0
+    image: docker.io/oryd/kratos:v26.2.0
     ports:
       - '4100:7000' # public
       - '4101:7001' # admin
@@ -158,7 +158,7 @@ services:
   # ============================================================
 
   ciam-hydra-migrate:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     environment:
       - DSN=${PG_CIAM_HYDRA_DSN}
     command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
@@ -173,7 +173,7 @@ services:
         condition: service_healthy
 
   ciam-hydra:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     ports:
       - '3102:5002' # public
       - '3103:5003' # admin
@@ -207,7 +207,7 @@ services:
   # ============================================================
 
   iam-hydra-migrate:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     environment:
       - DSN=${PG_IAM_HYDRA_DSN}
     command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
@@ -222,7 +222,7 @@ services:
         condition: service_healthy
 
   iam-hydra:
-    image: docker.io/oryd/hydra:v25.4.0
+    image: docker.io/oryd/hydra:v26.2.0
     ports:
       - '4102:7002' # public
       - '4103:7003' # admin

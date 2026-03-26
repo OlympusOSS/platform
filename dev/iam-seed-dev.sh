@@ -7,42 +7,50 @@ CIAM_HYDRA_ADMIN_URL="${CIAM_HYDRA_ADMIN_URL:-http://ciam-hydra:5003}"
 IAM_HYDRA_ADMIN_URL="${IAM_HYDRA_ADMIN_URL:-http://iam-hydra:7003}"
 
 echo "Waiting for IAM Kratos to be ready..."
-for i in $(seq 1 30); do
+i=0
+while true; do
   if curl -sf "${IAM_KRATOS_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
     echo "IAM Kratos is ready!"
     break
   fi
-  echo "Waiting... ($i/30)"
+  i=$((i + 1))
+  echo "Waiting... (${i}s)"
   sleep 2
 done
 
 echo "Waiting for CIAM Kratos to be ready..."
-for i in $(seq 1 30); do
+i=0
+while true; do
   if curl -sf "${CIAM_KRATOS_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
     echo "CIAM Kratos is ready!"
     break
   fi
-  echo "Waiting... ($i/30)"
+  i=$((i + 1))
+  echo "Waiting... (${i}s)"
   sleep 2
 done
 
 echo "Waiting for CIAM Hydra to be ready..."
-for i in $(seq 1 30); do
+i=0
+while true; do
   if curl -sf "${CIAM_HYDRA_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
     echo "CIAM Hydra is ready!"
     break
   fi
-  echo "Waiting... ($i/30)"
+  i=$((i + 1))
+  echo "Waiting... (${i}s)"
   sleep 2
 done
 
 echo "Waiting for IAM Hydra to be ready..."
-for i in $(seq 1 30); do
+i=0
+while true; do
   if curl -sf "${IAM_HYDRA_ADMIN_URL}/health/ready" > /dev/null 2>&1; then
     echo "IAM Hydra is ready!"
     break
   fi
-  echo "Waiting... ($i/30)"
+  i=$((i + 1))
+  echo "Waiting... (${i}s)"
   sleep 2
 done
 
@@ -239,6 +247,41 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "token_endpoint_auth_method": "client_secret_basic",
     "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: site-iam-client (IAM Hydra)" || echo "  site-iam-client already exists or failed"
+
+echo ""
+echo "=== SDK Settings (olympus DB) ==="
+
+psql -c "
+CREATE TABLE IF NOT EXISTS ciam_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  encrypted  BOOLEAN NOT NULL DEFAULT FALSE,
+  category   TEXT NOT NULL DEFAULT 'general',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO ciam_settings (key, value, encrypted, category, updated_at)
+  VALUES ('oauth.client_id', 'athena-ciam-client', false, 'oauth', NOW())
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, category = EXCLUDED.category, updated_at = NOW();
+INSERT INTO ciam_settings (key, value, encrypted, category, updated_at)
+  VALUES ('oauth.client_secret', 'athena-ciam-secret', false, 'oauth', NOW())
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, category = EXCLUDED.category, updated_at = NOW();
+" > /dev/null 2>&1 && echo "  CIAM settings seeded" || echo "  WARN: CIAM settings failed"
+
+psql -c "
+CREATE TABLE IF NOT EXISTS iam_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  encrypted  BOOLEAN NOT NULL DEFAULT FALSE,
+  category   TEXT NOT NULL DEFAULT 'general',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO iam_settings (key, value, encrypted, category, updated_at)
+  VALUES ('oauth.client_id', 'athena-iam-client', false, 'oauth', NOW())
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, category = EXCLUDED.category, updated_at = NOW();
+INSERT INTO iam_settings (key, value, encrypted, category, updated_at)
+  VALUES ('oauth.client_secret', 'athena-iam-secret', false, 'oauth', NOW())
+  ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, category = EXCLUDED.category, updated_at = NOW();
+" > /dev/null 2>&1 && echo "  IAM settings seeded" || echo "  WARN: IAM settings failed"
 
 echo ""
 echo "Seed complete!"
