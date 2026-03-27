@@ -73,6 +73,7 @@ upsert_identity() {
 
   if [ "$_status" = "201" ]; then
     echo "  Created: ${_label}"
+    verify_email "${_url}" "${_email}"
     return 0
   fi
 
