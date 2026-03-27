@@ -356,11 +356,9 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
       - HERA_INTERNAL_URL=http://ciam-hera:3000
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sf /app/.canvas /app/node_modules/@olympusoss/canvas && ln -sf /app/.sdk /app/node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../athena:/app
-      - ../../canvas:/app/.canvas
-      - ../../sdk:/app/.sdk
       - /app/node_modules/.cache
       - /app/.next
       - ./.npmrc:/tmp/.npmrc:ro
@@ -415,11 +413,9 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
       - HERA_INTERNAL_URL=http://iam-hera:4000
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sf /app/.canvas /app/node_modules/@olympusoss/canvas && ln -sf /app/.sdk /app/node_modules/@olympusoss/sdk && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../athena:/app
-      - ../../canvas:/app/.canvas
-      - ../../sdk:/app/.sdk
       - /app/node_modules/.cache
       - /app/.next
       - ./.npmrc:/tmp/.npmrc:ro
@@ -450,10 +446,9 @@ services:
       - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3001
       - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4001
       - WATCHPACK_POLLING=true
-    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sf /app/.canvas /app/node_modules/@olympusoss/canvas && bun run dev"]
+    command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../site:/app
-      - ../../canvas:/app/.canvas
       - /app/node_modules/.cache
       - /app/.next
       - ./.npmrc:/tmp/.npmrc:ro
