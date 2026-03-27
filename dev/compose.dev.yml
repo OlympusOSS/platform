@@ -257,6 +257,7 @@ services:
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
       - APP_INSTANCE=IAM
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - WATCHPACK_POLLING=true
     command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../hera:/app
@@ -298,6 +299,7 @@ services:
       - ENCRYPTION_KEY=dev-encryption-key-minimum-32-chars!!
       - APP_INSTANCE=CIAM
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - WATCHPACK_POLLING=true
     command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; bun install 2>/dev/null; rm -f /app/.npmrc; bun run dev"]
     volumes:
       - ../../hera:/app
@@ -343,6 +345,7 @@ services:
       - OAUTH_CLIENT_SECRET=athena-ciam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:3001
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - WATCHPACK_POLLING=true
       - APP_INSTANCE=CIAM
       - DEFAULT_CLIENT_ID=site-ciam-client
       - CAPTCHA_ENABLED=false
@@ -401,6 +404,7 @@ services:
       - OAUTH_CLIENT_SECRET=athena-iam-secret
       - NEXT_PUBLIC_APP_URL=http://localhost:4001
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - WATCHPACK_POLLING=true
       - APP_INSTANCE=IAM
       - DEFAULT_CLIENT_ID=athena-iam-client
       - CAPTCHA_ENABLED=false
@@ -445,6 +449,7 @@ services:
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
       - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3001
       - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4001
+      - WATCHPACK_POLLING=true
     command: ["sh", "-c", "cp /tmp/.npmrc /app/.npmrc 2>/dev/null; cd /app/.canvas && bun install --frozen-lockfile 2>/dev/null; cd /app && bun install 2>/dev/null; rm -f /app/.npmrc; rm -rf /app/node_modules/@olympusoss && mkdir -p /app/node_modules/@olympusoss && ln -sf /app/.canvas /app/node_modules/@olympusoss/canvas && bun run dev"]
     volumes:
       - ../../site:/app
