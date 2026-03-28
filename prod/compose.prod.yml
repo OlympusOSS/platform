@@ -274,6 +274,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=CIAM
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
     networks:
       - intranet
     restart: unless-stopped
@@ -312,6 +313,7 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=IAM
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
     networks:
       - intranet
     restart: unless-stopped
