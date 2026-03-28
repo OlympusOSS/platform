@@ -131,6 +131,9 @@ jobs:
           ATHENA_IMAGE_TAG=${{ vars.ATHENA_IMAGE_TAG || 'latest' }}
           SITE_IMAGE_TAG=${{ vars.SITE_IMAGE_TAG || 'latest' }}
 
+          # Feature flags
+          ALLOW_DEMO_ACCOUNTS=${{ vars.ALLOW_DEMO_ACCOUNTS || 'false' }}
+
           # Admin identity (used by seed)
           ADMIN_EMAIL=admin@example.com
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
