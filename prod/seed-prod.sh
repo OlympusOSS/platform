@@ -76,7 +76,9 @@ oauth2_client_exists() {
   curl -sf "${hydra_url}/admin/clients/${client_id}" > /dev/null 2>&1
 }
 
-# Create an OAuth2 client in Hydra (idempotent — skips if already exists).
+# Create or update an OAuth2 client in Hydra (true upsert).
+# If the client already exists, PUT replaces it so secrets, redirect URIs,
+# and other settings always match the current deployment.
 create_oauth2_client() {
   local hydra_url="$1"
   local client_id="$2"
@@ -86,25 +88,28 @@ create_oauth2_client() {
   local post_logout_uri="$6"
   local skip_consent="${7:-true}"
 
-  if oauth2_client_exists "${hydra_url}" "${client_id}"; then
-    echo "  Exists: ${client_id} — skipping"
-    return 0
-  fi
+  local payload="{
+    \"client_id\": \"${client_id}\",
+    \"client_name\": \"${client_name}\",
+    \"client_secret\": \"${client_secret}\",
+    \"grant_types\": [\"authorization_code\", \"refresh_token\"],
+    \"response_types\": [\"code\"],
+    \"redirect_uris\": [\"${redirect_uri}\"],
+    \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
+    \"scope\": \"openid profile email\",
+    \"token_endpoint_auth_method\": \"client_secret_basic\",
+    \"skip_consent\": ${skip_consent}
+  }"
 
-  curl -sf -X POST "${hydra_url}/admin/clients" \
-    -H "Content-Type: application/json" \
-    -d "{
-      \"client_id\": \"${client_id}\",
-      \"client_name\": \"${client_name}\",
-      \"client_secret\": \"${client_secret}\",
-      \"grant_types\": [\"authorization_code\", \"refresh_token\"],
-      \"response_types\": [\"code\"],
-      \"redirect_uris\": [\"${redirect_uri}\"],
-      \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
-      \"scope\": \"openid profile email\",
-      \"token_endpoint_auth_method\": \"client_secret_basic\",
-      \"skip_consent\": ${skip_consent}
-    }" > /dev/null 2>&1 && echo "  Created: ${client_id}" || { echo "  ERROR: failed to create ${client_id}"; exit 1; }
+  if oauth2_client_exists "${hydra_url}" "${client_id}"; then
+    curl -sf -X PUT "${hydra_url}/admin/clients/${client_id}" \
+      -H "Content-Type: application/json" \
+      -d "${payload}" > /dev/null 2>&1 && echo "  Updated: ${client_id}" || { echo "  ERROR: failed to update ${client_id}"; exit 1; }
+  else
+    curl -sf -X POST "${hydra_url}/admin/clients" \
+      -H "Content-Type: application/json" \
+      -d "${payload}" > /dev/null 2>&1 && echo "  Created: ${client_id}" || { echo "  ERROR: failed to create ${client_id}"; exit 1; }
+  fi
 }
 
 # -----------------------------------------------------------------------------
