@@ -1,0 +1,55 @@
+name: Build and push custom Caddy image
+
+# Builds the custom Caddy image (with mholt/caddy-ratelimit module) and
+# publishes it to ghcr.io/olympusoss/caddy:latest.
+#
+# Required: SR-CADDY-1 (platform#22) — standard caddy:2-alpine does not include
+# the caddy-ratelimit module needed for per-IP rate limiting on CIAM login routes.
+#
+# Triggers:
+#   - Push to main that modifies caddy/Containerfile (rebuilds when the image changes)
+#   - Manual workflow_dispatch (force rebuild / rotate)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'caddy/Containerfile'
+  workflow_dispatch:
+
+concurrency:
+  group: caddy-build
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./caddy
+          file: ./caddy/Containerfile
+          push: true
+          tags: ghcr.io/olympusoss/caddy:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

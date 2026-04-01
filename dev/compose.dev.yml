@@ -27,8 +27,7 @@ services:
 
   pgadmin:
     image: docker.io/dpage/pgadmin4:latest
-    ports:
-      - '5433:80'
+    # No direct host port — accessed via Caddy on :5433 (rate-limit enforcement)
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@demo.user
       - PGADMIN_DEFAULT_PASSWORD=admin123!
@@ -70,6 +69,51 @@ services:
       - '5434:4436'
     networks:
       - intranet
+
+  # ============================================================
+  # Caddy (Reverse Proxy — with per-IP rate limiting on CIAM login routes)
+  #
+  # Uses a custom Caddy image built with mholt/caddy-ratelimit (SR-CADDY-1).
+  # The standard caddy:2-alpine does not include this module.
+  # See platform/caddy/Containerfile for build details.
+  #
+  # Caddy is the single ingress for all app services. Kratos admin/public
+  # ports (3100/3101, 4100/4101) and Hydra admin ports (3103, 4103) retain
+  # direct host bindings for debugging convenience.
+  # ============================================================
+
+  caddy:
+    image: dev-caddy
+    build:
+      context: ../caddy
+      dockerfile: Containerfile
+    ports:
+      - '2000:2000'  # Site
+      - '3000:3000'  # CIAM Hera
+      - '3001:3001'  # CIAM Athena
+      - '3102:3102'  # CIAM Hydra public
+      - '4000:4000'  # IAM Hera
+      - '4001:4001'  # IAM Athena
+      - '4102:4102'  # IAM Hydra public
+      - '5433:5433'  # pgAdmin
+    volumes:
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - intranet
+    restart: unless-stopped
+    depends_on:
+      - ciam-hera
+      - ciam-hydra
+      - ciam-athena
+      - iam-hera
+      - iam-hydra
+      - iam-athena
+      - site
+      - pgadmin
 
   # ============================================================
   # CIAM Kratos (Identity Admin)
@@ -173,8 +217,8 @@ services:
   ciam-hydra:
     image: docker.io/oryd/hydra:v26.2.0
     ports:
-      - '3102:5002' # public
-      - '3103:5003' # admin
+      # Public port proxied via Caddy on :3102 — no direct host binding to avoid conflict
+      - '3103:5003' # admin (direct — not fronted by Caddy)
     command: serve -c /etc/config/ciam-hydra/hydra.yml all --dev
     volumes:
       - type: bind
@@ -214,8 +258,8 @@ services:
     depends_on:
       - iam-hydra-migrate
     ports:
-      - '4102:7002' # public
-      - '4103:7003' # admin
+      # Public port proxied via Caddy on :4102 — no direct host binding to avoid conflict
+      - '4103:7003' # admin (direct — not fronted by Caddy)
     environment:
       - DSN=postgres://postgres:secret@postgres:5432/iam_hydra?sslmode=disable
       - SERVE_PUBLIC_PORT=7002
@@ -240,8 +284,7 @@ services:
       dockerfile: Containerfile.dev
       secrets:
         - npmrc
-    ports:
-      - '4000:4000'
+    # No direct host port — accessed via Caddy on :4000
     environment:
       - PORT=4000
       - HYDRA_ADMIN_URL=http://iam-hydra:7003
@@ -282,8 +325,7 @@ services:
       dockerfile: Containerfile.dev
       secrets:
         - npmrc
-    ports:
-      - '3000:3000'
+    # No direct host port — accessed via Caddy on :3000 (rate-limit enforcement)
     environment:
       - PORT=3000
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
@@ -324,8 +366,7 @@ services:
       dockerfile: Containerfile.dev
       secrets:
         - npmrc
-    ports:
-      - '3001:3000'
+    # No direct host port — accessed via Caddy on :3001
     environment:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
@@ -381,8 +422,7 @@ services:
       dockerfile: Containerfile.dev
       secrets:
         - npmrc
-    ports:
-      - '4001:3000'
+    # No direct host port — accessed via Caddy on :4001
     environment:
       - NODE_ENV=development
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
@@ -437,8 +477,7 @@ services:
       dockerfile: Containerfile.dev
       secrets:
         - npmrc
-    ports:
-      - '2000:3000'
+    # No direct host port — accessed via Caddy on :2000
     environment:
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
@@ -487,6 +526,8 @@ networks:
 
 volumes:
   postgres:
+  caddy_data:
+  caddy_config:
 
 secrets:
   npmrc:

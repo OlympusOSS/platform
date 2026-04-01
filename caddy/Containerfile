@@ -1,0 +1,18 @@
+# Custom Caddy build with mholt/caddy-ratelimit module.
+#
+# The standard caddy:2-alpine image does not include the caddy-ratelimit module,
+# which is required for per-IP rate limiting on CIAM login routes (SR-CADDY-1).
+# This Containerfile uses xcaddy to build a custom Caddy binary with the module
+# included, then packages it into a minimal Alpine image.
+#
+# Module: github.com/mholt/caddy-ratelimit
+# Reference: https://github.com/mholt/caddy-ratelimit
+
+FROM docker.io/caddy:2-builder-alpine AS builder
+
+RUN xcaddy build \
+    --with github.com/mholt/caddy-ratelimit
+
+FROM docker.io/caddy:2-alpine
+
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy

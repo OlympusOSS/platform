@@ -1,0 +1,69 @@
+# Dev Caddyfile — localhost reverse proxy with per-IP rate limiting on CIAM login routes.
+#
+# Caddy is the single ingress for all services in dev (mirrors production topology).
+# Kratos admin/public ports (3100/3101, 4100/4101) and Hydra admin ports (3103, 4103)
+# retain direct host bindings for debugging convenience.
+#
+# Rate limit: 5 requests per 10 seconds per source IP on CIAM Hera POST /login* and
+# /self-service/login* paths. This matches the production configuration (SR-CADDY-1).
+#
+# Module required: github.com/mholt/caddy-ratelimit
+# Image: custom — see platform/caddy/Containerfile
+
+{
+	# Disable automatic HTTPS in dev (plain HTTP only)
+	auto_https off
+	admin off
+}
+
+# CIAM Hera — login/consent/logout UI (Customer Identity)
+:3000 {
+	# Match POST requests to login submission paths only.
+	# This does NOT rate-limit GET page loads, static assets, or health checks.
+	@login_post {
+		method POST
+		path /login* /self-service/login*
+	}
+
+	# 5 requests per 10 seconds per source IP.
+	# Attackers are limited to 30 attempts per minute even during DB outage
+	# (fail-open scenario described in platform#11 / SR-CADDY-1).
+	rate_limit @login_post {remote.ip} 5r/10s
+
+	reverse_proxy ciam-hera:3000
+}
+
+# CIAM Hydra — OAuth2/OIDC provider (Customer Identity)
+:3102 {
+	reverse_proxy ciam-hydra:5002
+}
+
+# CIAM Athena — admin panel (Customer Identity)
+:3001 {
+	reverse_proxy ciam-athena:3000
+}
+
+# IAM Hera — login/consent/logout UI (Internal Identity)
+:4000 {
+	reverse_proxy iam-hera:4000
+}
+
+# IAM Hydra — OAuth2/OIDC provider (Internal Identity)
+:4102 {
+	reverse_proxy iam-hydra:7002
+}
+
+# IAM Athena — admin panel (Internal Identity)
+:4001 {
+	reverse_proxy iam-athena:3000
+}
+
+# Site — brochure site & OAuth2 playground
+:2000 {
+	reverse_proxy site:3000
+}
+
+# pgAdmin — database administration UI
+:5433 {
+	reverse_proxy pgadmin:80
+}

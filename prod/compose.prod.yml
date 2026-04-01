@@ -30,7 +30,10 @@ services:
   # ============================================================
 
   caddy:
-    image: docker.io/caddy:2-alpine
+    # Custom Caddy image built with mholt/caddy-ratelimit module (SR-CADDY-1).
+    # The standard caddy:2-alpine does not include this module.
+    # See platform/caddy/Containerfile for build details.
+    image: ghcr.io/olympusoss/caddy:latest
     ports:
       - '80:80'
       - '443:443'
