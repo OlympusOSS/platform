@@ -8,22 +8,24 @@
 }
 
 # CIAM — Customer Identity
-#
-# Rate limiting on login POST paths (SR-CADDY-1):
-# Per-IP rate limit of 5 requests per 10 seconds on POST /login* and
-# /self-service/login*. Applies before requests reach Hera, providing a
-# network-layer backstop during DB outages when checkLockout() fails open.
-# Module required: github.com/mholt/caddy-ratelimit (see platform/caddy/Containerfile)
 {$CIAM_HERA_PUBLIC_URL} {
-	# Match POST requests to login submission paths only.
-	# Does NOT rate-limit GET page loads, static assets, or health checks.
-	@login_post {
-		method POST
-		path /login* /self-service/login*
-	}
-
+	# Rate limiting on login POST paths (SR-CADDY-1):
 	# 5 requests per 10 seconds per source IP (30 attempts/min max).
-	rate_limit @login_post {remote.ip} 5r/10s
+	# Applies before requests reach Hera, providing a network-layer backstop
+	# during DB outages when checkLockout() fails open.
+	# Does NOT rate-limit GET page loads, static assets, or health checks.
+	# Module: github.com/mholt/caddy-ratelimit (see platform/caddy/Containerfile)
+	rate_limit {
+		zone login_limit {
+			match {
+				method POST
+				path /login* /self-service/login*
+			}
+			key {http.request.remote.host}
+			events 5
+			window 10s
+		}
+	}
 
 	reverse_proxy ciam-hera:3000
 }

@@ -168,12 +168,45 @@ jobs:
 
       - name: Run Ory schema migrations
         run: |
+          # podman-compose 1.0.6 `run --rm --no-deps` silently fails to resolve
+          # env vars from compose files. Run migrations directly via `podman run`
+          # with explicit DSN and volume mounts to bypass the issue.
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "cd ${{ env.DEPLOY_PATH }} && \
-             ${{ env.COMPOSE }} run --rm --no-deps ciam-kratos-migrate && \
-             ${{ env.COMPOSE }} run --rm --no-deps iam-kratos-migrate && \
-             ${{ env.COMPOSE }} run --rm --no-deps ciam-hydra-migrate && \
-             ${{ env.COMPOSE }} run --rm --no-deps iam-hydra-migrate"
+            "cd ${{ env.DEPLOY_PATH }} && source .env && \
+             podman run --rm --network prod_intranet \
+               -v \$(pwd)/ciam-kratos:/etc/config/ciam-kratos:ro \
+               -e DSN=\"\$PG_CIAM_KRATOS_DSN\" \
+               docker.io/oryd/kratos:v26.2.0 \
+               -c /etc/config/ciam-kratos/kratos.yml migrate sql -e --yes && \
+             podman run --rm --network prod_intranet \
+               -v \$(pwd)/iam-kratos:/etc/config/iam-kratos:ro \
+               -e DSN=\"\$PG_IAM_KRATOS_DSN\" \
+               docker.io/oryd/kratos:v26.2.0 \
+               -c /etc/config/iam-kratos/kratos.yml migrate sql -e --yes && \
+             podman run --rm --network prod_intranet \
+               -v \$(pwd)/ciam-hydra:/etc/config/ciam-hydra:ro \
+               -e DSN=\"\$PG_CIAM_HYDRA_DSN\" \
+               docker.io/oryd/hydra:v26.2.0 \
+               migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes && \
+             podman run --rm --network prod_intranet \
+               -v \$(pwd)/iam-hydra:/etc/config/iam-hydra:ro \
+               -e DSN=\"\$PG_IAM_HYDRA_DSN\" \
+               docker.io/oryd/hydra:v26.2.0 \
+               migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes"
+
+      - name: Verify migrations
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "PG_USER=\$(grep '^PG_USER=' ${{ env.DEPLOY_PATH }}/.env | cut -d= -f2) && \
+             for db in ciam_kratos iam_kratos ciam_hydra iam_hydra; do \
+               COUNT=\$(podman exec prod_postgres_1 psql -U \$PG_USER -d \$db -t -c \
+                 \"SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'\" | tr -d ' '); \
+               if [ \"\$COUNT\" -lt 1 ]; then \
+                 echo \"FATAL: \$db has no tables — migration failed\" && exit 1; \
+               fi; \
+               echo \"  ✓ \$db: \$COUNT tables\"; \
+             done && \
+             echo 'All Ory databases verified'"
 
       - name: Clean up stale containers
         run: |
@@ -208,7 +241,6 @@ jobs:
                --format 'table {{.Names}} {{.Status}}'"
 
       - name: Seed (idempotent)
-        continue-on-error: true
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
@@ -227,10 +259,21 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "echo 'Waiting for services to stabilize...' && \
-             sleep 15 && \
-             cd ${{ env.DEPLOY_PATH }} && \
-             echo '=== Service Health ===' && \
-             ${{ env.COMPOSE }} ps"
+             sleep 20 && \
+             FAILED=0 && \
+             for svc in prod_ciam-kratos_1 prod_iam-kratos_1 prod_ciam-hydra_1 prod_iam-hydra_1 \
+                        prod_ciam-hera_1 prod_iam-hera_1 prod_ciam-athena_1 prod_iam-athena_1 \
+                        prod_site_1 prod_caddy_1; do \
+               STATUS=\$(podman inspect --format '{{.State.Health.Status}}' \$svc 2>/dev/null || \
+                         podman inspect --format '{{.State.Status}}' \$svc 2>/dev/null); \
+               if [ \"\$STATUS\" = 'healthy' ] || [ \"\$STATUS\" = 'running' ]; then \
+                 echo \"  ✓ \$svc: \$STATUS\"; \
+               else \
+                 echo \"  ✗ \$svc: \$STATUS\"; FAILED=1; \
+               fi; \
+             done && \
+             if [ \$FAILED -eq 1 ]; then echo 'FATAL: One or more services unhealthy' && exit 1; fi && \
+             echo 'All services healthy'"
 
       - name: Cleanup SSH key
         if: always()
