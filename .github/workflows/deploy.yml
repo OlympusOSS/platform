@@ -278,12 +278,12 @@ jobs:
              for svc in prod_ciam-kratos_1 prod_iam-kratos_1 prod_ciam-hydra_1 prod_iam-hydra_1 \
                         prod_ciam-hera_1 prod_iam-hera_1 prod_ciam-athena_1 prod_iam-athena_1 \
                         prod_site_1 prod_caddy_1; do \
-               STATUS=\$(podman inspect --format '{{.State.Health.Status}}' \$svc 2>/dev/null || \
-                         podman inspect --format '{{.State.Status}}' \$svc 2>/dev/null); \
-               if [ \"\$STATUS\" = 'healthy' ] || [ \"\$STATUS\" = 'running' ]; then \
-                 echo \"  ✓ \$svc: \$STATUS\"; \
+               HEALTH=\$(podman inspect --format '{{.State.Health.Status}}' \$svc 2>/dev/null); \
+               STATE=\$(podman inspect --format '{{.State.Status}}' \$svc 2>/dev/null); \
+               if [ \"\$HEALTH\" = 'healthy' ] || { [ -z \"\$HEALTH\" ] && [ \"\$STATE\" = 'running' ]; }; then \
+                 echo \"  ✓ \$svc: \${HEALTH:-\$STATE}\"; \
                else \
-                 echo \"  ✗ \$svc: \$STATUS\"; FAILED=1; \
+                 echo \"  ✗ \$svc: health=\$HEALTH state=\$STATE\"; FAILED=1; \
                fi; \
              done && \
              if [ \$FAILED -eq 1 ]; then echo 'FATAL: One or more services unhealthy' && exit 1; fi && \
