@@ -231,14 +231,28 @@ jobs:
                ciam-hydra iam-hydra \
                pgadmin && \
              echo 'Waiting for Ory services to be healthy...' && \
-             for i in \$(seq 1 30); do \
+             for i in \$(seq 1 60); do \
                podman healthcheck run prod_ciam-kratos_1 >/dev/null 2>&1 && \
-               podman healthcheck run prod_iam-kratos_1 >/dev/null 2>&1 && \
+               podman healthcheck run prod_iam-kratos_1  >/dev/null 2>&1 && \
+               podman healthcheck run prod_ciam-hydra_1  >/dev/null 2>&1 && \
+               podman healthcheck run prod_iam-hydra_1   >/dev/null 2>&1 && \
                break; \
                sleep 3; \
              done && \
              podman ps --filter label=com.docker.compose.project=prod \
                --format 'table {{.Names}} {{.Status}}'"
+
+      - name: Verify Ory services healthy before seed
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "for svc in prod_ciam-kratos_1 prod_iam-kratos_1 prod_ciam-hydra_1 prod_iam-hydra_1; do \
+               STATUS=\$(podman inspect --format '{{.State.Health.Status}}' \$svc 2>/dev/null); \
+               if [ \"\$STATUS\" != 'healthy' ]; then \
+                 echo \"FATAL: \$svc is \$STATUS — seed requires all Ory services healthy\" && exit 1; \
+               fi; \
+               echo \"  ✓ \$svc: healthy\"; \
+             done && \
+             echo 'All Ory services healthy — proceeding with seed'"
 
       - name: Seed (idempotent)
         run: |
