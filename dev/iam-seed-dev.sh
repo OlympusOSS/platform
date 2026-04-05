@@ -171,13 +171,12 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -d '{
     "client_id": "athena-ciam-client",
     "client_name": "Olympus CIAM Admin",
-    "client_secret": "athena-ciam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:3001/api/auth/callback"],
     "post_logout_redirect_uris": ["http://localhost:3001/api/auth/login"],
     "scope": "openid profile email",
-    "token_endpoint_auth_method": "client_secret_basic",
+    "token_endpoint_auth_method": "none",
     "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: athena-ciam-client (IAM Hydra)" || echo "  athena-ciam-client already exists or failed"
 
@@ -187,13 +186,12 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -d '{
     "client_id": "athena-iam-client",
     "client_name": "Olympus IAM Admin",
-    "client_secret": "athena-iam-secret",
     "grant_types": ["authorization_code", "refresh_token"],
     "response_types": ["code"],
     "redirect_uris": ["http://localhost:4001/api/auth/callback"],
     "post_logout_redirect_uris": ["http://localhost:4001/api/auth/login"],
     "scope": "openid profile email",
-    "token_endpoint_auth_method": "client_secret_basic",
+    "token_endpoint_auth_method": "none",
     "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: athena-iam-client (IAM Hydra)" || echo "  athena-iam-client already exists or failed"
 

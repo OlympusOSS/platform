@@ -87,19 +87,37 @@ create_oauth2_client() {
   local redirect_uri="$5"
   local post_logout_uri="$6"
   local skip_consent="${7:-true}"
+  local auth_method="${8:-client_secret_basic}"
 
-  local payload="{
-    \"client_id\": \"${client_id}\",
-    \"client_name\": \"${client_name}\",
-    \"client_secret\": \"${client_secret}\",
-    \"grant_types\": [\"authorization_code\", \"refresh_token\"],
-    \"response_types\": [\"code\"],
-    \"redirect_uris\": [\"${redirect_uri}\"],
-    \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
-    \"scope\": \"openid profile email\",
-    \"token_endpoint_auth_method\": \"client_secret_basic\",
-    \"skip_consent\": ${skip_consent}
-  }"
+  local payload
+  if [ "${auth_method}" = "none" ]; then
+    # Public client (PKCE) — no client_secret
+    payload="{
+      \"client_id\": \"${client_id}\",
+      \"client_name\": \"${client_name}\",
+      \"grant_types\": [\"authorization_code\", \"refresh_token\"],
+      \"response_types\": [\"code\"],
+      \"redirect_uris\": [\"${redirect_uri}\"],
+      \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
+      \"scope\": \"openid profile email\",
+      \"token_endpoint_auth_method\": \"none\",
+      \"skip_consent\": ${skip_consent}
+    }"
+  else
+    # Confidential client — includes client_secret
+    payload="{
+      \"client_id\": \"${client_id}\",
+      \"client_name\": \"${client_name}\",
+      \"client_secret\": \"${client_secret}\",
+      \"grant_types\": [\"authorization_code\", \"refresh_token\"],
+      \"response_types\": [\"code\"],
+      \"redirect_uris\": [\"${redirect_uri}\"],
+      \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
+      \"scope\": \"openid profile email\",
+      \"token_endpoint_auth_method\": \"${auth_method}\",
+      \"skip_consent\": ${skip_consent}
+    }"
+  fi
 
   if oauth2_client_exists "${hydra_url}" "${client_id}"; then
     curl -sf -X PUT "${hydra_url}/admin/clients/${client_id}" \
@@ -191,24 +209,28 @@ echo ""
 echo "=== OAuth2 Clients ==="
 
 # CIAM Athena — admin panel for customer identities (authenticates via IAM Hydra)
+# Public client (PKCE) — no client_secret needed
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_CIAM_OAUTH_CLIENT_ID}" \
   "Olympus CIAM Admin" \
-  "${ATHENA_CIAM_OAUTH_CLIENT_SECRET}" \
+  "" \
   "${CIAM_ATHENA_PUBLIC_URL}/api/auth/callback" \
   "${CIAM_ATHENA_PUBLIC_URL}" \
-  true
+  true \
+  none
 
 # IAM Athena — admin panel for employee identities (authenticates via IAM Hydra)
+# Public client (PKCE) — no client_secret needed
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_IAM_OAUTH_CLIENT_ID}" \
   "Olympus IAM Admin" \
-  "${ATHENA_IAM_OAUTH_CLIENT_SECRET}" \
+  "" \
   "${IAM_ATHENA_PUBLIC_URL}/api/auth/callback" \
   "${IAM_ATHENA_PUBLIC_URL}" \
-  true
+  true \
+  none
 
 # -----------------------------------------------------------------------------
 # Site OAuth2 clients
