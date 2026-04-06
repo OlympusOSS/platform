@@ -14,9 +14,10 @@ oidc:
     supported_types:
       - pairwise
       - public
-  # Claims mapper (platform#21): injects IAM Kratos identity traits into ID tokens.
-  # The mapper adds the 'roles' array claim required by pgAdmin's
-  # OAUTH2_ADDITIONAL_CLAIMS_VALIDATION hook to enforce 'dba' role access control.
-  # Uses null-safe std.get() to handle identities without a 'roles' trait.
-  claims_mapper:
-    filepath: /etc/config/iam-hydra/pgadmin-claims-mapper.jsonnet
+  # NOTE (platform#21): A claims_mapper was attempted here to inject IAM Kratos
+  # identity traits into ID tokens for pgAdmin DBA role gate enforcement.
+  # The 'claims_mapper' property under 'oidc' is NOT valid in Hydra v26.2.0
+  # ("additionalProperties 'claims_mapper' not allowed") and has been removed.
+  # The Platform Engineer must re-implement role injection using a supported
+  # Hydra v26.2.0 mechanism (e.g., claims_mappers via token hooks if available,
+  # or an alternative approach). See pgadmin-claims-mapper.jsonnet for reference.
