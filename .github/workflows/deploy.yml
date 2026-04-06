@@ -77,11 +77,11 @@ jobs:
           PG_PASSWORD=${PG_PASSWORD}
 
           # PostgreSQL — per-service DSNs derived from single base DSN
-          PG_CIAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=${{ vars.PG_SSLMODE || 'disable' }}
-          PG_CIAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=${{ vars.PG_SSLMODE || 'disable' }}
-          PG_IAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=${{ vars.PG_SSLMODE || 'disable' }}
-          PG_IAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=${{ vars.PG_SSLMODE || 'disable' }}
-          PG_OLYMPUS_DSN=${{ secrets.PG_DSN_BASE }}/olympus?sslmode=${{ vars.PG_SSLMODE || 'disable' }}
+          PG_CIAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=${{ vars.PG_SSLMODE || 'require' }}
+          PG_CIAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=${{ vars.PG_SSLMODE || 'require' }}
+          PG_IAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=${{ vars.PG_SSLMODE || 'require' }}
+          PG_IAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=${{ vars.PG_SSLMODE || 'require' }}
+          PG_OLYMPUS_DSN=${{ secrets.PG_DSN_BASE }}/olympus?sslmode=${{ vars.PG_SSLMODE || 'require' }}
 
           # Application settings encryption
           ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
@@ -153,6 +153,40 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "echo '${{ secrets.GHCR_PAT }}' | podman login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin"
+
+      # ---------------------------------------------------------------
+      # SECURITY: Write PostgreSQL SSL private key BEFORE starting
+      # PostgreSQL. This step MUST precede "Start PostgreSQL" — if the
+      # key file is missing when the container starts, PostgreSQL will
+      # fail immediately with "could not load private SSL key".
+      #
+      # Pre-flight checklist (must be done before triggering this
+      # workflow — cannot be automated here):
+      #
+      #   [C4] Delete or update the PG_SSLMODE GitHub Variable:
+      #        Go to: Settings > Secrets and variables > Actions > Variables
+      #        Either delete PG_SSLMODE (new 'require' default takes effect)
+      #        or set PG_SSLMODE=require explicitly.
+      #        WARNING: If PG_SSLMODE=disable is still set as a Variable,
+      #        it overrides the 'require' default in this workflow and
+      #        plaintext connections will continue post-deployment.
+      #
+      #   [PG_SSL_KEY] Add secrets.PG_SSL_KEY to GitHub Secrets:
+      #        Go to: Settings > Secrets and variables > Actions > Secrets
+      #        Paste the contents of platform/prod/postgres/server.key
+      #        (the private key file — do NOT commit server.key to the repo).
+      # ---------------------------------------------------------------
+      - name: Write PostgreSQL SSL private key
+        run: |
+          # Write server.key from secret to deploy path BEFORE postgres starts.
+          # Mode 600 is required — postgres:18-alpine refuses keys with group/world access.
+          # The file is owned by the deploy runner user, which postgres:18-alpine accepts
+          # (confirmed empirically: postgres 18.3 on alpine accepts any owner with mode 600).
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "mkdir -p ${{ env.DEPLOY_PATH }}/postgres && \
+             printf '%s' '${{ secrets.PG_SSL_KEY }}' > ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+             chmod 600 ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+             echo 'SSL private key written to ${{ env.DEPLOY_PATH }}/postgres/server.key (mode 600)'"
 
       - name: Start PostgreSQL
         run: |
@@ -288,6 +322,32 @@ jobs:
              done && \
              if [ \$FAILED -eq 1 ]; then echo 'FATAL: One or more services unhealthy' && exit 1; fi && \
              echo 'All services healthy'"
+
+      # ---------------------------------------------------------------
+      # SOC2 CC6.1 Evidence: Confirm active TLS connections to PostgreSQL.
+      # Run after all services are healthy (all Ory/Hera/Athena services
+      # have established their database connections).
+      # Two queries:
+      #   1. pg_settings ssl=on — structural proof SSL is enabled server-side
+      #   2. pg_stat_ssl count — active TLS connection count at this point
+      # Output is printed to the workflow log. Copy this output to the
+      # GitHub issue thread as the SOC2 CC6.1 evidence artifact.
+      # ---------------------------------------------------------------
+      - name: Verify PostgreSQL SSL active (SOC2 CC6.1 evidence)
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "PG_USER=\$(grep '^PG_USER=' ${{ env.DEPLOY_PATH }}/.env | cut -d= -f2) && \
+             echo '=== SOC2 CC6.1 Evidence: PostgreSQL SSL Status ===' && \
+             echo '' && \
+             echo '--- Structural check: ssl setting in pg_settings ---' && \
+             podman exec prod_postgres_1 psql -U \$PG_USER -c \
+               \"SELECT name, setting FROM pg_settings WHERE name = 'ssl';\" && \
+             echo '' && \
+             echo '--- Active TLS connections: pg_stat_ssl ---' && \
+             podman exec prod_postgres_1 psql -U \$PG_USER -c \
+               \"SELECT count(*) AS ssl_connections FROM pg_stat_ssl WHERE ssl = true;\" && \
+             echo '' && \
+             echo '=== End SOC2 evidence — copy above output to platform#19 issue thread ==='"
 
       - name: Cleanup SSH key
         if: always()

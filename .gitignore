@@ -40,3 +40,8 @@ CLAUDE.md
 # private
 private/
 dev/.npmrc
+
+# PostgreSQL SSL private keys — must never be committed (server.key and CA key are secrets)
+# server.crt and pg-ca.crt are public and CAN be committed
+prod/postgres/server.key
+prod/postgres/pg-ca.key

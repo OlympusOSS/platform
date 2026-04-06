@@ -5,6 +5,14 @@ services:
 
   postgres:
     image: docker.io/postgres:18-alpine
+    # SSL is enabled via command arguments. The server.key is written by deploy.yml
+    # from secrets.PG_SSL_KEY BEFORE this container starts (ordering enforced in deploy.yml).
+    # server.key must be mode 600; server.crt is committed to the repo (public).
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/var/lib/postgresql/server.crt
+      -c ssl_key_file=/var/lib/postgresql/server.key
     environment:
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
@@ -15,6 +23,16 @@ services:
       - type: bind
         source: ./init-db.sql
         target: /docker-entrypoint-initdb.d/init-db.sql
+      # SSL certificate (public — committed to repo)
+      - type: bind
+        source: ./postgres/server.crt
+        target: /var/lib/postgresql/server.crt
+        read_only: true
+      # SSL private key (secret — written by deploy.yml from secrets.PG_SSL_KEY; never committed)
+      - type: bind
+        source: ./postgres/server.key
+        target: /var/lib/postgresql/server.key
+        read_only: true
     networks:
       - intranet
     restart: unless-stopped
