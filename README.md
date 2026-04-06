@@ -160,6 +160,19 @@ See [Secrets.md](./Secrets.md) for manual setup, or use the [octl CLI](https://g
 
 ---
 
+## Security Operations
+
+### Credential Rotation
+
+| Credential | Runbook |
+|-----------|---------|
+| `CIAM_RELOAD_API_KEY` (sidecar auth key) | [docs/reload-api-key-rotation.md](./docs/reload-api-key-rotation.md) |
+
+All production credential rotations must go through GitHub Actions (deploy.yml). Direct SSH
+or manual server access for credential rotation is prohibited by the platform deployment policy.
+
+---
+
 ## License
 
 MIT

@@ -1,0 +1,46 @@
+name: Verify email verification enforcement
+
+# Asserts that mandatory email verification is enforced in CIAM Kratos for
+# both dev and prod environments. This is a persistent CI check that prevents
+# config drift from removing the require_verified_address login hook.
+#
+# Security context (platform#24):
+#   flows.login.after.hooks: [require_verified_address] is the ONLY mechanism
+#   that prevents unverified CIAM accounts from logging in. If this hook is
+#   absent, users can log in without verifying their email, enabling account
+#   takeover via email enumeration at the registration step.
+#
+# Acceptable dev/prod divergences (documented — do NOT fail on these):
+#   log.level, log.leak_sensitive_values, hashers.bcrypt.cost, dsn, cors.allowed_origins
+#
+# NOT acceptable: any divergence in the flows section (login hooks, registration
+#   hooks, verification settings). Any such divergence will fail this check.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dev/ciam-kratos/kratos.yml'
+      - 'prod/ciam-kratos/kratos.yml'
+      - 'scripts/verify-email-enforcement.sh'
+  pull_request:
+    paths:
+      - 'dev/ciam-kratos/kratos.yml'
+      - 'prod/ciam-kratos/kratos.yml'
+      - 'scripts/verify-email-enforcement.sh'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Check email verification enforcement in CIAM Kratos configs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run email verification enforcement check
+        run: |
+          chmod +x scripts/verify-email-enforcement.sh
+          bash scripts/verify-email-enforcement.sh

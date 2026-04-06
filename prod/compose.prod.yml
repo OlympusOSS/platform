@@ -278,8 +278,10 @@ services:
 
   ciam-hera:
     image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
-    ports:
-      - '3000:3000'
+    # No direct host port — accessed via Caddy on {$CIAM_HERA_PUBLIC_URL} (rate-limit enforcement).
+    # SECURITY: Do NOT add a ports: binding here. ciam-hera must only be reachable through
+    # Caddy on the intranet network. A host port binding bypasses per-IP rate limiting
+    # (SR-CADDY-1 / platform#10 Security Condition V1). Deployment policy: CLAUDE.md.
     environment:
       - PORT=3000
       - HYDRA_ADMIN_URL=http://ciam-hydra:5003
@@ -317,8 +319,10 @@ services:
 
   iam-hera:
     image: ghcr.io/olympusoss/hera:${HERA_IMAGE_TAG:-latest}
-    ports:
-      - '4000:4000'
+    # No direct host port — accessed via Caddy on {$IAM_HERA_PUBLIC_URL}.
+    # SECURITY: Do NOT add a ports: binding here. iam-hera must only be reachable through
+    # Caddy on the intranet network. A host port binding bypasses the Caddy ingress layer
+    # (platform#10 Security Condition V1). Deployment policy: CLAUDE.md.
     environment:
       - PORT=4000
       - HYDRA_ADMIN_URL=http://iam-hydra:7003
@@ -356,8 +360,10 @@ services:
 
   ciam-athena:
     image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
-    ports:
-      - '3001:3000'
+    # No direct host port — accessed via Caddy on {$CIAM_ATHENA_PUBLIC_URL}.
+    # SECURITY: Do NOT add a ports: binding here. ciam-athena must only be reachable through
+    # Caddy on the intranet network. A host port binding bypasses the Caddy ingress layer
+    # (platform#10 Security Condition V1). Deployment policy: CLAUDE.md.
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
@@ -409,8 +415,10 @@ services:
 
   iam-athena:
     image: ghcr.io/olympusoss/athena:${ATHENA_IMAGE_TAG:-latest}
-    ports:
-      - '4001:3000'
+    # No direct host port — accessed via Caddy on {$IAM_ATHENA_PUBLIC_URL}.
+    # SECURITY: Do NOT add a ports: binding here. iam-athena must only be reachable through
+    # Caddy on the intranet network. A host port binding bypasses the Caddy ingress layer
+    # (platform#10 Security Condition V1). Deployment policy: CLAUDE.md.
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_INSTANCE=IAM
