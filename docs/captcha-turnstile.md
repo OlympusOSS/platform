@@ -65,7 +65,16 @@ These variables are injected into `ciam-hera` and `iam-hera` containers. The com
 | `CAPTCHA_SITE_KEY` | `IAM_CAPTCHA_SITE_KEY` | IAM | Cloudflare Turnstile site key for the IAM Hera domain |
 | `CAPTCHA_SECRET_KEY` | `IAM_CAPTCHA_SECRET_KEY` | IAM | Turnstile secret key for IAM server-side verification |
 
-**Production defaults**: Both `ciam-hera` and `iam-hera` use `${CIAM_CAPTCHA_ENABLED:-true}` / `${IAM_CAPTCHA_ENABLED:-true}` in `compose.prod.yml`. CAPTCHA is active unless the GitHub Variable is explicitly set to `false`.
+**Production defaults**: All four application containers use `:-true` defaults in `compose.prod.yml`. CAPTCHA is active in all containers unless the GitHub Variable is explicitly set to `false`.
+
+| Container | Variable | Default |
+|-----------|----------|---------|
+| `ciam-hera` | `CIAM_CAPTCHA_ENABLED` | `true` (enforced — `verifyCaptcha()` runs) |
+| `iam-hera` | `IAM_CAPTCHA_ENABLED` | `true` (enforced — `verifyCaptcha()` runs) |
+| `ciam-athena` | `CIAM_CAPTCHA_ENABLED` | `true` (display-only — no `verifyCaptcha()` call in Athena) |
+| `iam-athena` | `IAM_CAPTCHA_ENABLED` | `true` (display-only — no `verifyCaptcha()` call in Athena) |
+
+The Athena containers receive the `CAPTCHA_ENABLED` variable to drive UI elements (e.g., showing or hiding the CAPTCHA settings panel). Athena does not call `verifyCaptcha()` — it is not an authentication flow endpoint. Changing `CAPTCHA_ENABLED` on Athena has no effect on authentication gate enforcement.
 
 **Dev compose**: Both containers have `CAPTCHA_ENABLED=false` hardcoded. Use test keys (see Local Development section) to test the CAPTCHA flow locally.
 
