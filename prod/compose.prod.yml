@@ -289,6 +289,12 @@ services:
       - KRATOS_ADMIN_URL=http://ciam-kratos:5001
       - DEFAULT_OAUTH2_CLIENT_ID=site-ciam-client
       - HYDRA_PUBLIC_URL=${CIAM_HYDRA_PUBLIC_URL}
+      # CAPTCHA POLICY — FAIL-CLOSED (Hera / platform#17)
+      # This is a policy-only control. When CAPTCHA_ENABLED=true, TURNSTILE_SITE_KEY (CIAM_CAPTCHA_SITE_KEY)
+      # MUST be set correctly. A mismatched or missing key causes Hera login to fail closed — users see
+      # a captcha error and cannot log in. Verify CIAM_CAPTCHA_SITE_KEY and CIAM_CAPTCHA_SECRET_KEY match
+      # the Turnstile widget configured for this domain before enabling.
+      # Defense-in-depth: see platform#22 (per-IP rate limiting via Caddy) — currently GATE HOLD.
       - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-true}
       - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
       - CAPTCHA_SECRET_KEY=${CIAM_CAPTCHA_SECRET_KEY:-}
@@ -297,6 +303,10 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=CIAM
       - NEXT_PUBLIC_APP_INSTANCE=CIAM
+      # SECURITY WARNING — ALLOW_DEMO_ACCOUNTS (platform#17)
+      # Setting ALLOW_DEMO_ACCOUNTS=true bypasses CAPTCHA enforcement AND brute-force lockout
+      # protections for demo accounts. Both Hera CAPTCHA verification and login rate-limiting are
+      # skipped entirely. This MUST remain false in production.
       - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
     networks:
       - intranet
@@ -330,6 +340,12 @@ services:
       - KRATOS_ADMIN_URL=http://iam-kratos:7001
       - DEFAULT_OAUTH2_CLIENT_ID=athena-iam-client
       - HYDRA_PUBLIC_URL=${IAM_HYDRA_PUBLIC_URL}
+      # CAPTCHA POLICY — FAIL-CLOSED (Hera / platform#17)
+      # This is a policy-only control. When CAPTCHA_ENABLED=true, TURNSTILE_SITE_KEY (IAM_CAPTCHA_SITE_KEY)
+      # MUST be set correctly. A mismatched or missing key causes Hera login to fail closed — users see
+      # a captcha error and cannot log in. Verify IAM_CAPTCHA_SITE_KEY and IAM_CAPTCHA_SECRET_KEY match
+      # the Turnstile widget configured for this domain before enabling.
+      # Defense-in-depth: see platform#22 (per-IP rate limiting via Caddy) — currently GATE HOLD.
       - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-true}
       - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
       - CAPTCHA_SECRET_KEY=${IAM_CAPTCHA_SECRET_KEY:-}
@@ -338,6 +354,10 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - APP_INSTANCE=IAM
       - NEXT_PUBLIC_APP_INSTANCE=IAM
+      # SECURITY WARNING — ALLOW_DEMO_ACCOUNTS (platform#17)
+      # Setting ALLOW_DEMO_ACCOUNTS=true bypasses CAPTCHA enforcement AND brute-force lockout
+      # protections for demo accounts. Both Hera CAPTCHA verification and login rate-limiting are
+      # skipped entirely. This MUST remain false in production.
       - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
     networks:
       - intranet
@@ -383,6 +403,11 @@ services:
       - AUTH_HYDRA_URL=http://iam-hydra:7002
       - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      # CAPTCHA POLICY — DISPLAY-ONLY / FAIL-OPEN (Athena / platform#17)
+      # This is a policy-only control. Athena's CAPTCHA is display-only (fail-open): if the
+      # Turnstile widget fails to load or the key is misconfigured, Athena continues to function.
+      # CAPTCHA_ENABLED=false is the safe default for Athena. See platform#17 for rationale.
+      # Defense-in-depth: see platform#22 (per-IP rate limiting via Caddy) — currently GATE HOLD.
       - CAPTCHA_ENABLED=${CIAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${CIAM_CAPTCHA_SITE_KEY:-}
       - DATABASE_URL=${PG_OLYMPUS_DSN}
@@ -438,6 +463,11 @@ services:
       - AUTH_HYDRA_URL=http://iam-hydra:7002
       - AUTH_HYDRA_ADMIN_URL=http://iam-hydra:7003
       - AUTH_KRATOS_ADMIN_URL=http://iam-kratos:7001
+      # CAPTCHA POLICY — DISPLAY-ONLY / FAIL-OPEN (Athena / platform#17)
+      # This is a policy-only control. Athena's CAPTCHA is display-only (fail-open): if the
+      # Turnstile widget fails to load or the key is misconfigured, Athena continues to function.
+      # CAPTCHA_ENABLED=false is the safe default for Athena. See platform#17 for rationale.
+      # Defense-in-depth: see platform#22 (per-IP rate limiting via Caddy) — currently GATE HOLD.
       - CAPTCHA_ENABLED=${IAM_CAPTCHA_ENABLED:-false}
       - CAPTCHA_SITE_KEY=${IAM_CAPTCHA_SITE_KEY:-}
       - DATABASE_URL=${PG_OLYMPUS_DSN}
