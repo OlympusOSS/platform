@@ -65,14 +65,14 @@ These variables are injected into `ciam-hera` and `iam-hera` containers. The com
 | `CAPTCHA_SITE_KEY` | `IAM_CAPTCHA_SITE_KEY` | IAM | Cloudflare Turnstile site key for the IAM Hera domain |
 | `CAPTCHA_SECRET_KEY` | `IAM_CAPTCHA_SECRET_KEY` | IAM | Turnstile secret key for IAM server-side verification |
 
-**Production defaults**: All four application containers use `:-true` defaults in `compose.prod.yml`. CAPTCHA is active in all containers unless the GitHub Variable is explicitly set to `false`.
+**Production defaults**: Hera containers default to `:-true` (fail-closed); Athena containers default to `:-false` (fail-open, display-only). CAPTCHA authentication enforcement lives exclusively in Hera. The Athena flag controls UI display only — no `verifyCaptcha()` call exists in Athena.
 
-| Container | Variable | Default |
-|-----------|----------|---------|
-| `ciam-hera` | `CIAM_CAPTCHA_ENABLED` | `true` (enforced — `verifyCaptcha()` runs) |
-| `iam-hera` | `IAM_CAPTCHA_ENABLED` | `true` (enforced — `verifyCaptcha()` runs) |
-| `ciam-athena` | `CIAM_CAPTCHA_ENABLED` | `true` (display-only — no `verifyCaptcha()` call in Athena) |
-| `iam-athena` | `IAM_CAPTCHA_ENABLED` | `true` (display-only — no `verifyCaptcha()` call in Athena) |
+| Container | `CAPTCHA_ENABLED` default | Behavior |
+|-----------|--------------------------|----------|
+| `ciam-hera` | `:-true` (fail-closed) | Full CAPTCHA enforcement — blocks on Cloudflare failure |
+| `iam-hera` | `:-true` (fail-closed) | Full CAPTCHA enforcement — blocks on Cloudflare failure |
+| `ciam-athena` | `:-false` (fail-open) | Display only — CAPTCHA widget shown but not server-enforced |
+| `iam-athena` | `:-false` (fail-open) | Display only — CAPTCHA widget shown but not server-enforced |
 
 The Athena containers receive the `CAPTCHA_ENABLED` variable to drive UI elements (e.g., showing or hiding the CAPTCHA settings panel). Athena does not call `verifyCaptcha()` — it is not an authentication flow endpoint. Changing `CAPTCHA_ENABLED` on Athena has no effect on authentication gate enforcement.
 
