@@ -1,3 +1,25 @@
+# Production Caddyfile — reverse proxy with TLS (ACME) and per-IP rate limiting.
+#
+# RATE LIMIT KEY NOTE (SR-CADDY-5 / Security V1):
+# The rate limit keys on {http.request.remote.host} (TCP peer address, port stripped).
+# In the current direct-connect topology (no proxy in front of Caddy) this correctly
+# identifies the client IP. If a load balancer, CDN, or reverse proxy is ever placed
+# in front of Caddy, ALL traffic will share the proxy's IP as the rate limit key,
+# effectively disabling per-IP protection. In that case, the configuration MUST be
+# updated to use `trusted_proxies` + {http.request.header.X-Forwarded-For} before
+# traffic flows through the proxy.
+#
+# RESIDUAL RISKS (accepted, documented per Security review):
+# - Distributed brute force (IP rotation, botnet): this control targets single-IP
+#   attacks only. An attacker with N IPs gets N×30 attempts/min. Distributed attack
+#   mitigation (fail2ban, CDN bot management, account velocity limits) is out of scope.
+# - IPv6 /64 prefix bypass: a /64 prefix contains ~18 quintillion addresses. An
+#   attacker can rotate within a prefix with each address appearing as a distinct key.
+#   Subnet-level limiting is not configured. Monitor production logs; revisit if abuse
+#   is observed.
+# - In-memory counters reset on Caddy restart: a restart grants a fresh burst window.
+#   Accepted at current single-node scale.
+
 {
 	email {$ACME_EMAIL:noreply@example.com}
 }

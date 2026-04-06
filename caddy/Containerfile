@@ -6,12 +6,17 @@
 # included, then packages it into a minimal Alpine image.
 #
 # Module: github.com/mholt/caddy-ratelimit
+# Pinned version: v0.1.0 (pinned 2026-04-05, SR-CADDY-2 / platform#47)
 # Reference: https://github.com/mholt/caddy-ratelimit
+#
+# To upgrade: check https://github.com/mholt/caddy-ratelimit/releases for a newer
+# tagged release, update the version below, and update the pinned date above.
+# Always verify the module is present after rebuild (caddy list-modules | grep rate_limit).
 
 FROM docker.io/caddy:2-builder-alpine AS builder
 
 RUN xcaddy build \
-    --with github.com/mholt/caddy-ratelimit
+    --with github.com/mholt/caddy-ratelimit@v0.1.0
 
 FROM docker.io/caddy:2-alpine
 

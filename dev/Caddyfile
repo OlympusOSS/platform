@@ -9,6 +9,26 @@
 #
 # Module required: github.com/mholt/caddy-ratelimit
 # Image: custom — see platform/caddy/Containerfile
+#
+# RATE LIMIT KEY NOTE (SR-CADDY-5 / Security V1):
+# The rate limit keys on {http.request.remote.host} (TCP peer address, port stripped).
+# In the current direct-connect topology (no proxy in front of Caddy) this correctly
+# identifies the client IP. If a load balancer, CDN, or reverse proxy is ever placed
+# in front of Caddy, ALL traffic will share the proxy's IP as the rate limit key,
+# effectively disabling per-IP protection. In that case, the configuration MUST be
+# updated to use `trusted_proxies` + {http.request.header.X-Forwarded-For} before
+# traffic flows through the proxy.
+#
+# RESIDUAL RISKS (accepted, documented per Security review):
+# - Distributed brute force (IP rotation, botnet): this control targets single-IP
+#   attacks only. An attacker with N IPs gets N×30 attempts/min. Distributed attack
+#   mitigation (fail2ban, CDN bot management, account velocity limits) is out of scope.
+# - IPv6 /64 prefix bypass: a /64 prefix contains ~18 quintillion addresses. An
+#   attacker can rotate within a prefix with each address appearing as a distinct key.
+#   Subnet-level limiting is not configured. Monitor production logs; revisit if abuse
+#   is observed.
+# - In-memory counters reset on Caddy restart: a restart grants a fresh burst window.
+#   Accepted at current single-node scale.
 
 {
 	# Disable automatic HTTPS in dev (plain HTTP only)
@@ -18,16 +38,23 @@
 
 # CIAM Hera — login/consent/logout UI (Customer Identity)
 :3000 {
-	# Match POST requests to login submission paths only.
-	# This does NOT rate-limit GET page loads, static assets, or health checks.
-	@login_post {
-		method POST
-		path /login* /self-service/login*
+	# Rate limiting on login POST paths (SR-CADDY-1):
+	# 5 requests per 10 seconds per source IP (30 attempts/min max).
+	# Applies before requests reach Hera, providing a network-layer backstop
+	# during DB outages when checkLockout() fails open.
+	# Does NOT rate-limit GET page loads, static assets, or health checks.
+	# Module: github.com/mholt/caddy-ratelimit (see platform/caddy/Containerfile)
+	rate_limit {
+		zone login_limit {
+			match {
+				method POST
+				path /login* /self-service/login*
+			}
+			key {http.request.remote.host}
+			events 5
+			window 10s
+		}
 	}
-
-	# TODO: Rate limiting disabled — caddy-ratelimit module syntax needs fixing.
-	# See platform#11 / SR-CADDY-1 for the production rate limit spec.
-	# rate_limit @login_post {remote.ip} 5r/10s
 
 	# Block external access to the HIBP policy webhook endpoint (Security Condition 1 — platform#12)
 	# This endpoint receives plaintext passwords from Kratos in block mode (V2) and must be
