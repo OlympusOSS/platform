@@ -53,6 +53,11 @@ Both `ciam-athena` and `ciam-kratos-reload-sidecar` must hold the same key value
 reload calls to succeed. Restarting one container without the other creates a window
 where reload calls fail with 401.
 
+> **If you see a 401 on a social config save during rotation**: the two containers hold
+> different key values. Re-run steps 3–4 below in immediate succession, then re-run the
+> post-rotation verification. See the "Post-Rotation Verification" section for the full
+> recovery procedure.
+
 **During this window**: any social connection config save in Athena will succeed at the
 SDK write layer (the config is stored in the database) but the Kratos config reload will
 not execute. The social connection change will appear saved in the UI but will not be
