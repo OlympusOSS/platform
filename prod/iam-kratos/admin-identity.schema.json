@@ -43,6 +43,12 @@
           "title": "Role",
           "enum": ["admin", "viewer"],
           "default": "viewer"
+        },
+        "roles": {
+          "type": "array",
+          "items": { "type": "string" },
+          "title": "Access Control Roles",
+          "description": "Access control roles for this identity (e.g. 'dba' grants pgAdmin access)"
         }
       },
       "required": ["email"],

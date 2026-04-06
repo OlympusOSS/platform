@@ -481,6 +481,10 @@ services:
     environment:
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - CIAM_HYDRA_ADMIN_URL=http://ciam-hydra:5003
+      - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - CIAM_KRATOS_ADMIN_URL=http://ciam-kratos:5001
+      - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - NEXT_PUBLIC_APP_URL=http://localhost:2000
       - NEXT_PUBLIC_CIAM_ATHENA_URL=http://localhost:3001
       - NEXT_PUBLIC_IAM_ATHENA_URL=http://localhost:4001

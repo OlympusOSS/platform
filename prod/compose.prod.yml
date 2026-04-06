@@ -469,9 +469,13 @@ services:
       - NEXT_PUBLIC_IAM_HYDRA_URL=${IAM_HYDRA_PUBLIC_URL}
       - NEXT_PUBLIC_CIAM_ATHENA_URL=${CIAM_ATHENA_PUBLIC_URL}
       - NEXT_PUBLIC_IAM_ATHENA_URL=${IAM_ATHENA_PUBLIC_URL}
-      # Server-side token exchange (internal network)
+      # Server-side (internal network)
       - CIAM_HYDRA_PUBLIC_URL=http://ciam-hydra:5002
       - IAM_HYDRA_PUBLIC_URL=http://iam-hydra:7002
+      - CIAM_HYDRA_ADMIN_URL=http://ciam-hydra:5003
+      - IAM_HYDRA_ADMIN_URL=http://iam-hydra:7003
+      - CIAM_KRATOS_ADMIN_URL=http://ciam-kratos:5001
+      - IAM_KRATOS_ADMIN_URL=http://iam-kratos:7001
       - CIAM_CLIENT_ID=${SITE_CIAM_CLIENT_ID}
       - CIAM_CLIENT_SECRET=${SITE_CIAM_CLIENT_SECRET}
       - IAM_CLIENT_ID=${SITE_IAM_CLIENT_ID}

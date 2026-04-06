@@ -141,6 +141,13 @@ upsert_identity "${IAM_KRATOS_ADMIN_URL}" "viewer@demo.user" \
   '{"schema_id":"admin","traits":{"email":"viewer@demo.user","name":{"first":"Marine","last":"Nannier"},"role":"viewer"},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
   "viewer@demo.user (role: viewer, demo)"
 
+# Create/update DBA user: dba@demo.user (platform#21 — pgAdmin access requires 'dba' role)
+# This identity has the 'dba' roles trait, which is injected into IAM Hydra ID tokens
+# by the global oidc.claims_mapper and validated by pgAdmin's OAUTH2_ADDITIONAL_CLAIMS_VALIDATION.
+upsert_identity "${IAM_KRATOS_ADMIN_URL}" "dba@demo.user" \
+  '{"schema_id":"admin","traits":{"email":"dba@demo.user","name":{"first":"DBA","last":"User"},"role":"admin","roles":["dba"]},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
+  "dba@demo.user (role: admin, roles: [dba], demo)"
+
 echo ""
 echo "=== CIAM Demo Identity ==="
 
@@ -166,6 +173,10 @@ echo ""
 echo "Creating OAuth2 clients for admin panels..."
 
 # Create OAuth2 client for CIAM Athena (admin panel for customer identities)
+# subject_type=public: ensures Hydra returns the Kratos identity UUID as the sub claim,
+#   not a pairwise HMAC. Required for /userinfo sub matching against Kratos identity IDs.
+# token_endpoint_auth_method=none: marks this as a public client so Hydra enforces PKCE
+#   (S256) on the authorization code flow per Security Expert requirement (athena#52).
 curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{
@@ -176,11 +187,16 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "redirect_uris": ["http://localhost:3001/api/auth/callback"],
     "post_logout_redirect_uris": ["http://localhost:3001/api/auth/login"],
     "scope": "openid profile email",
+    "subject_type": "public",
     "token_endpoint_auth_method": "none",
     "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: athena-ciam-client (IAM Hydra)" || echo "  athena-ciam-client already exists or failed"
 
 # Create OAuth2 client for IAM Athena (admin panel for employee identities)
+# subject_type=public: ensures Hydra returns the Kratos identity UUID as the sub claim,
+#   not a pairwise HMAC. Required for /userinfo sub matching against Kratos identity IDs.
+# token_endpoint_auth_method=none: marks this as a public client so Hydra enforces PKCE
+#   (S256) on the authorization code flow per Security Expert requirement (athena#52).
 curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{
@@ -191,6 +207,7 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "redirect_uris": ["http://localhost:4001/api/auth/callback"],
     "post_logout_redirect_uris": ["http://localhost:4001/api/auth/login"],
     "scope": "openid profile email",
+    "subject_type": "public",
     "token_endpoint_auth_method": "none",
     "skip_consent": true
   }' > /dev/null 2>&1 && echo "  Created: athena-iam-client (IAM Hydra)" || echo "  athena-iam-client already exists or failed"
@@ -199,6 +216,10 @@ echo ""
 echo "Creating OAuth2 client for pgAdmin..."
 
 # Create OAuth2 client for pgAdmin (database management UI)
+# platform#21: The 'roles' claim is injected into all IAM Hydra ID tokens via the
+# global oidc.claims_mapper in iam-hydra/hydra.yml (pgadmin-claims-mapper.jsonnet).
+# pgAdmin's OAUTH2_ADDITIONAL_CLAIMS_VALIDATION hook enforces 'dba' role membership
+# as a second access control layer (in addition to OAUTH2_AUTO_CREATE_USER = False).
 curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{

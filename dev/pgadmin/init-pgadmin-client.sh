@@ -21,6 +21,10 @@ if echo "$EXISTING" | grep -q '"client_id":"pgadmin"'; then
 fi
 
 echo "Creating pgadmin OAuth2 client..."
+# platform#21: The 'roles' claim is injected into all IAM Hydra ID tokens via the
+# global oidc.claims_mapper in iam-hydra/hydra.yml (pgadmin-claims-mapper.jsonnet).
+# pgAdmin's OAUTH2_ADDITIONAL_CLAIMS_VALIDATION hook enforces 'dba' role membership
+# as a second access control layer (in addition to OAUTH2_AUTO_CREATE_USER = False).
 curl -sf -X POST "${HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{

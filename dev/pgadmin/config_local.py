@@ -2,7 +2,21 @@ import os
 
 AUTHENTICATION_SOURCES = ['oauth2']
 
-OAUTH2_AUTO_CREATE_USER = True
+# Security fix (platform#21 — OWASP A01:2021 Broken Access Control):
+# OAUTH2_AUTO_CREATE_USER = False prevents pgAdmin from silently provisioning
+# a new database admin account for every IAM identity that successfully
+# authenticates via IAM Hydra. Only pre-provisioned DBA accounts may log in.
+OAUTH2_AUTO_CREATE_USER = False
+
+# Role-based access validation (platform#21 — mandatory defense-in-depth layer):
+# Even for pre-provisioned accounts, the IAM identity must hold the 'dba' role.
+# The 'roles' claim is injected into the ID token by the IAM Hydra Jsonnet claims
+# mapper configured on the pgAdmin OAuth2 client. If the claim is absent, null,
+# or does not contain 'dba', access is denied at the application layer.
+# This provides a second enforcement layer independent of pgAdmin's user database.
+OAUTH2_ADDITIONAL_CLAIMS_VALIDATION = {
+    'roles': lambda roles: 'dba' in (roles or [])
+}
 
 OAUTH2_CONFIG = [
     {

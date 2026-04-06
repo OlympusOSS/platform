@@ -79,6 +79,21 @@ oauth2_client_exists() {
 # Create or update an OAuth2 client in Hydra (true upsert).
 # If the client already exists, PUT replaces it so secrets, redirect URIs,
 # and other settings always match the current deployment.
+#
+# Parameters:
+#   $1  hydra_url
+#   $2  client_id
+#   $3  client_name
+#   $4  client_secret
+#   $5  redirect_uri
+#   $6  post_logout_uri
+#   $7  skip_consent         (default: true)
+#   $8  subject_type         (default: pairwise) — use "public" for Athena clients so the
+#                             sub claim is the raw Kratos identity UUID instead of a
+#                             pairwise HMAC. Required for /userinfo sub matching (athena#52).
+#   $9  token_endpoint_auth  (default: client_secret_basic) — use "none" for Athena clients
+#                             to enforce PKCE S256 on the authorization code flow per the
+#                             Security Expert requirement (athena#52).
 create_oauth2_client() {
   local hydra_url="$1"
   local client_id="$2"
@@ -87,7 +102,8 @@ create_oauth2_client() {
   local redirect_uri="$5"
   local post_logout_uri="$6"
   local skip_consent="${7:-true}"
-  local auth_method="${8:-client_secret_basic}"
+  local subject_type="${8:-pairwise}"
+  local auth_method="${9:-client_secret_basic}"
 
   local payload
   if [ "${auth_method}" = "none" ]; then
@@ -100,6 +116,7 @@ create_oauth2_client() {
       \"redirect_uris\": [\"${redirect_uri}\"],
       \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
       \"scope\": \"openid profile email\",
+      \"subject_type\": \"${subject_type}\",
       \"token_endpoint_auth_method\": \"none\",
       \"skip_consent\": ${skip_consent}
     }"
@@ -114,6 +131,7 @@ create_oauth2_client() {
       \"redirect_uris\": [\"${redirect_uri}\"],
       \"post_logout_redirect_uris\": [\"${post_logout_uri}\"],
       \"scope\": \"openid profile email\",
+      \"subject_type\": \"${subject_type}\",
       \"token_endpoint_auth_method\": \"${auth_method}\",
       \"skip_consent\": ${skip_consent}
     }"
@@ -209,7 +227,8 @@ echo ""
 echo "=== OAuth2 Clients ==="
 
 # CIAM Athena — admin panel for customer identities (authenticates via IAM Hydra)
-# Public client (PKCE) — no client_secret needed
+# subject_type=public: sub claim is the raw Kratos UUID, enabling /userinfo lookup (athena#52)
+# token_endpoint_auth=none: public client (PKCE S256) per Security Expert requirement (athena#52)
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_CIAM_OAUTH_CLIENT_ID}" \
@@ -218,10 +237,12 @@ create_oauth2_client \
   "${CIAM_ATHENA_PUBLIC_URL}/api/auth/callback" \
   "${CIAM_ATHENA_PUBLIC_URL}" \
   true \
+  public \
   none
 
 # IAM Athena — admin panel for employee identities (authenticates via IAM Hydra)
-# Public client (PKCE) — no client_secret needed
+# subject_type=public: sub claim is the raw Kratos UUID, enabling /userinfo lookup (athena#52)
+# token_endpoint_auth=none: public client (PKCE S256) per Security Expert requirement (athena#52)
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_IAM_OAUTH_CLIENT_ID}" \
@@ -230,6 +251,7 @@ create_oauth2_client \
   "${IAM_ATHENA_PUBLIC_URL}/api/auth/callback" \
   "${IAM_ATHENA_PUBLIC_URL}" \
   true \
+  public \
   none
 
 # -----------------------------------------------------------------------------

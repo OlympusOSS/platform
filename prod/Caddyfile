@@ -82,7 +82,24 @@
 	reverse_proxy iam-athena:3000
 }
 
-# pgAdmin
+# pgAdmin — database administration (INTERNAL ONLY — platform#21 network restriction)
+#
+# Network restriction evidence (AC-A1 — platform#21):
+# pgAdmin MUST NOT be publicly accessible from the internet in production.
+# Enforcement layers:
+#   1. PGADMIN_PUBLIC_URL must resolve to a private/internal hostname only
+#      (e.g., pgadmin.internal.example.com with no public DNS record)
+#   2. The production server's firewall/security group MUST restrict port 443
+#      (or whatever port PGADMIN_PUBLIC_URL resolves to) to authorized VPN/
+#      bastion source IPs only — not 0.0.0.0/0
+#   3. This Caddyfile block is intentionally present to document the routing;
+#      network-layer access control is enforced at the firewall/security group,
+#      not here (Caddy does not have IP allowlist for this route)
+#
+# OPERATOR REQUIREMENT: Before deploying, confirm firewall/security group rules
+# restrict access to pgAdmin's Caddy route to internal/VPN CIDRs only.
+# Failure to apply this restriction exposes all 5 Olympus PostgreSQL databases
+# (including ciam_kratos, ciam_hydra, iam_kratos, iam_hydra, olympus) to the internet.
 {$PGADMIN_PUBLIC_URL} {
 	reverse_proxy pgadmin:80
 }
