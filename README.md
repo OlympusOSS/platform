@@ -174,6 +174,55 @@ Key rules:
 
 ## Security Operations
 
+### Security Headers
+
+The production Caddy reverse proxy applies structural security headers (HSTS, X-Frame-Options,
+X-Content-Type-Options, Referrer-Policy, Permissions-Policy) via two Caddyfile snippets. Hera
+and Athena apply Content-Security-Policy via per-request nonce-based Next.js middleware. Each
+header is owned by exactly one layer.
+
+**Breaking change**: `frame-ancestors 'none'` in the CSP means Hera and Athena cannot be embedded
+in iframes. Any integration that relied on iframe embedding of the login, consent, or admin pages
+must move to a redirect-based OAuth2 flow.
+
+See [docs/security-headers.md](./docs/security-headers.md) for the full reference including vhost
+assignment table, nonce propagation pattern, operator runbook for Caddyfile changes, and CSP
+troubleshooting.
+
+### Database SSL
+
+All five PostgreSQL connections use `sslmode=require` in production (implemented in platform#19).
+`sslmode=require` encrypts connections but does not validate the server certificate; `verify-full`
+is tracked in platform#53.
+
+**Pre-deployment checklist item**: before any deployment, verify the `PG_SSLMODE` GitHub Variable
+is either absent or set to `require`. If `PG_SSLMODE=disable` is still set, it silently overrides
+the `deploy.yml` default and all connections remain plaintext — there is no error or warning.
+
+See [docs/database-ssl.md](./docs/database-ssl.md) for the full reference including pre-deployment
+checklist, certificate management, SOC2 CC6.1 evidence queries, and troubleshooting for the three
+common SSL deployment failures.
+
+### pgAdmin Access Control
+
+pgAdmin is restricted to pre-provisioned DBAs with the `dba` role in IAM Kratos. Access is
+enforced by three independent layers: network restriction (port 5433 not publicly accessible),
+pre-provisioning gate (`OAUTH2_AUTO_CREATE_USER = False`), and role claim validation
+(`OAUTH2_ADDITIONAL_CLAIMS_VALIDATION`).
+
+**Global claims mapper note**: due to a Hydra v26.2.0 limitation, the IAM Hydra claims mapper is
+configured globally (`oidc.claims_mapper.filepath` in `hydra.yml`). All IAM Hydra ID tokens include
+a `roles` array claim. Any new IAM Hydra OAuth2 client integration must account for this claim.
+
+**Active session gap**: removing the `dba` role from an IAM identity prevents new logins but does
+not terminate active pgAdmin sessions (session lifetime: 1 day). For time-sensitive DBA removals,
+execute session revocation (step 4 of the offboarding runbook) immediately.
+
+See [docs/pgadmin-access.md](./docs/pgadmin-access.md) for the DBA provisioning runbook,
+Jsonnet claims mapper configuration, and the Hydra v26.2.0 global mapper ADR.
+See [docs/runbook-pgadmin-dba-offboarding.md](./docs/runbook-pgadmin-dba-offboarding.md) for the
+complete four-step offboarding procedure.
+
 ### Rate Limiting
 
 The production login endpoint has two independent rate limiting layers — Caddy (per-IP) and SDK (per-account lockout). See [docs/rate-limiting.md](./docs/rate-limiting.md) for the full reference including error response shapes, configuration keys, and integration examples.
@@ -187,6 +236,17 @@ The production login endpoint has two independent rate limiting layers — Caddy
 
 All production credential rotations must go through GitHub Actions (deploy.yml). Direct SSH
 or manual server access for credential rotation is prohibited by the platform deployment policy.
+
+### Security Decisions
+
+Architectural security decisions are recorded at the point they are made so future engineers do not have to rediscover the rationale.
+
+| Decision | Document |
+|----------|---------|
+| Email verification enforcement — which config key enforces it (hook vs. method) | [docs/email-verification.md](./docs/email-verification.md) |
+| OIDC social login — whether provider `email_verified: true` is trusted by Kratos | [docs/oidc-email-verified-trust-decision.md](./docs/oidc-email-verified-trust-decision.md) |
+
+The OIDC trust decision must be revisited explicitly in the Architecture Brief for any story that adds an OIDC provider to the CIAM Kratos configuration. The decision document is a prerequisite for that Brief to be approved.
 
 ---
 
