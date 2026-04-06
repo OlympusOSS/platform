@@ -24,13 +24,31 @@
 	email {$ACME_EMAIL:noreply@example.com}
 }
 
+# Security headers snippet — applied to all site blocks.
+# HSTS is included in production: all traffic is HTTPS via Caddy's ACME TLS.
+# max-age=31536000 (1 year) with includeSubDomains matches the Security Expert's
+# requirement (platform#18). Preload is intentionally omitted pending HSTS
+# preload list submission — add "preload" and submit once confirmed stable.
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+}
+
 # Site
 {$SITE_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy site:3000
 }
 
 # CIAM — Customer Identity
 {$CIAM_HERA_PUBLIC_URL} {
+	import security_headers
+
 	# Rate limiting on login POST paths (SR-CADDY-1):
 	# 5 requests per 10 seconds per source IP (30 attempts/min max).
 	# Applies before requests reach Hera, providing a network-layer backstop
@@ -62,23 +80,28 @@
 }
 
 {$CIAM_HYDRA_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy ciam-hydra:5002
 }
 
 {$CIAM_ATHENA_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy ciam-athena:3000
 }
 
 # IAM — Internal Identity
 {$IAM_HERA_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy iam-hera:4000
 }
 
 {$IAM_HYDRA_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy iam-hydra:7002
 }
 
 {$IAM_ATHENA_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy iam-athena:3000
 }
 
@@ -101,5 +124,6 @@
 # Failure to apply this restriction exposes all 5 Olympus PostgreSQL databases
 # (including ciam_kratos, ciam_hydra, iam_kratos, iam_hydra, olympus) to the internet.
 {$PGADMIN_PUBLIC_URL} {
+	import security_headers
 	reverse_proxy pgadmin:80
 }

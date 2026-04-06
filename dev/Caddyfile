@@ -36,6 +36,19 @@
 	admin off
 }
 
+# Security headers snippet — applied to all site blocks.
+# HSTS is intentionally excluded: dev runs on plain HTTP, sending HSTS over HTTP
+# is meaningless and would cause browser lockout if a developer later enables
+# HTTPS on the same hostname. All other headers are safe for HTTP contexts.
+(security_headers) {
+	header {
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+}
+
 # CIAM Hera — login/consent/logout UI (Customer Identity)
 :3000 {
 	# Rate limiting on login POST paths (SR-CADDY-1):
@@ -65,40 +78,48 @@
 	}
 	respond @policy_password 404
 
+	import security_headers
 	reverse_proxy ciam-hera:3000
 }
 
 # CIAM Hydra — OAuth2/OIDC provider (Customer Identity)
 :3102 {
+	import security_headers
 	reverse_proxy ciam-hydra:5002
 }
 
 # CIAM Athena — admin panel (Customer Identity)
 :3001 {
+	import security_headers
 	reverse_proxy ciam-athena:3000
 }
 
 # IAM Hera — login/consent/logout UI (Internal Identity)
 :4000 {
+	import security_headers
 	reverse_proxy iam-hera:4000
 }
 
 # IAM Hydra — OAuth2/OIDC provider (Internal Identity)
 :4102 {
+	import security_headers
 	reverse_proxy iam-hydra:7002
 }
 
 # IAM Athena — admin panel (Internal Identity)
 :4001 {
+	import security_headers
 	reverse_proxy iam-athena:3000
 }
 
 # Site — brochure site & OAuth2 playground
 :2000 {
+	import security_headers
 	reverse_proxy site:3000
 }
 
 # pgAdmin — database administration UI
 :5433 {
+	import security_headers
 	reverse_proxy pgadmin:80
 }
