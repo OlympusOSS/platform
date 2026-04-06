@@ -25,7 +25,7 @@ Because of this blast radius, DBA access is a high-consequence privilege. When a
 pgAdmin enforces two independent access control layers:
 
 1. **Pre-provisioning gate** (`OAUTH2_AUTO_CREATE_USER = False`): only IAM identities with an existing pgAdmin user record may log in. New accounts are never silently created.
-2. **Role claim gate** (`OAUTH2_ADDITIONAL_CLAIMS_VALIDATION`): the IAM Hydra ID token must contain a `roles` claim that includes `"dba"`. This claim is injected by the IAM Hydra global Jsonnet claims mapper (`pgadmin-claims-mapper.jsonnet`). If the claim is absent, null, or does not contain `"dba"`, login is denied regardless of pgAdmin user record status.
+2. **Role claim gate** (`OAUTH2_ADDITIONAL_CLAIMS_VALIDATION`): the IAM Hydra ID token must contain a `roles` claim that includes `"dba"`. This claim is injected via the IAM Hera consent session — the consent page (`hera/src/app/consent/page.tsx`) reads `traits.roles` from the IAM Kratos identity context and passes it to IAM Hydra as `session.id_token.roles` when calling `acceptConsentRequest`. If the claim is absent, null, or does not contain `"dba"`, login is denied regardless of pgAdmin user record status. Note: Hydra v26.2.0 does not support per-client Jsonnet claims mappers — consent session injection is the implemented mechanism.
 
 Offboarding must address both layers.
 
@@ -161,7 +161,7 @@ To provision a new DBA:
 | File | Purpose |
 |------|---------|
 | `platform/prod/pgadmin/config_local.py` | pgAdmin OAuth2 config — `OAUTH2_AUTO_CREATE_USER = False`, `OAUTH2_ADDITIONAL_CLAIMS_VALIDATION` |
-| `platform/prod/iam-hydra/pgadmin-claims-mapper.jsonnet` | Jsonnet mapper — injects `roles` claim into IAM Hydra ID tokens |
-| `platform/prod/iam-hydra/hydra.yml` | IAM Hydra config — `oidc.claims_mapper.filepath` |
+| `hera/src/app/consent/page.tsx` | IAM Hera consent page — injects `roles` claim into IAM Hydra ID tokens via `session.id_token.roles` in `acceptConsentRequest` |
+| `hera/src/app/login/actions.ts` | IAM Hera login action — extracts `traits.roles` from IAM Kratos identity and passes it as login context |
 | `platform/prod/iam-kratos/admin-identity.schema.json` | IAM identity schema — `roles` array trait |
 | `platform/prod/Caddyfile` | Reverse proxy — network restriction documentation |

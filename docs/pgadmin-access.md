@@ -67,21 +67,46 @@ consent page (`hera/src/app/consent/page.tsx`) reads `traits.roles` from the Kra
 passes it to IAM Hydra when accepting the consent request:
 
 ```ts
-// In IAM Hera consent page
-await hydraAdmin.acceptOAuth2ConsentRequest({
-  consentChallenge,
-  acceptOAuth2ConsentRequest: {
-    session: {
-      id_token: {
-        roles: identity.traits.roles ?? [],
-      },
+// hera/src/app/consent/page.tsx
+import { getConsentRequest, acceptConsentRequest } from "@/lib/hydra";
+
+const consentRequest = await getConsentRequest(challenge);
+
+// Extract roles from context — set by IAM login action (login/actions.ts)
+const contextRoles = consentRequest.context?.roles;
+const idTokenRoles: string[] = Array.isArray(contextRoles)
+  ? (contextRoles as string[]).filter((r: unknown): r is string => typeof r === "string")
+  : [];
+
+// Accept consent and inject roles into the ID token session claim
+await acceptConsentRequest(challenge, {
+  grant_scope: consentRequest.requested_scope,
+  grant_access_token_audience: consentRequest.requested_access_token_audience,
+  session: {
+    id_token: {
+      email: consentRequest.context?.email || "",
+      sub: consentRequest.subject,
+      roles: idTokenRoles,
     },
   },
 });
 ```
 
-This is null-safe — identities without a `roles` trait receive an empty array, causing the
-pgAdmin hook to deny access (correct behavior for non-DBA identities).
+The implementation uses `acceptConsentRequest` from `@/lib/hydra` — not the Ory SDK's
+`hydraAdmin.acceptOAuth2ConsentRequest` method. The helper wraps the Hydra admin API call
+with the correct request shape for this codebase.
+
+The roles extraction is null-safe: identities without a `roles` trait in their Kratos context
+receive an empty array. The `.filter()` call also strips any non-string values from the array.
+Both paths — skip-consent (remembered) and first-time consent — inject `roles` from the
+current login context, not from the stored consent grant. This means role changes take effect
+at the DBA's next login, not after the consent grant expires.
+
+> **Note for future IAM Hydra client developers**: All OAuth2 clients using the IAM Hera
+> consent flow receive a `roles` array claim in their ID tokens. See the
+> [Consent Session Injection ADR](#consent-session-injection-adr) section below and the
+> [New IAM Hydra client encounters unexpected `roles` claim](#new-iam-hydra-client-encounters-unexpected-roles-claim)
+> edge case.
 
 ### IAM Kratos Identity Schema
 
@@ -167,14 +192,23 @@ If the identity already has other roles, include them in the value array alongsi
 
 ### Step 3 — Pre-provision the pgAdmin user record
 
-1. Log in to pgAdmin as a pgAdmin administrator
-2. Navigate to User Management (top menu)
-3. Create a new user with the DBA's email address
-4. Set the appropriate role (Admin or User) within pgAdmin
+> **Required setup step — do not skip.** A DBA with a correctly assigned `dba` role in IAM
+> Kratos will still be denied by pgAdmin if this step is not completed. The error message is
+> indistinguishable from a role-gate denial. This step is also a prerequisite for Local QA
+> test cases V1 and F5.
+
+1. Log in to pgAdmin as a pgAdmin administrator (the default admin account is configured in
+   the dev compose file; production requires an existing pgAdmin admin session)
+2. Navigate to User Management (top menu: click your username in the top right, then
+   "User Management")
+3. Click "Add User"
+4. Enter the DBA's email address (must match the IAM Kratos identity's email exactly)
+5. Set the appropriate pgAdmin role: "Administrator" for lead DBAs, "User" for standard DBAs
+6. Save
 
 This step is mandatory — `OAUTH2_AUTO_CREATE_USER = False` means pgAdmin never auto-creates
 accounts. A valid IAM SSO session is necessary but not sufficient for access. The pgAdmin user
-record must exist before the DBA's first login.
+record must exist before the DBA's first login attempt.
 
 ### Step 4 — Verify access
 
@@ -282,3 +316,49 @@ Both conditions must be true for access to be granted.
   collected by the platform log pipeline for audit purposes
 - The `roles` claim is injected via the IAM Hera consent page (`AcceptConsentRequest` with
   `session.id_token.roles`) — scoped to OAuth2 clients using the IAM Hera consent flow
+
+---
+
+## Consent Session Injection ADR
+
+**Decision**: Roles are injected into IAM Hydra ID tokens via the IAM Hera consent session
+(`session.id_token.roles` in `acceptConsentRequest`), not via a per-client Jsonnet claims mapper.
+
+**Context**: Hydra v26.2.0 does not support per-client claims mappers configured via the Hydra
+admin API. The `oidc.claims_mapper.filepath` configuration property exists in the Hydra YAML but
+applies globally to all OAuth2 clients — it cannot be scoped to a single client such as pgAdmin.
+A global Jsonnet mapper would inject the `roles` claim into ID tokens issued for every IAM Hydra
+client (Athena IAM, pgAdmin, and any future clients), with no ability to restrict injection to
+the pgAdmin client only.
+
+The consent session path was chosen instead because it achieves per-token injection with no
+Hydra configuration changes, leverages the existing `hera/src/app/consent/page.tsx` code path
+that already executes for every login, and preserves the ability to extend claims injection
+independently per client in the future.
+
+**Scope and global impact**: The consent session injection is not truly per-client — it is
+per-consent-flow. Any IAM Hydra OAuth2 client that uses the IAM Hera login and consent UI will
+receive a `roles` claim in its ID tokens if the authenticated user has `traits.roles` set in
+their IAM Kratos identity. Currently that means Athena IAM and pgAdmin. Future clients added to
+IAM Hydra with the IAM Hera consent flow will also receive the `roles` claim.
+
+**Implication for future IAM Hydra client developers**: When integrating a new OAuth2 client
+with IAM Hydra and the IAM Hera consent flow:
+
+- Expect a `roles` array claim in the ID token for users who have `traits.roles` set in IAM Kratos
+- Expect an empty array (`[]`) for users without the `roles` trait
+- Do not configure your client's claims parser to fail on unexpected claims — use permissive
+  parsing or explicitly add `roles` to your accepted claims list
+- If your client does not need the `roles` claim, ignore it — it does not affect authentication
+  or authorization unless your client explicitly reads it
+- If your client needs to gate access on a role, follow the pgAdmin pattern:
+  `OAUTH2_ADDITIONAL_CLAIMS_VALIDATION` (or equivalent) checking for the required role value in
+  the `roles` array
+
+Machine-to-machine flows (client credentials grant) that bypass the consent UI do not receive
+the `roles` claim — it is only present in user-facing authorization code flows that pass through
+the IAM Hera consent page.
+
+**Revisit trigger**: When Hydra is upgraded beyond v26.2.0, evaluate whether per-client claims
+mappers are supported. If so, the consent session injection can be replaced with a per-client
+mapper scoped to pgAdmin only, removing the global injection from all future client tokens.
