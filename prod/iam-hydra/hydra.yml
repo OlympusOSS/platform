@@ -14,10 +14,9 @@ oidc:
     supported_types:
       - pairwise
       - public
-  # NOTE (platform#21): A claims_mapper was attempted here to inject IAM Kratos
-  # identity traits into ID tokens for pgAdmin DBA role gate enforcement.
-  # The 'claims_mapper' property under 'oidc' is NOT valid in Hydra v26.2.0
-  # ("additionalProperties 'claims_mapper' not allowed") and has been removed.
-  # The Platform Engineer must re-implement role injection using a supported
-  # Hydra v26.2.0 mechanism (e.g., claims_mappers via token hooks if available,
-  # or an alternative approach). See pgadmin-claims-mapper.jsonnet for reference.
+  # Note (platform#21): Hydra v26.2.0 does not support oidc.claims_mapper.
+  # The 'roles' claim for the pgAdmin DBA role gate is injected via the consent
+  # session instead: the IAM login action fetches the identity's 'roles' trait
+  # and passes it through the Hydra login context; the consent page reads it
+  # and sets session.id_token.roles in AcceptConsentRequest.
+  # See hera/src/app/login/actions.ts and hera/src/app/consent/page.tsx.
