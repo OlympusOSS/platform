@@ -6,9 +6,11 @@ Olympus applies HTTP security headers at two layers: Caddy (the reverse proxy) o
 protocol-level headers; Next.js middleware owns Content-Security-Policy. Each header is owned by
 exactly one layer. The same header must never appear in both.
 
-This two-layer model was implemented in platform#18. The Caddy layer prevents clickjacking, HTTPS
-downgrades, and MIME-type sniffing attacks across all vhosts. The Next.js layer provides a
-per-request nonce-based CSP that restricts which scripts may execute in the browser.
+The Next.js CSP layer is implemented and active in Hera and Athena. The Caddy layer
+(HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) is
+**designed but not yet implemented** — the prod Caddyfile contains no security header directives as
+of platform#18. The Caddy implementation is tracked as a pending deliverable for the Platform
+Engineer.
 
 ---
 
@@ -16,23 +18,29 @@ per-request nonce-based CSP that restricts which scripts may execute in the brow
 
 ### Header Ownership — Authoritative Assignment
 
-| Header | Owner | Set Where |
-|--------|-------|-----------|
-| `Strict-Transport-Security` | Caddy | Caddyfile `(security_headers)` snippet |
-| `X-Frame-Options` | Caddy | Caddyfile `(security_headers)` snippet |
-| `X-Content-Type-Options` | Caddy | Caddyfile `(security_headers)` snippet |
-| `Referrer-Policy` | Caddy | Caddyfile `(security_headers)` snippet |
-| `Permissions-Policy` | Caddy | Caddyfile `(security_headers)` snippet |
-| `Content-Security-Policy` | Next.js | `src/middleware.ts` in Hera and Athena |
+| Header | Owner | Set Where | Status |
+|--------|-------|-----------|--------|
+| `Strict-Transport-Security` | Caddy | Caddyfile `(security_headers)` snippet | **PENDING** |
+| `X-Frame-Options` | Caddy | Caddyfile `(security_headers)` snippet | **PENDING** |
+| `X-Content-Type-Options` | Caddy | Caddyfile `(security_headers)` snippet | **PENDING** |
+| `Referrer-Policy` | Caddy | Caddyfile `(security_headers)` snippet | **PENDING** |
+| `Permissions-Policy` | Caddy | Caddyfile `(security_headers)` snippet | **PENDING** |
+| `Content-Security-Policy` | Next.js | `src/middleware.ts` in Hera and Athena | **Implemented** |
 
-**Rule**: Next.js must not emit `X-Frame-Options`, `Strict-Transport-Security`, `X-Content-Type-Options`,
-or `Referrer-Policy`. Caddy must not emit `Content-Security-Policy`.
+**Rule (enforced once Caddy implementation ships)**: Next.js must not emit `X-Frame-Options`,
+`Strict-Transport-Security`, `X-Content-Type-Options`, or `Referrer-Policy`. Caddy must not emit
+`Content-Security-Policy`.
 
-### Caddy Snippets
+### Caddy Snippets — PENDING IMPLEMENTATION
 
-Two Caddyfile snippets handle the UI vs. API vhost distinction:
+> **PENDING**: The Caddy security header layer has been designed but is not yet present in
+> `platform/prod/Caddyfile`. The prod Caddyfile as of platform#18 contains no `header` directives.
+> These snippets describe the planned implementation. Do not treat this section as deployed
+> configuration. Track progress against this ticket: OlympusOSS/platform#18.
 
-**`(security_headers)`** — applied to all browser-facing vhosts:
+The planned design defines two Caddyfile snippets to handle the UI vs. API vhost distinction:
+
+**`(security_headers)`** — to be applied to all browser-facing vhosts:
 
 ```
 (security_headers) {
@@ -47,8 +55,8 @@ Two Caddyfile snippets handle the UI vs. API vhost distinction:
 }
 ```
 
-**`(api_security_headers)`** — applied to Hydra API vhosts (no `X-Frame-Options`; Hydra serves API
-responses, not browser UIs):
+**`(api_security_headers)`** — to be applied to Hydra API vhosts (no `X-Frame-Options`; Hydra
+serves API responses, not browser UIs):
 
 ```
 (api_security_headers) {
@@ -61,7 +69,10 @@ responses, not browser UIs):
 }
 ```
 
-### Vhost Assignment
+### Planned Vhost Assignment — PENDING IMPLEMENTATION
+
+> **PENDING**: The vhost assignments below reflect the design intent. None of these snippet
+> imports exist in the prod Caddyfile yet.
 
 | Vhost | Snippet | `X-Frame-Options` | Notes |
 |-------|---------|-------------------|-------|
@@ -116,13 +127,12 @@ frame-ancestors 'none';
 ### Framing Policy Ownership
 
 `frame-ancestors 'none'` in the CSP is the **authoritative framing policy** for Hera and Athena.
-It supersedes `X-Frame-Options` in all modern browsers. `X-Frame-Options: DENY` in Caddy is the
-legacy-browser fallback only.
+It supersedes `X-Frame-Options` in all modern browsers. Once the Caddy layer ships,
+`X-Frame-Options: DENY` in the Caddyfile will serve as the legacy-browser fallback only.
 
 **Consequence for future changes**: if you need to modify the framing policy for Hera or Athena,
-update `frame-ancestors` in `src/middleware.ts`. Changing `X-Frame-Options` in the Caddyfile for
-those vhosts has no effect in modern browsers. For the Site vhost (which has no CSP), `X-Frame-Options`
-in the Caddyfile is the only framing control.
+update `frame-ancestors` in `src/middleware.ts`. For the Site vhost (which has no CSP middleware),
+`X-Frame-Options` in the Caddyfile will be the only framing control once that layer is implemented.
 
 ---
 
@@ -174,10 +184,12 @@ in an iframe served from `https://challenges.cloudflare.com`. The Hera CSP inclu
 Removing any of these entries breaks Turnstile. If Turnstile adds new subdomain origins, update
 the Hera middleware CSP template accordingly.
 
-### Caddyfile Validation
+### Caddyfile Validation — PENDING
 
-A `caddy validate` CI step runs before the Caddyfile is synced to production, using the Caddy
-Docker image to avoid runner dependency issues:
+> **PENDING**: This CI step is part of the planned Caddy implementation and does not yet run.
+> It is documented here so that it is added alongside the header directives.
+
+The planned CI step runs `caddy validate` before syncing the Caddyfile to production:
 
 ```bash
 docker run --rm \
@@ -194,7 +206,7 @@ assume self-recovery is complete without verifying the running config.
 
 ## Examples
 
-### Verifying headers in Chrome DevTools
+### Verifying CSP headers in Chrome DevTools (implemented)
 
 1. Open Chrome DevTools (F12)
 2. Go to the Network tab
@@ -204,6 +216,8 @@ assume self-recovery is complete without verifying the running config.
 
 You should see:
 - `content-security-policy: default-src 'self'; script-src 'self' 'nonce-...` (unique per request)
+
+The following headers are **NOT yet present** — they ship with the Caddy implementation:
 - `strict-transport-security: max-age=31536000; includeSubDomains; preload`
 - `x-frame-options: DENY`
 - `x-content-type-options: nosniff`
@@ -219,11 +233,11 @@ document.querySelectorAll('script[nonce]').length
 // Expected: all scripts have a nonce attribute matching the CSP header nonce
 ```
 
-### Verifying no duplicate headers
+### Verifying no duplicate headers (for future use)
 
-Each security header should appear exactly once in the response. If `content-security-policy`
-appears twice, Caddy is also emitting CSP — check that no Caddy vhost sets a `Content-Security-Policy`
-header directive.
+Once the Caddy layer ships, each security header should appear exactly once in the response.
+If `content-security-policy` appears twice, Caddy is also emitting CSP — check that no Caddy
+vhost sets a `Content-Security-Policy` header directive.
 
 ---
 
@@ -260,7 +274,7 @@ admin panel is no longer possible by design. This is intentional security harden
 If your integration relied on iframe embedding, you must move to a redirect-based OAuth2 flow.
 There is no supported workaround — the framing restriction is a deliberate security control.
 
-### Caddy syntax error
+### Caddy syntax error (once Caddy layer is implemented)
 
 If a Caddyfile change passes the `caddy validate` CI step but fails to reload in production
 (rare), Caddy retains the previous running configuration. The deployment is considered failed —
@@ -271,7 +285,21 @@ a known-invalid Caddyfile.
 
 ## Security Considerations
 
-### Frame-ancestors ownership
+### Current exposure: Caddy-level headers are absent
+
+As of platform#18, the prod Caddyfile does not emit HSTS, X-Frame-Options, X-Content-Type-Options,
+Referrer-Policy, or Permissions-Policy. Browsers connecting to Hera and Athena receive only the
+CSP header from Next.js middleware.
+
+- HTTPS is still enforced by Caddy's ACME TLS configuration — the absence of HSTS does not mean
+  plain-HTTP connections are accepted, but browsers will not pin HTTPS via the preload list until
+  HSTS is delivered.
+- Clickjacking protection relies entirely on `frame-ancestors 'none'` in the CSP (implemented)
+  until `X-Frame-Options` is added at the Caddy layer (pending).
+- The Site vhost has no CSP middleware — until the Caddy layer ships, the Site has no
+  `X-Frame-Options` or `frame-ancestors` control at all.
+
+### Frame-ancestors ownership (once Caddy layer ships)
 
 `frame-ancestors 'none'` in the CSP is authoritative for Hera and Athena. Changing `X-Frame-Options`
 in the Caddyfile for those vhosts does not change the effective framing policy in any browser that
@@ -300,9 +328,14 @@ Server-side fetch calls (API routes, server components) are not subject to the C
 
 ### Compliance
 
-- HSTS (`max-age=31536000; includeSubDomains; preload`) satisfies SOC2 encryption-in-transit
-  requirements by enforcing HTTPS on all subsequent requests from the browser
-- `X-Content-Type-Options: nosniff` prevents MIME-type sniffing attacks on API responses
-- `frame-ancestors 'none'` and `X-Frame-Options: DENY` directly address OWASP A05:2021 Security
-  Misconfiguration (clickjacking protection)
+Implemented:
+- `frame-ancestors 'none'` in CSP directly addresses OWASP A05:2021 Security Misconfiguration
+  (clickjacking protection) for Hera and Athena
 - CSP `script-src` with nonce enforcement addresses OWASP A03:2021 Injection (XSS)
+
+Pending (requires Caddy implementation):
+- HSTS (`max-age=31536000; includeSubDomains; preload`) to satisfy SOC2 encryption-in-transit
+  requirements by enforcing HTTPS on all subsequent requests from the browser
+- `X-Content-Type-Options: nosniff` to prevent MIME-type sniffing attacks on API responses
+- `X-Frame-Options: DENY` as legacy-browser clickjacking fallback for Hera and Athena;
+  sole framing control for the Site vhost
