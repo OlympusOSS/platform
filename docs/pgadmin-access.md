@@ -31,7 +31,7 @@ allowed any valid IAM identity to silently receive a pgAdmin account on first lo
 4. IAM Hydra redirects to IAM Hera login page
 5. DBA authenticates with IAM Kratos credentials
 6. IAM Hydra issues authorization code; pgAdmin exchanges for tokens
-7. IAM Hydra injects `roles` claim into the ID token via the global Jsonnet claims mapper
+7. IAM Hera consent page reads `traits.roles` from the Kratos identity and calls `AcceptConsentRequest` with `session.id_token.roles`, injecting the `roles` claim into the ID token
 8. pgAdmin evaluates `OAUTH2_ADDITIONAL_CLAIMS_VALIDATION`: `'dba' in (roles or [])`
 9. If `dba` present in claim AND pgAdmin user record exists: access granted
 10. If claim absent, or `dba` not in claim, or no pgAdmin user record: access denied
@@ -60,34 +60,28 @@ AUTHENTICATION_SOURCES = ['oauth2']  # no password login
 `OAUTH2_AUTO_CREATE_USER = False` is the primary fix. The role validation hook is the second
 enforcement layer. Both must be present.
 
-### IAM Hydra Claims Mapper
+### IAM Hera Consent Page — Roles Injection
 
-The `roles` claim is injected into all IAM Hydra ID tokens by a global Jsonnet claims mapper.
+The `roles` claim is injected into IAM Hydra ID tokens during the consent flow. The IAM Hera
+consent page (`hera/src/app/consent/page.tsx`) reads `traits.roles` from the Kratos identity and
+passes it to IAM Hydra when accepting the consent request:
 
-**Mapper file**: `platform/prod/iam-hydra/pgadmin-claims-mapper.jsonnet`
-
-```jsonnet
-local claims = {
-  iss: std.extVar('claims').iss,
-  sub: std.extVar('claims').sub,
-  email: std.extVar('claims').email,
-  roles: std.get(std.extVar('session').identity.traits, 'roles', []),
-};
-claims
+```ts
+// In IAM Hera consent page
+await hydraAdmin.acceptOAuth2ConsentRequest({
+  consentChallenge,
+  acceptOAuth2ConsentRequest: {
+    session: {
+      id_token: {
+        roles: identity.traits.roles ?? [],
+      },
+    },
+  },
+});
 ```
 
-The `std.get(..., 'roles', [])` form is null-safe — it returns an empty array for all existing
-IAM identities that have no `roles` trait. Do not use the direct access form
-(`std.extVar('session').identity.traits.roles`) — it throws a Jsonnet evaluation error for
-identities without the `roles` field.
-
-**hydra.yml configuration**:
-
-```yaml
-oidc:
-  claims_mapper:
-    filepath: /etc/config/iam-hydra/pgadmin-claims-mapper.jsonnet
-```
+This is null-safe — identities without a `roles` trait receive an empty array, causing the
+pgAdmin hook to deny access (correct behavior for non-DBA identities).
 
 ### IAM Kratos Identity Schema
 
@@ -115,21 +109,15 @@ The pgAdmin client in IAM Hydra uses:
 - `skip_consent`: `true` (pgAdmin is an internal tool, no user-facing consent required)
 - Claims mapper: configured globally in `hydra.yml` (see ADR note below)
 
-### ADR: Global Claims Mapper Limitation
+### Consent-Based Injection Scope
 
-**Hydra v26.2.0 does not support per-client Jsonnet claims mappers via the API**. Per-client
-mapper fields in client registrations are silently ignored. The mapper is configured globally in
-`iam-hydra/hydra.yml` via `oidc.claims_mapper.filepath`.
+Because `roles` is injected during the consent flow in IAM Hera, the claim is only present in
+ID tokens issued through the IAM Hera consent page. This is scoped to OAuth2 clients that use
+IAM Hydra with the IAM Hera login/consent UI (currently: Athena IAM, pgAdmin).
 
-**Consequence**: the `roles` claim is injected into **all** IAM Hydra ID tokens — not only the
-pgAdmin client's tokens. This is safe for the current set of IAM Hydra clients, as no other
-registered client validates or depends on ID token claims. However, any new IAM Hydra client
-integration must be written with the awareness that all ID tokens include a `roles` array claim.
-
-**Impact for future integrations**: if you register a new OAuth2 client with IAM Hydra and perform
-strict claims validation on the ID token, account for the `roles` claim. A client that rejects
-unrecognized claims will fail to parse tokens from this Hydra instance. This is a known platform
-constraint until Hydra adds per-client mapper support in a future version.
+Any new IAM Hydra OAuth2 client that shares the same consent flow will also receive the `roles`
+claim in its ID tokens. Clients that perform strict claims validation on the ID token must account
+for the `roles` array claim or configure their parser to ignore unknown claims.
 
 ### Network Restriction
 
@@ -227,9 +215,9 @@ All four steps are mandatory.
 
 ### Identity without `roles` trait attempts login
 
-The null-safe Jsonnet mapper returns `roles: []` for all identities without the trait. The
-pgAdmin hook `'dba' in (roles or [])` evaluates to `False`. Access is denied. No error is
-thrown during token issuance.
+The IAM Hera consent page uses `identity.traits.roles ?? []`, returning an empty array for
+all identities without the trait. The pgAdmin hook `'dba' in (roles or [])` evaluates to
+`False`. Access is denied. No error is thrown during token issuance.
 
 ### DBA role removed — session still active
 
@@ -246,9 +234,10 @@ before reaching pgAdmin. The stale record is harmless but should be cleaned up (
 
 ### New IAM Hydra client encounters unexpected `roles` claim
 
-Due to the global Jsonnet mapper limitation, all IAM Hydra ID tokens include a `roles` array claim.
-New OAuth2 clients must not fail on unrecognized claims in the ID token. If a client performs strict
-claims validation, add `roles` to its accepted claim list or configure it to ignore unknown claims.
+OAuth2 clients that share the IAM Hera consent flow receive a `roles` array claim in their ID
+tokens. New OAuth2 clients must not fail on unrecognized claims in the ID token. If a client
+performs strict claims validation, add `roles` to its accepted claim list or configure it to
+ignore unknown claims.
 
 ---
 
@@ -291,6 +280,5 @@ Both conditions must be true for access to be granted.
   artifact for DBA access removal procedures
 - pgAdmin login events are logged by pgAdmin to its container logs; ensure container logs are
   collected by the platform log pipeline for audit purposes
-- The `roles` claim in all IAM Hydra ID tokens is a deliberate architectural decision documented
-  here due to Hydra v26.2.0 per-client mapper limitations; future Hydra versions may support
-  per-client mappers, enabling a more targeted implementation
+- The `roles` claim is injected via the IAM Hera consent page (`AcceptConsentRequest` with
+  `session.id_token.roles`) — scoped to OAuth2 clients using the IAM Hera consent flow
