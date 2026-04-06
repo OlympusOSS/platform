@@ -183,7 +183,110 @@ being declared healthy.
 
 ---
 
-## 6. Maintenance Policy
+## 6. Secret Generation Commands
+
+Use these commands to generate each secret type. Never reuse secrets across environments. Never commit
+production secret values to source control.
+
+| Secret | Generate command | Minimum entropy |
+|--------|-----------------|-----------------|
+| `CIAM_KRATOS_SECRET_COOKIE` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `CIAM_KRATOS_SECRET_CIPHER` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `IAM_KRATOS_SECRET_COOKIE` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `IAM_KRATOS_SECRET_CIPHER` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `CIAM_HYDRA_SECRET_SYSTEM` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `CIAM_HYDRA_PAIRWISE_SALT` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `IAM_HYDRA_SECRET_SYSTEM` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `IAM_HYDRA_PAIRWISE_SALT` | `openssl rand -hex 32` | 32 bytes / 256 bits |
+| `ENCRYPTION_KEY` | `openssl rand -base64 32` | 32 bytes / 256 bits |
+
+Store all outputs directly in GitHub Actions Secrets. Never write them to files or shell history.
+
+---
+
+## 7. Understanding Pairwise Salts
+
+`CIAM_HYDRA_PAIRWISE_SALT` and `IAM_HYDRA_PAIRWISE_SALT` control how Hydra computes the OIDC `sub`
+(subject) claim for each OAuth2 client.
+
+**What pairwise subjects do**: When pairwise subject identifiers are enabled, Hydra derives a different
+`sub` value for the same user depending on which OAuth2 client they are authenticating to. For example, a
+user with internal identity `abc-123` will appear as `xG7q...` to one client and `mPw9...` to a different
+client. This is an OIDC privacy mechanism that prevents clients from cross-correlating users by `sub`.
+
+**Why the salt matters**: The pairwise derivation is `HMAC(salt, user_id || client_id)`. Rotating the
+salt changes the `sub` claim for every user in every OAuth2 client. Any client that has stored the `sub`
+claim as a user identifier will fail to match existing records — effectively breaking all existing user
+associations in those clients.
+
+**Rotation rule**: Do not rotate pairwise salts unless you have a coordinated migration plan for all
+affected OAuth2 clients. Rotating a Kratos cookie secret invalidates sessions (low operational impact).
+Rotating a pairwise salt breaks user identity associations in downstream systems (high operational impact).
+
+---
+
+## 8. Secret Rotation Procedures
+
+### Rotating Kratos Cookie or Cipher Secrets
+
+Cookie secrets and cipher secrets can be added to the existing array rather than replacing it. Kratos
+supports multiple secrets simultaneously — it uses the first for new signatures/encryptions and accepts
+all others for verification/decryption. This enables zero-downtime rotation.
+
+**Procedure:**
+
+1. Generate a new secret: `openssl rand -hex 32`
+2. In GitHub Actions Secrets, prepend the new value to the existing secret — Kratos expects a
+   comma-separated list or a YAML array depending on config format
+3. Run the deploy workflow — existing sessions remain valid while signed with either key
+4. After one session TTL period (typically 1 hour for CIAM, configurable), remove the old value
+5. Run deploy again — rotation complete
+
+**Effect**: No sessions invalidated. Users remain logged in throughout the rotation.
+
+### Rotating Hydra System Secret
+
+Hydra system secret rotation invalidates all outstanding OAuth2 tokens.
+
+**Procedure:**
+
+1. Generate a new secret: `openssl rand -hex 32`
+2. Schedule a maintenance window if token invalidation will affect users
+3. Update the GitHub Actions Secret
+4. Run the deploy workflow — Hydra restarts with the new secret; all existing tokens become invalid
+5. OAuth2 clients will receive token errors on their next API call and must re-authenticate
+
+**Effect**: All outstanding access tokens, refresh tokens, and ID tokens are invalidated immediately.
+
+### Rotating ENCRYPTION_KEY (SDK)
+
+Rotating `ENCRYPTION_KEY` requires a migration step. All encrypted values in the `olympus` database
+must be re-encrypted with the new key before the old key is removed.
+
+**Procedure:**
+
+1. Generate a new key: `openssl rand -base64 32`
+2. Run the re-encryption migration script against the production database:
+   ```bash
+   DATABASE_URL=<prod_url> OLD_ENCRYPTION_KEY=<current> ENCRYPTION_KEY=<new> \
+     bun run src/migrate-encryption-key.ts
+   ```
+3. The migration script re-encrypts all `encrypted=true` rows in all settings tables
+4. After migration completes successfully, update the GitHub Actions Secret to the new value
+5. Run the deploy workflow — containers restart with the new key
+
+**Effect**: No service interruption if migration completes before deployment. Services with the old key
+and the migration running concurrently will produce `decrypt` errors for any settings written after
+migration starts — plan for a brief maintenance window or drain traffic before migrating.
+
+### Rotating Pairwise Salts
+
+**Do not rotate pairwise salts unless you have a coordinated migration plan.** See Section 7 for the
+impact. Contact the team lead before rotating any pairwise salt in production.
+
+---
+
+## 9. Maintenance Policy
 
 This document must be updated whenever a new secret is added to `deploy.yml`. Any PR that introduces a new
 `secrets.*` reference in `deploy.yml` must include a corresponding update to this document as part of the

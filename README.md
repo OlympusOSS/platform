@@ -158,14 +158,31 @@ Initialized by `init-db.sql` on first startup.
 
 See [Secrets.md](./Secrets.md) for manual setup, or use the [octl CLI](https://github.com/OlympusOSS/octl) for automated deployment.
 
+### Pre-deployment Secrets Checklist
+
+Before deploying to production, verify that all nine required secrets are set in GitHub Actions Secrets. The version-controlled audit document lists every secret, its purpose, generation command, and the consequence if it is missing or empty.
+
+**[docs/secrets-audit.md](./docs/secrets-audit.md)** — pre-deployment checklist and SOC2 CC6.1 evidence artifact.
+
+Key rules:
+- All nine secrets must be set before running `deploy.yml` — missing secrets cause container startup failures, not silent misconfiguration
+- Ory Kratos and Hydra refuse to start with empty secret values (empirically verified — see the audit document)
+- The SDK validates `ENCRYPTION_KEY` at module load — a missing key causes the Next.js container to crash before serving any requests
+- Do not rotate pairwise salts (`CIAM_HYDRA_PAIRWISE_SALT`, `IAM_HYDRA_PAIRWISE_SALT`) without reading the rotation procedure first — rotation changes OIDC `sub` claims for all users across all OAuth2 clients
+
 ---
 
 ## Security Operations
+
+### Rate Limiting
+
+The production login endpoint has two independent rate limiting layers — Caddy (per-IP) and SDK (per-account lockout). See [docs/rate-limiting.md](./docs/rate-limiting.md) for the full reference including error response shapes, configuration keys, and integration examples.
 
 ### Credential Rotation
 
 | Credential | Runbook |
 |-----------|---------|
+| All production secrets (Kratos, Hydra, SDK) | [docs/secrets-audit.md](./docs/secrets-audit.md) — Section 8 |
 | `CIAM_RELOAD_API_KEY` (sidecar auth key) | [docs/reload-api-key-rotation.md](./docs/reload-api-key-rotation.md) |
 
 All production credential rotations must go through GitHub Actions (deploy.yml). Direct SSH
