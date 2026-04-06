@@ -86,7 +86,28 @@
 
 {$CIAM_ATHENA_PUBLIC_URL} {
 	import security_headers
-	reverse_proxy ciam-athena:3000
+	# Transport settings for Athena RSC streaming (athena#109):
+	# Next.js RSC maintains a long-lived upstream connection for client-side
+	# navigation updates. Without explicit keepalive and read_timeout settings,
+	# Caddy closes idle connections before RSC streaming completes, causing
+	# chunk 3794 (Next.js router/RSC connection module) to throw
+	# "Error: Connection closed" and block React hydration entirely.
+	#
+	# keepalive 65s: exceeds the 60s TCP idle timeout common on intermediate
+	#   network equipment — keeps the RSC streaming connection alive.
+	# keepalive_idle_conns 10: prevents connection churn under concurrent loads.
+	# dial_timeout 10s: bounds upstream TCP connect time.
+	# response_header_timeout 60s: bounds wait for first response header.
+	# read_timeout 120s: covers the full RSC streaming window without cutting short.
+	reverse_proxy ciam-athena:3000 {
+		transport http {
+			keepalive 65s
+			keepalive_idle_conns 10
+			dial_timeout 10s
+			response_header_timeout 60s
+			read_timeout 120s
+		}
+	}
 }
 
 # IAM — Internal Identity
@@ -102,7 +123,18 @@
 
 {$IAM_ATHENA_PUBLIC_URL} {
 	import security_headers
-	reverse_proxy iam-athena:3000
+	# Same RSC streaming transport settings as CIAM Athena (athena#109).
+	# IAM Athena uses the same Next.js RSC architecture and is subject to
+	# the same Caddy connection closure issue.
+	reverse_proxy iam-athena:3000 {
+		transport http {
+			keepalive 65s
+			keepalive_idle_conns 10
+			dial_timeout 10s
+			response_header_timeout 60s
+			read_timeout 120s
+		}
+	}
 }
 
 # pgAdmin — database administration (INTERNAL ONLY — platform#21 network restriction)
