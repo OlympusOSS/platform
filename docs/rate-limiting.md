@@ -57,7 +57,7 @@ Content-Type: text/plain
 Too Many Requests
 ```
 
-No `Retry-After` or `X-RateLimit-*` headers are returned by the current Caddy configuration.
+No `Retry-After` or `X-RateLimit-*` headers are returned. The response body is plain text. This is a known V1 limitation — the Caddy rate limit module does not emit structured headers or a JSON body in the current configuration. Standardizing the Caddy 429 response (adding `Retry-After` and `X-RateLimit-*` headers) is tracked as a follow-on infrastructure story (DX-P10-2).
 
 **Layer 2 — SDK lockout (browser flow):**
 
@@ -70,7 +70,9 @@ Content-Type: text/html
 
 **Layer 2 — SDK lockout (API consumer, JSON):**
 
-When the `Accept: application/json` header is present, Hera returns a structured error:
+> **Note**: The structured JSON lockout response is planned for a follow-on story (DX-P10-3, tracked in hera#26). The V1 implementation returns HTML for all lockout responses regardless of the `Accept` header. Do not implement integrations against the JSON shape until hera#26 ships.
+
+When the `Accept: application/json` header is present, Hera will return a structured error (planned, not yet implemented):
 
 ```json
 {
@@ -81,7 +83,7 @@ When the `Accept: application/json` header is present, Hera returns a structured
 }
 ```
 
-The `retry_after` field is the number of seconds remaining until the lockout expires. The `retry_at` field is the ISO 8601 timestamp at which the lockout expires.
+The `retry_after` field will be the number of seconds remaining until the lockout expires. The `retry_at` field will be the ISO 8601 timestamp at which the lockout expires.
 
 ### Configuration Keys (SDK Settings Table)
 
@@ -139,7 +141,9 @@ async function loginWithRetry(email: string, password: string) {
 }
 ```
 
-### Handling a lockout response (JSON API consumer)
+### Handling a lockout response (JSON API consumer — planned)
+
+> **Note**: The JSON lockout response requires hera#26 (DX-P10-3). The V1 SDK lockout response is HTML-only. This example applies after hera#26 ships.
 
 ```typescript
 const response = await fetch("/self-service/login", {
@@ -156,7 +160,9 @@ if (data.error === "account_locked") {
 }
 ```
 
-### Distinguishing the two layers
+### Distinguishing the two layers (planned — after hera#26)
+
+> **Note**: Distinguishing Layer 1 (Caddy 429) from Layer 2 (SDK lockout) by `Accept: application/json` content negotiation requires hera#26. Until then, Layer 2 lockout responses are HTML pages and cannot be distinguished programmatically from a successful HTML flow.
 
 ```typescript
 const response = await fetch("/self-service/login", {
