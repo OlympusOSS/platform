@@ -223,6 +223,18 @@ Jsonnet claims mapper configuration, and the Hydra v26.2.0 global mapper ADR.
 See [docs/runbook-pgadmin-dba-offboarding.md](./docs/runbook-pgadmin-dba-offboarding.md) for the
 complete four-step offboarding procedure.
 
+### CAPTCHA (Cloudflare Turnstile)
+
+Login, registration, and account recovery flows are protected by Cloudflare Turnstile. CAPTCHA enforcement is implemented in the Hera application layer before credentials reach Kratos. The production compose defaults to CAPTCHA enabled — operators must explicitly set `CIAM_CAPTCHA_ENABLED=false` or `IAM_CAPTCHA_ENABLED=false` to disable it.
+
+**Deployment requirement**: All four Turnstile GitHub Variables (`CIAM_CAPTCHA_SITE_KEY`, `CIAM_CAPTCHA_SECRET_KEY`, `IAM_CAPTCHA_SITE_KEY`, `IAM_CAPTCHA_SECRET_KEY`) must be set before deploying a compose change that enables CAPTCHA. Deploying without these variables causes `verifyCaptcha()` to fail closed and blocks all logins on CAPTCHA-protected flows.
+
+CIAM and IAM require separate Cloudflare Turnstile site registrations — a single registration cannot cover both domains.
+
+CAPTCHA can be disabled at runtime via the Athena settings vault (`captcha.enabled = false`) without a redeployment. Changes propagate within 60 seconds. Disabling CAPTCHA in production requires the Caddy rate limiter (below) to be confirmed active as a compensating control.
+
+See [docs/captcha-turnstile.md](./docs/captcha-turnstile.md) for the operator setup guide, HIBP breach detection configuration, local dev test keys, environment variable reference, and failure mode recovery procedures.
+
 ### Rate Limiting
 
 The production login endpoint has two independent rate limiting layers — Caddy (per-IP) and SDK (per-account lockout). See [docs/rate-limiting.md](./docs/rate-limiting.md) for the full reference including error response shapes, configuration keys, and integration examples.
