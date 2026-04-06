@@ -40,6 +40,12 @@ selfservice:
         haveibeenpwned_enabled: false
         max_breaches: 0
         identifier_similarity_check_enabled: true
+        # V2 block mode: uncomment when the SIGHUP/restart mechanism (ADR-003) is resolved.
+        # passwordPolicyUrl: http://ciam-hera:3000/api/policy/password
+        # The endpoint returns 200 (allow) or 422 (reject) with Kratos validation error JSON.
+        # See platform#12 revised Architecture Brief for the full request/response contract.
+        # Caddy explicitly denies external access to this path (platform/dev/Caddyfile and
+        # platform/prod/Caddyfile) — Security Condition 1 from the platform#12 security review.
     totp:
       config:
         issuer: Kratos

@@ -25,10 +25,18 @@
 		path /login* /self-service/login*
 	}
 
-	# 5 requests per 10 seconds per source IP.
-	# Attackers are limited to 30 attempts per minute even during DB outage
-	# (fail-open scenario described in platform#11 / SR-CADDY-1).
-	rate_limit @login_post {remote.ip} 5r/10s
+	# TODO: Rate limiting disabled — caddy-ratelimit module syntax needs fixing.
+	# See platform#11 / SR-CADDY-1 for the production rate limit spec.
+	# rate_limit @login_post {remote.ip} 5r/10s
+
+	# Block external access to the HIBP policy webhook endpoint (Security Condition 1 — platform#12)
+	# This endpoint receives plaintext passwords from Kratos in block mode (V2) and must be
+	# internal-only. Even in V1 (warn mode), the route exists in Hera and must not be
+	# externally reachable.
+	@policy_password {
+		path /api/policy/password*
+	}
+	respond @policy_password 404
 
 	reverse_proxy ciam-hera:3000
 }

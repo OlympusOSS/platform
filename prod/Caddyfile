@@ -27,6 +27,15 @@
 		}
 	}
 
+	# Block external access to the HIBP policy webhook endpoint (Security Condition 1 — platform#12)
+	# This endpoint receives plaintext passwords from Kratos in block mode (V2) and must be
+	# internal-only. Even in V1 (warn mode), the route exists in Hera and must not be
+	# externally reachable.
+	@policy_password {
+		path /api/policy/password*
+	}
+	respond @policy_password 404
+
 	reverse_proxy ciam-hera:3000
 }
 
