@@ -286,7 +286,29 @@ impact. Contact the team lead before rotating any pairwise salt in production.
 
 ---
 
-## 9. Maintenance Policy
+## 9. ENCRYPTION_KEY Scope: Shared Across CIAM and IAM
+
+`ENCRYPTION_KEY` has no domain prefix (`CIAM_` or `IAM_`). This is intentional: it is a cross-domain SDK secret, shared by all four SDK-consuming containers — `ciam-hera`, `iam-hera`, `ciam-athena`, and `iam-athena`.
+
+### Current behavior
+
+All four containers read the same single `ENCRYPTION_KEY` value. Any setting encrypted in `ciam_settings` and any setting encrypted in `iam_settings` use the same AES-256-GCM key. Encrypted values stored in one domain cannot be decrypted in the other domain (tables are separate), but the same cryptographic key material is in use across both.
+
+### Implications of the shared key
+
+| Concern | Detail |
+|---------|--------|
+| **Shared rotation** | Rotating `ENCRYPTION_KEY` requires re-encrypting all rows in both `ciam_settings` and `iam_settings`. The rotation script must target both tables. |
+| **Blast radius** | If `ENCRYPTION_KEY` is compromised, encrypted values in both CIAM and IAM settings tables are exposed — not just one domain. |
+| **Future divergence** | If CIAM and IAM need separate encryption keys (e.g., different key rotation schedules, separate HSM custody, or regulatory separation), the SDK will require a new domain-prefixed variable (`CIAM_ENCRYPTION_KEY` / `IAM_ENCRYPTION_KEY`) and a migration to re-encrypt each table with its respective key. This is not a breaking architectural change, but it requires coordinated deployment across all four containers. |
+
+### Operational rule
+
+Do not interpret the absence of a domain prefix as a mistake. `ENCRYPTION_KEY` is shared by design for the current single-key architecture. If this changes in a future release, this document and `deploy.yml` will be updated simultaneously. Any PR that introduces domain-specific encryption keys must update this document as part of the PR checklist.
+
+---
+
+## 10. Maintenance Policy
 
 This document must be updated whenever a new secret is added to `deploy.yml`. Any PR that introduces a new
 `secrets.*` reference in `deploy.yml` must include a corresponding update to this document as part of the
