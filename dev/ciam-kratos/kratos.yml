@@ -48,7 +48,7 @@ selfservice:
         # platform/prod/Caddyfile) — Security Condition 1 from the platform#12 security review.
     totp:
       config:
-        issuer: Kratos
+        issuer: Olympus
       enabled: true
     lookup_secret:
       enabled: true

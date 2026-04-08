@@ -37,6 +37,10 @@ selfservice:
         haveibeenpwned_enabled: true
         max_breaches: 0
         identifier_similarity_check_enabled: true
+    totp:
+      config:
+        issuer: Olympus
+      enabled: true
 
   flows:
     login:

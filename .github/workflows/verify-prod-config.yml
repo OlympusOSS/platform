@@ -1,33 +1,39 @@
 name: Verify production config has no sensitive value leaks
 
-# Asserts that leak_sensitive_values: true is never present in production
-# Kratos configs. This is a persistent CI regression check (SR-CADDY-5 /
-# platform#25) that prevents a critical logging misconfiguration from
-# silently reaching production.
+# Two regression gates for production Ory (Kratos + Hydra) configs.
+# Both grep only platform/prod/ — dev configs intentionally contain
+# placeholder and debug values and are excluded from these checks.
 #
-# Background:
-#   Ory Kratos has a log.leak_sensitive_values flag. When true, Kratos logs
-#   plaintext TOTP secrets, session tokens, and credentials. These appear in
-#   any log aggregation system (Datadog, CloudWatch, Loki) and are visible
-#   to anyone with log access. Production configs must never have this true.
+# Gate 1 — leak_sensitive_values (platform#25):
+#   Asserts that leak_sensitive_values: true is never present in production
+#   Kratos configs. When true, Kratos logs plaintext TOTP secrets, session
+#   tokens, and credentials into any log aggregation system.
 #
-# Scope — platform/prod/ ONLY:
-#   Dev configs (dev/ciam-kratos/kratos.yml, dev/iam-kratos/kratos.yml)
-#   intentionally have leak_sensitive_values: true for debugging convenience.
-#   Grepping all of platform/ would fail on every dev config change. Only
-#   production configs are safety-critical here.
+#   Grep pattern: leak_sensitive_values:\s*true
+#   Handles YAML spacing variants. Does NOT false-positive on false or absent.
 #
-# Grep pattern: leak_sensitive_values:\s*true
-#   Handles YAML spacing variants (zero or more spaces between : and true).
-#   Does NOT false-positive on leak_sensitive_values: false or absent key.
-#
-# String-boolean note (Go yaml.v3):
+#   String-boolean note (Go yaml.v3):
 #   Ory Kratos is built with Go's yaml.v3. That parser does NOT coerce a
 #   quoted string "true" to boolean true — it treats it as a string type,
 #   which Kratos would not interpret as the boolean flag. The unquoted form
 #   (leak_sensitive_values: true) is the only form that activates the flag,
 #   and is the only form this regex needs to catch. The quoted-string bypass
 #   is inert. This closes the DA open question from the Architecture Review.
+#
+# Gate 2 — placeholder/insecure secret strings (platform#9):
+#   Asserts that known dev-placeholder and insecure-default strings are absent
+#   from all production Kratos and Hydra YAML configs. These strings indicate
+#   that a secret field was not replaced with a real value before deploying.
+#
+#   Patterns checked (case-insensitive):
+#     PLEASE-CHANGE-ME  — Ory default placeholder in generated configs
+#     change-me         — common dev placeholder variant
+#     insecure          — Ory and community convention for "not safe for prod"
+#
+#   Scope: prod/ciam-kratos/, prod/iam-kratos/, prod/ciam-hydra/, prod/iam-hydra/
+#   Only YAML files are checked to avoid false positives on JSON schemas or
+#   jsonnet files that may legitimately contain these strings as field names
+#   or example values.
 #
 # Gate model:
 #   Push-to-main is the authoritative gate — it always runs on the final
@@ -43,7 +49,7 @@ on:
 
 jobs:
   verify-prod-config:
-    name: Check production Kratos configs for leak_sensitive_values
+    name: Check production Kratos/Hydra configs for insecure values
     runs-on: ubuntu-latest
 
     steps:
@@ -61,3 +67,24 @@ jobs:
             exit 1
           fi
           echo "OK: leak_sensitive_values check passed — no production config has this set to true."
+
+      - name: Check for placeholder/insecure secret strings in production configs
+        run: |
+          # Only scan YAML files in the four Ory service config directories.
+          # JSON schemas and jsonnet files are excluded — they may legitimately
+          # reference these strings as documentation or example values.
+          FOUND=$(grep -rniE 'PLEASE-CHANGE-ME|change-me|insecure' \
+            prod/ciam-kratos/ prod/iam-kratos/ prod/ciam-hydra/ prod/iam-hydra/ \
+            --include='*.yml' || true)
+          if [ -n "$FOUND" ]; then
+            echo ""
+            echo "ERROR: placeholder or insecure secret string found in a production Ory config."
+            echo ""
+            echo "$FOUND"
+            echo ""
+            echo "Strings 'PLEASE-CHANGE-ME', 'change-me', and 'insecure' are dev placeholders."
+            echo "Every secret field in production configs must reference an environment variable"
+            echo "substitution (e.g. \$SECRETS_COOKIE) — never a hardcoded or placeholder value."
+            exit 1
+          fi
+          echo "OK: no placeholder or insecure secret strings found in production Ory configs."
