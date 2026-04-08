@@ -51,6 +51,25 @@ services:
     # Custom Caddy image built with mholt/caddy-ratelimit module (SR-CADDY-1).
     # The standard caddy:2-alpine does not include this module.
     # See platform/caddy/Containerfile for build details.
+    #
+    # ROLLBACK PROCEDURE (SR-CADDY-4 / platform#49):
+    # Every build of this image pushes two tags to GHCR:
+    #   ghcr.io/olympusoss/caddy:latest            — updated on each build (mutable)
+    #   ghcr.io/olympusoss/caddy:sha-<full-sha>    — immutable reference per commit
+    #
+    # To roll back to a specific build:
+    #   1. Identify the SHA of the desired build from the caddy-build.yml workflow run
+    #      in GitHub Actions (the sha- tag matches the git commit SHA that triggered it)
+    #   2. Pull the specific sha-tagged image:
+    #        podman pull ghcr.io/olympusoss/caddy:sha-<full-sha>
+    #   3. Update the image: line below to reference the sha-tagged image:
+    #        image: ghcr.io/olympusoss/caddy:sha-<full-sha>
+    #   4. Redeploy: podman compose -f compose.prod.yml up -d caddy
+    #   5. Verify Caddy health and rate limiting are active before closing the incident
+    #
+    # Only reference Caddy images from successful caddy-build.yml workflow runs
+    # (verify job green). Do NOT update this image reference when the workflow
+    # is red — the broken image may lack the rate_limit module.
     image: ghcr.io/olympusoss/caddy:latest
     ports:
       - '80:80'

@@ -19,6 +19,15 @@
 # updated to use `trusted_proxies` + {http.request.header.X-Forwarded-For} before
 # traffic flows through the proxy.
 #
+# PROXY-IN-FRONT REQUIREMENTS (if topology changes):
+#   - The key placeholder syntax (e.g. {http.request.header.X-Forwarded-For}) MUST be
+#     verified against the installed caddy-ratelimit module version before deploying.
+#     Run `caddy validate` with the updated Caddyfile — do not copy the placeholder
+#     verbatim without confirming it is valid for the module version in use.
+#   - Set `trusted_proxies` to the specific CIDR of the upstream proxy ONLY.
+#     NEVER use `trusted_proxies 0.0.0.0/0` — this trusts all source IPs, enabling
+#     any client to spoof X-Forwarded-For and bypass per-IP rate limiting entirely.
+#
 # RESIDUAL RISKS (accepted, documented per Security review):
 # - Distributed brute force (IP rotation, botnet): this control targets single-IP
 #   attacks only. An attacker with N IPs gets N×30 attempts/min. Distributed attack

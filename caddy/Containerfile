@@ -7,6 +7,7 @@
 #
 # Module: github.com/mholt/caddy-ratelimit
 # Pinned version: v0.1.0 (pinned 2026-04-05, SR-CADDY-2 / platform#47)
+# Full commit SHA: 12435ecef5dbb1b137eb68002b85d775a9d5cdb2 (supply-chain traceability — DA condition)
 # Reference: https://github.com/mholt/caddy-ratelimit
 #
 # To upgrade: check https://github.com/mholt/caddy-ratelimit/releases for a newer

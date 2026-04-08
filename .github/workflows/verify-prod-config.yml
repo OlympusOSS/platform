@@ -1,0 +1,63 @@
+name: Verify production config has no sensitive value leaks
+
+# Asserts that leak_sensitive_values: true is never present in production
+# Kratos configs. This is a persistent CI regression check (SR-CADDY-5 /
+# platform#25) that prevents a critical logging misconfiguration from
+# silently reaching production.
+#
+# Background:
+#   Ory Kratos has a log.leak_sensitive_values flag. When true, Kratos logs
+#   plaintext TOTP secrets, session tokens, and credentials. These appear in
+#   any log aggregation system (Datadog, CloudWatch, Loki) and are visible
+#   to anyone with log access. Production configs must never have this true.
+#
+# Scope — platform/prod/ ONLY:
+#   Dev configs (dev/ciam-kratos/kratos.yml, dev/iam-kratos/kratos.yml)
+#   intentionally have leak_sensitive_values: true for debugging convenience.
+#   Grepping all of platform/ would fail on every dev config change. Only
+#   production configs are safety-critical here.
+#
+# Grep pattern: leak_sensitive_values:\s*true
+#   Handles YAML spacing variants (zero or more spaces between : and true).
+#   Does NOT false-positive on leak_sensitive_values: false or absent key.
+#
+# String-boolean note (Go yaml.v3):
+#   Ory Kratos is built with Go's yaml.v3. That parser does NOT coerce a
+#   quoted string "true" to boolean true — it treats it as a string type,
+#   which Kratos would not interpret as the boolean flag. The unquoted form
+#   (leak_sensitive_values: true) is the only form that activates the flag,
+#   and is the only form this regex needs to catch. The quoted-string bypass
+#   is inert. This closes the DA open question from the Architecture Review.
+#
+# Gate model:
+#   Push-to-main is the authoritative gate — it always runs on the final
+#   merged state. The pull_request trigger is fast feedback during review;
+#   it fires on all PRs regardless of path, matching the grep's own scope.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify-prod-config:
+    name: Check production Kratos configs for leak_sensitive_values
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for leak_sensitive_values in production configs
+        run: |
+          if grep -rE 'leak_sensitive_values:\s*true' prod/; then
+            echo ""
+            echo "ERROR: leak_sensitive_values: true found in a production Kratos config."
+            echo "This setting causes Kratos to log plaintext TOTP secrets, session tokens,"
+            echo "and credentials into any log aggregation system. It MUST NOT be true in"
+            echo "production. Set it to false or remove it (Kratos defaults to false)."
+            exit 1
+          fi
+          echo "OK: leak_sensitive_values check passed — no production config has this set to true."

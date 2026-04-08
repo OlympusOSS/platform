@@ -80,6 +80,26 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify rate_limit module present
+        # SMOKE TEST SCOPE (SR-CADDY-3 / platform#48):
+        # This check confirms that the http.handlers.rate_limit module binary is
+        # present in the built image by running `caddy list-modules` inside the
+        # container. It is a BUILD-TIME MODULE PRESENCE CHECK ONLY.
+        #
+        # What this check does NOT verify:
+        #   - Caddyfile parse correctness (a malformed config would fail at runtime)
+        #   - Module initialization (the module binary may be present but crash on
+        #     first request if incompatible with the Caddyfile directives)
+        #   - Runtime rate limiting behavior (whether the zone config is correct)
+        #
+        # A green verify job means: the binary was compiled into the image.
+        # Full runtime verification occurs via deployment health checks and QA.
+        # QA must NOT issue a PASS verdict on rate limiting based solely on this
+        # workflow succeeding — runtime validation requires a live environment.
+        #
+        # No automated pull of caddy:latest from GHCR exists in this infrastructure.
+        # compose.prod.yml is updated manually by operators after a green workflow run.
+        # A failed verify job marks the workflow as failed — do not update compose.prod.yml
+        # to reference a new Caddy image until this workflow shows green.
         run: |
           docker run --rm ghcr.io/olympusoss/caddy:latest caddy list-modules \
             | grep -q "http.handlers.rate_limit" \
