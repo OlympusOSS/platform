@@ -177,9 +177,9 @@ echo "Creating OAuth2 clients for admin panels..."
 #   not a pairwise HMAC. Required for /userinfo sub matching against Kratos identity IDs.
 # token_endpoint_auth_method=none: marks this as a public client so Hydra enforces PKCE
 #   (S256) on the authorization code flow per Security Expert requirement (athena#52).
-curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
-  -H "Content-Type: application/json" \
-  -d '{
+# require_pkce=true: server-side PKCE enforcement per hera#32 / platform#66 Security Review.
+#   Hydra rejects authorization requests without code_challenge when this is set.
+ATHENA_CIAM_PAYLOAD='{
     "client_id": "athena-ciam-client",
     "client_name": "Olympus CIAM Admin",
     "grant_types": ["authorization_code", "refresh_token"],
@@ -189,17 +189,32 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "scope": "openid profile email",
     "subject_type": "public",
     "token_endpoint_auth_method": "none",
-    "skip_consent": true
-  }' > /dev/null 2>&1 && echo "  Created: athena-ciam-client (IAM Hydra)" || echo "  athena-ciam-client already exists or failed"
+    "skip_consent": true,
+    "require_pkce": true
+  }'
+
+# Try POST first; if client already exists, PUT the full payload (hera#32).
+# Hydra PUT replaces the entire client object, so we send the complete config.
+if curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
+  -H "Content-Type: application/json" \
+  -d "${ATHENA_CIAM_PAYLOAD}" > /dev/null 2>&1; then
+  echo "  Created: athena-ciam-client (IAM Hydra, require_pkce=true)"
+else
+  curl -sf -X PUT "${IAM_HYDRA_ADMIN_URL}/admin/clients/athena-ciam-client" \
+    -H "Content-Type: application/json" \
+    -d "${ATHENA_CIAM_PAYLOAD}" > /dev/null 2>&1 && \
+    echo "  Updated: athena-ciam-client (IAM Hydra, require_pkce=true)" || \
+    echo "  WARN: athena-ciam-client — could not create or update"
+fi
 
 # Create OAuth2 client for IAM Athena (admin panel for employee identities)
 # subject_type=public: ensures Hydra returns the Kratos identity UUID as the sub claim,
 #   not a pairwise HMAC. Required for /userinfo sub matching against Kratos identity IDs.
 # token_endpoint_auth_method=none: marks this as a public client so Hydra enforces PKCE
 #   (S256) on the authorization code flow per Security Expert requirement (athena#52).
-curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
-  -H "Content-Type: application/json" \
-  -d '{
+# require_pkce=true: server-side PKCE enforcement per hera#32 / platform#66 Security Review.
+#   Hydra rejects authorization requests without code_challenge when this is set.
+ATHENA_IAM_PAYLOAD='{
     "client_id": "athena-iam-client",
     "client_name": "Olympus IAM Admin",
     "grant_types": ["authorization_code", "refresh_token"],
@@ -209,13 +224,29 @@ curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
     "scope": "openid profile email",
     "subject_type": "public",
     "token_endpoint_auth_method": "none",
-    "skip_consent": true
-  }' > /dev/null 2>&1 && echo "  Created: athena-iam-client (IAM Hydra)" || echo "  athena-iam-client already exists or failed"
+    "skip_consent": true,
+    "require_pkce": true
+  }'
+
+# Try POST first; if client already exists, PUT the full payload (hera#32).
+# Hydra PUT replaces the entire client object, so we send the complete config.
+if curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
+  -H "Content-Type: application/json" \
+  -d "${ATHENA_IAM_PAYLOAD}" > /dev/null 2>&1; then
+  echo "  Created: athena-iam-client (IAM Hydra, require_pkce=true)"
+else
+  curl -sf -X PUT "${IAM_HYDRA_ADMIN_URL}/admin/clients/athena-iam-client" \
+    -H "Content-Type: application/json" \
+    -d "${ATHENA_IAM_PAYLOAD}" > /dev/null 2>&1 && \
+    echo "  Updated: athena-iam-client (IAM Hydra, require_pkce=true)" || \
+    echo "  WARN: athena-iam-client — could not create or update"
+fi
 
 echo ""
 echo "Creating OAuth2 client for pgAdmin..."
 
 # Create OAuth2 client for pgAdmin (database management UI)
+# NOTE: require_pkce is intentionally NOT set — pgAdmin does not support PKCE (hera#32 Security Review).
 # platform#21: The 'roles' claim is injected into all IAM Hydra ID tokens via the
 # global oidc.claims_mapper in iam-hydra/hydra.yml (pgadmin-claims-mapper.jsonnet).
 # pgAdmin's OAUTH2_ADDITIONAL_CLAIMS_VALIDATION hook enforces 'dba' role membership
@@ -238,6 +269,7 @@ echo ""
 echo "Creating OAuth2 clients for Site..."
 
 # Create CIAM OAuth2 client for Site
+# NOTE: require_pkce is intentionally NOT set — Site has no PKCE implementation yet (site#20).
 curl -sf -X POST "${CIAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{
@@ -253,6 +285,7 @@ curl -sf -X POST "${CIAM_HYDRA_ADMIN_URL}/admin/clients" \
   }' > /dev/null 2>&1 && echo "  Created: site-ciam-client (CIAM Hydra)" || echo "  site-ciam-client already exists or failed"
 
 # Create IAM OAuth2 client for Site
+# NOTE: require_pkce is intentionally NOT set — Site has no PKCE implementation yet (site#20).
 curl -sf -X POST "${IAM_HYDRA_ADMIN_URL}/admin/clients" \
   -H "Content-Type: application/json" \
   -d '{

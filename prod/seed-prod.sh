@@ -94,6 +94,10 @@ oauth2_client_exists() {
 #   $9  token_endpoint_auth  (default: client_secret_basic) — use "none" for Athena clients
 #                             to enforce PKCE S256 on the authorization code flow per the
 #                             Security Expert requirement (athena#52).
+#   $10 require_pkce         (default: false) — set "true" for clients whose consumers
+#                             implement PKCE (Athena). Hydra rejects authorization requests
+#                             without code_challenge when this is set. Per hera#32 Security
+#                             Review: do NOT set on site or pgadmin clients.
 create_oauth2_client() {
   local hydra_url="$1"
   local client_id="$2"
@@ -104,6 +108,13 @@ create_oauth2_client() {
   local skip_consent="${7:-true}"
   local subject_type="${8:-pairwise}"
   local auth_method="${9:-client_secret_basic}"
+  local require_pkce="${10:-false}"
+
+  local pkce_field=""
+  if [ "${require_pkce}" = "true" ]; then
+    pkce_field=",
+      \"require_pkce\": true"
+  fi
 
   local payload
   if [ "${auth_method}" = "none" ]; then
@@ -118,7 +129,7 @@ create_oauth2_client() {
       \"scope\": \"openid profile email\",
       \"subject_type\": \"${subject_type}\",
       \"token_endpoint_auth_method\": \"none\",
-      \"skip_consent\": ${skip_consent}
+      \"skip_consent\": ${skip_consent}${pkce_field}
     }"
   else
     # Confidential client — includes client_secret
@@ -133,7 +144,7 @@ create_oauth2_client() {
       \"scope\": \"openid profile email\",
       \"subject_type\": \"${subject_type}\",
       \"token_endpoint_auth_method\": \"${auth_method}\",
-      \"skip_consent\": ${skip_consent}
+      \"skip_consent\": ${skip_consent}${pkce_field}
     }"
   fi
 
@@ -229,6 +240,7 @@ echo "=== OAuth2 Clients ==="
 # CIAM Athena — admin panel for customer identities (authenticates via IAM Hydra)
 # subject_type=public: sub claim is the raw Kratos UUID, enabling /userinfo lookup (athena#52)
 # token_endpoint_auth=none: public client (PKCE S256) per Security Expert requirement (athena#52)
+# require_pkce=true: server-side PKCE enforcement per hera#32 / platform#66 Security Review
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_CIAM_OAUTH_CLIENT_ID}" \
@@ -238,11 +250,13 @@ create_oauth2_client \
   "${CIAM_ATHENA_PUBLIC_URL}" \
   true \
   public \
-  none
+  none \
+  true
 
 # IAM Athena — admin panel for employee identities (authenticates via IAM Hydra)
 # subject_type=public: sub claim is the raw Kratos UUID, enabling /userinfo lookup (athena#52)
 # token_endpoint_auth=none: public client (PKCE S256) per Security Expert requirement (athena#52)
+# require_pkce=true: server-side PKCE enforcement per hera#32 / platform#66 Security Review
 create_oauth2_client \
   "${IAM_HYDRA_ADMIN_URL}" \
   "${ATHENA_IAM_OAUTH_CLIENT_ID}" \
@@ -252,7 +266,8 @@ create_oauth2_client \
   "${IAM_ATHENA_PUBLIC_URL}" \
   true \
   public \
-  none
+  none \
+  true
 
 # -----------------------------------------------------------------------------
 # Site OAuth2 clients
