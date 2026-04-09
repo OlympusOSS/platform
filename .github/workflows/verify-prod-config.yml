@@ -1,8 +1,9 @@
 name: Verify production config has no sensitive value leaks
 
-# Two regression gates for production Ory (Kratos + Hydra) configs.
-# Both grep only platform/prod/ — dev configs intentionally contain
+# Three regression gates for production Ory (Kratos + Hydra) configs.
+# Gates 1-2 grep only platform/prod/ — dev configs intentionally contain
 # placeholder and debug values and are excluded from these checks.
+# Gate 3 uses gitleaks to scan the full prod/ tree for broad secret patterns.
 #
 # Gate 1 — leak_sensitive_values (platform#25):
 #   Asserts that leak_sensitive_values: true is never present in production
@@ -34,6 +35,14 @@ name: Verify production config has no sensitive value leaks
 #   Only YAML files are checked to avoid false positives on JSON schemas or
 #   jsonnet files that may legitimately contain these strings as field names
 #   or example values.
+#
+# Gate 3 — gitleaks secrets scanner (platform#9 / Security V2):
+#   Runs gitleaks against the full prod/ directory tree to detect a broad
+#   class of secrets: API keys, tokens, passwords, private keys, etc.
+#   This catches patterns that the narrower grep in Gate 2 does not —
+#   e.g. "secret123", short fixed strings, AWS keys, private keys.
+#   Ownership: this workflow (platform#9) owns gitleaks configuration.
+#   The .gitleaks.toml config file lives in the repo root.
 #
 # Gate model:
 #   Push-to-main is the authoritative gate — it always runs on the final
@@ -88,3 +97,10 @@ jobs:
             exit 1
           fi
           echo "OK: no placeholder or insecure secret strings found in production Ory configs."
+
+      - name: Run gitleaks secrets scan on prod/ directory
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source prod/ --no-git --config .gitleaks.toml --verbose
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

@@ -1,0 +1,51 @@
+# .gitleaks.toml — gitleaks configuration for platform repo (platform#9).
+#
+# Ownership: This configuration is owned by platform#9 (secrets audit).
+# Changes to this file require Security review.
+#
+# Scope: Scans prod/ directory tree for hardcoded secrets in Ory configs,
+# Compose files, and shell scripts. Dev configs are excluded — they
+# intentionally contain placeholder secrets.
+#
+# Allowlist: Environment variable references (${VAR}, $VAR) are allowed
+# since production secrets are injected at deploy time via .env.
+
+title = "Olympus Platform — Production Secrets Scanner"
+
+# Use the built-in gitleaks rules (generic-api-key, private-key, etc.)
+# plus the custom rules below.
+
+# Allowlist patterns that are NOT secrets
+[allowlist]
+  description = "Global allowlist — env var references and known safe patterns"
+  # Env var substitution patterns used in compose.prod.yml and Ory configs
+  regexTarget = "match"
+  regexes = [
+    '''\$\{[A-Z_]+\}''',           # ${VAR_NAME} — compose env substitution
+    '''\$\{\{[^}]+\}\}''',         # ${{ secrets.X }} — GitHub Actions expressions
+    '''sslmode=(require|verify)''', # SSL mode values are not secrets
+  ]
+  paths = [
+    '''dev/''',                     # Dev configs excluded entirely
+    '''\.github/''',                # Workflow files use ${{ secrets.X }} — not leaks
+    '''init-db\.sql''',             # Database names are not secrets
+    '''postgres/server\.crt''',     # Public certificate — not a secret
+  ]
+
+# Custom rules for Ory-specific placeholder patterns
+[[rules]]
+  id = "ory-placeholder-secret"
+  description = "Ory default placeholder secrets that must not appear in prod configs"
+  regex = '''(?i)(PLEASE-CHANGE-ME|changeme|change-me|insecure|default-secret|replace-me)'''
+  tags = ["ory", "placeholder"]
+
+[[rules]]
+  id = "short-fixed-secret"
+  description = "Short fixed strings in secret fields (likely placeholder or weak secret)"
+  regex = '''(?i)(secret|password|cookie|cipher|salt)\s*[:=]\s*['"]?[a-zA-Z0-9_-]{1,16}['"]?\s*$'''
+  tags = ["weak-secret"]
+  [rules.allowlist]
+    regexes = [
+      '''\$\{[A-Z_]+\}''',         # Env var references are fine
+      '''false|true''',             # Boolean values
+    ]

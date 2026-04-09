@@ -105,9 +105,14 @@ services:
       - DSN=${PG_CIAM_KRATOS_DSN}
     volumes:
       - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
+      - type: bind
         source: ./ciam-kratos
         target: /etc/config/ciam-kratos
-    command: -c /etc/config/ciam-kratos/kratos.yml migrate sql -e --yes
+    entrypoint: ["sh", "/check-secrets.sh", "ciam-kratos-migrate", "DSN", "--"]
+    command: ["kratos", "-c", "/etc/config/ciam-kratos/kratos.yml", "migrate", "sql", "-e", "--yes"]
     networks:
       - intranet
     depends_on:
@@ -130,8 +135,15 @@ services:
       - SELFSERVICE_DEFAULT_BROWSER_RETURN_URL=${CIAM_HERA_PUBLIC_URL}/
       - COURIER_SMTP_CONNECTION_URI=${SMTP_CONNECTION_URI}
       - COURIER_SMTP_FROM_ADDRESS=${SMTP_FROM_EMAIL}
-    command: serve -c /etc/config/ciam-kratos/kratos.yml --watch-courier
+    # Startup shim (platform#9): validates SECRETS_COOKIE, SECRETS_CIPHER, and DSN
+    # are non-empty before starting Kratos. Prevents silent startup with empty secrets.
+    entrypoint: ["sh", "/check-secrets.sh", "ciam-kratos", "SECRETS_COOKIE", "SECRETS_CIPHER", "DSN", "--"]
+    command: ["kratos", "serve", "-c", "/etc/config/ciam-kratos/kratos.yml", "--watch-courier"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./ciam-kratos
         target: /etc/config/ciam-kratos
@@ -154,9 +166,14 @@ services:
       - DSN=${PG_IAM_KRATOS_DSN}
     volumes:
       - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
+      - type: bind
         source: ./iam-kratos
         target: /etc/config/iam-kratos
-    command: -c /etc/config/iam-kratos/kratos.yml migrate sql -e --yes
+    entrypoint: ["sh", "/check-secrets.sh", "iam-kratos-migrate", "DSN", "--"]
+    command: ["kratos", "-c", "/etc/config/iam-kratos/kratos.yml", "migrate", "sql", "-e", "--yes"]
     networks:
       - intranet
     depends_on:
@@ -179,8 +196,15 @@ services:
       - SELFSERVICE_DEFAULT_BROWSER_RETURN_URL=${IAM_ATHENA_PUBLIC_URL}/
       - COURIER_SMTP_CONNECTION_URI=${SMTP_CONNECTION_URI}
       - COURIER_SMTP_FROM_ADDRESS=${SMTP_FROM_EMAIL}
-    command: serve -c /etc/config/iam-kratos/kratos.yml --watch-courier
+    # Startup shim (platform#9): validates SECRETS_COOKIE, SECRETS_CIPHER, and DSN
+    # are non-empty before starting Kratos. Prevents silent startup with empty secrets.
+    entrypoint: ["sh", "/check-secrets.sh", "iam-kratos", "SECRETS_COOKIE", "SECRETS_CIPHER", "DSN", "--"]
+    command: ["kratos", "serve", "-c", "/etc/config/iam-kratos/kratos.yml", "--watch-courier"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./iam-kratos
         target: /etc/config/iam-kratos
@@ -201,8 +225,13 @@ services:
     image: docker.io/oryd/hydra:v26.2.0
     environment:
       - DSN=${PG_CIAM_HYDRA_DSN}
-    command: migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes
+    entrypoint: ["sh", "/check-secrets.sh", "ciam-hydra-migrate", "DSN", "--"]
+    command: ["hydra", "migrate", "-c", "/etc/config/ciam-hydra/hydra.yml", "sql", "up", "-e", "--yes"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
@@ -217,8 +246,15 @@ services:
     ports:
       - '3102:5002' # public
       - '3103:5003' # admin
-    command: serve -c /etc/config/ciam-hydra/hydra.yml all
+    # Startup shim (platform#9): validates SECRETS_SYSTEM, OIDC pairwise salt, and DSN
+    # are non-empty before starting Hydra. Prevents silent startup with empty secrets.
+    entrypoint: ["sh", "/check-secrets.sh", "ciam-hydra", "SECRETS_SYSTEM", "OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT", "DSN", "--"]
+    command: ["hydra", "serve", "-c", "/etc/config/ciam-hydra/hydra.yml", "all"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
@@ -250,8 +286,13 @@ services:
     image: docker.io/oryd/hydra:v26.2.0
     environment:
       - DSN=${PG_IAM_HYDRA_DSN}
-    command: migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes
+    entrypoint: ["sh", "/check-secrets.sh", "iam-hydra-migrate", "DSN", "--"]
+    command: ["hydra", "migrate", "-c", "/etc/config/iam-hydra/hydra.yml", "sql", "up", "-e", "--yes"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./iam-hydra
         target: /etc/config/iam-hydra
@@ -276,8 +317,15 @@ services:
       - URLS_LOGOUT=${IAM_HERA_PUBLIC_URL}/logout
       - SECRETS_SYSTEM=${IAM_HYDRA_SECRET_SYSTEM}
       - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=${IAM_HYDRA_PAIRWISE_SALT}
-    command: serve -c /etc/config/iam-hydra/hydra.yml all
+    # Startup shim (platform#9): validates SECRETS_SYSTEM, OIDC pairwise salt, and DSN
+    # are non-empty before starting Hydra. Prevents silent startup with empty secrets.
+    entrypoint: ["sh", "/check-secrets.sh", "iam-hydra", "SECRETS_SYSTEM", "OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT", "DSN", "--"]
+    command: ["hydra", "serve", "-c", "/etc/config/iam-hydra/hydra.yml", "all"]
     volumes:
+      - type: bind
+        source: ./check-secrets.sh
+        target: /check-secrets.sh
+        read_only: true
       - type: bind
         source: ./iam-hydra
         target: /etc/config/iam-hydra
