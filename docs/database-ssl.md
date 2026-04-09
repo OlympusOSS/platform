@@ -75,7 +75,7 @@ Files in `platform/prod/postgres/`:
 - `server.key` — server private key (gitignored, provisioned via `PG_SSL_KEY` secret)
 - `pg-ca.key` — CA private key (gitignored)
 
-Certificate expiry: 3650 days (~10 years) from generation date.
+Certificate expiry: see [database-ssl-verify-full.md](database-ssl-verify-full.md) for current cert validity details (updated in platform#53).
 
 ---
 
@@ -292,10 +292,8 @@ SOC2 CC6.1 requires encryption of data in transit. The evidence artifacts for th
 - `pg_stat_ssl` and `pg_settings` query output posted to the deployment issue thread, run after
   all services are confirmed healthy
 
-### Follow-on: `sslmode=verify-full` (platform#53)
+### Upgrade: `sslmode=verify-full` (platform#53)
 
-Platform#53 covers upgrading to `sslmode=verify-full` with CA certificate distribution. When
-implemented, every client container will receive the `pg-ca.crt` as `sslrootcert`, and the DSN
-will change to `sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt`. The CA certificate
-already committed to this repo (`platform/prod/postgres/pg-ca.crt`) is the CA used in that upgrade —
-no certificate regeneration is required for the migration.
+Platform#53 upgraded to `sslmode=verify-full` with CA certificate distribution. See
+[database-ssl-verify-full.md](database-ssl-verify-full.md) for the full configuration,
+CA certificate setup, key management, and troubleshooting guide.

@@ -219,7 +219,9 @@ not terminate active pgAdmin sessions (session lifetime: 1 day). For time-sensit
 execute session revocation (step 4 of the offboarding runbook) immediately.
 
 See [docs/pgadmin-access.md](./docs/pgadmin-access.md) for the DBA provisioning runbook,
-Jsonnet claims mapper configuration, and the Hydra v26.2.0 global mapper ADR.
+claims injection architecture, and the Hydra v26.2.0 consent session injection ADR.
+See [docs/pgadmin-dba-accounts.md](./docs/pgadmin-dba-accounts.md) for the registry of
+pre-provisioned DBA accounts (required deployment gate artifact for platform#21).
 See [docs/runbook-pgadmin-dba-offboarding.md](./docs/runbook-pgadmin-dba-offboarding.md) for the
 complete four-step offboarding procedure.
 

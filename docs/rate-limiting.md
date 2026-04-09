@@ -210,7 +210,18 @@ The per-account lockout layer (Layer 2) is not effective against distributed att
 across many accounts from many IP addresses. The per-IP Caddy layer (Layer 1) provides partial mitigation
 for high-volume distributed attacks.
 
-Per-IP rate limiting as a complement to per-account lockout is tracked as a follow-on security story.
+Distributed brute force via botnet IP rotation — where an attacker cycles through many source IPs — is an
+accepted residual risk not mitigated by per-IP rate limiting. The CAPTCHA layer (platform#17) provides
+additional protection. Botnet-scale attacks require a WAF or Cloudflare-level control.
+
+### Proxy-in-front topology
+
+If Olympus is deployed behind a load balancer, CDN, or reverse proxy, the Caddy rate limit key must be
+updated from `remote.host` (TCP peer address) to an `X-Forwarded-For`-based key. Failing to do this causes
+all users to share a single rate limit bucket (the proxy IP address).
+
+See [caddy-supply-chain.md — Proxy-in-Front Topology](caddy-supply-chain.md#proxy-in-front-topology-platform51)
+for the required configuration changes, CIDR scoping requirements, and the `caddy validate` verification step.
 
 ### Low `max_attempts` off-by-one
 
@@ -218,6 +229,13 @@ At `max_attempts=1` or `max_attempts=2`, concurrent login requests processed sim
 one extra attempt to pass before the lockout record is committed. This is a known V1 behavior of the
 append-then-count pattern. At the default of `max_attempts=5`, the practical effect is negligible. Avoid
 setting `max_attempts` below 3 in production.
+
+---
+
+## Related Documentation
+
+- [caddy-supply-chain.md](caddy-supply-chain.md) — version pinning, post-build smoke test, SHA-tagged image releases, and proxy topology configuration for the Caddy layer
+- [kratos-production-config.md](kratos-production-config.md) — required Kratos production configuration including `leak_sensitive_values: false`
 
 ---
 

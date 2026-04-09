@@ -2,6 +2,12 @@ import os
 
 AUTHENTICATION_SOURCES = ['oauth2']
 
+# Session timeout (platform#21 — offboarding gap reduction):
+# pgAdmin default session lifetime is 24 hours (86 400 s). Setting
+# SESSION_EXPIRATION_TIME = 60 reduces the active-session gap after DBA
+# offboarding to at most 60 minutes, limiting the blast-radius window.
+SESSION_EXPIRATION_TIME = 60
+
 # Security fix (platform#21 — OWASP A01:2021 Broken Access Control):
 # OAUTH2_AUTO_CREATE_USER = False prevents pgAdmin from silently provisioning
 # a new database admin account for every IAM identity that successfully

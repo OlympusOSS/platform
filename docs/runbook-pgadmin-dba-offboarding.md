@@ -33,11 +33,15 @@ Offboarding must address both layers.
 
 ## Session Cookie Lifetime
 
-pgAdmin's session cookie lifetime uses the default pgAdmin4 value: **1 day (86 400 seconds)**.
+pgAdmin's session cookie lifetime is explicitly set to **60 minutes** in both config files:
 
-This setting is NOT overridden in `platform/dev/pgadmin/config_local.py` or `platform/prod/pgadmin/config_local.py`.
+```python
+SESSION_EXPIRATION_TIME = 60  # minutes
+```
 
-**Consequence**: an active pgAdmin session persists for up to 24 hours after role removal. Steps 1 and 2 below take immediate effect at the next login attempt, but they do NOT terminate sessions that are already in progress. Step 4 (manual session revocation) is mandatory to close the active session gap.
+This is configured in `platform/dev/pgadmin/config_local.py` and `platform/prod/pgadmin/config_local.py` (platform#21 — offboarding gap reduction). The pgAdmin4 default of 24 hours (86 400 seconds) is overridden to limit the active-session blast-radius window after a DBA is offboarded.
+
+**Consequence**: an active pgAdmin session persists for up to **60 minutes** after role removal. Steps 1 and 2 below take immediate effect at the next login attempt, but they do NOT terminate sessions that are already in progress. Step 4 (manual session revocation) is mandatory to close the active session gap.
 
 ---
 
@@ -105,9 +109,9 @@ Alternatively, use pgAdmin's internal SQLite database or the pgAdmin admin API i
 
 ### Step 4 — Revoke active pgAdmin sessions (mandatory — V1)
 
-**Effect**: immediate termination of any in-progress pgAdmin sessions. This closes the 24-hour active session gap created by the pgAdmin session cookie lifetime.
+**Effect**: immediate termination of any in-progress pgAdmin sessions. This closes the 60-minute active session gap created by the pgAdmin session cookie lifetime (`SESSION_EXPIRATION_TIME = 60`).
 
-Steps 1 and 2 prevent the identity from initiating a new pgAdmin session, but any session cookie issued before role removal remains valid until expiry (up to 24 hours). Manual session revocation is required to eliminate this window.
+Steps 1 and 2 prevent the identity from initiating a new pgAdmin session, but any session cookie issued before role removal remains valid until expiry (up to 60 minutes). Manual session revocation is required to eliminate this window.
 
 To revoke active sessions:
 

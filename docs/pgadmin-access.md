@@ -217,6 +217,13 @@ Confirm the DBA reaches the pgAdmin dashboard with database access before handin
 
 ---
 
+## DBA Account Registry
+
+The current set of pre-provisioned pgAdmin accounts is tracked in
+[pgadmin-dba-accounts.md](./pgadmin-dba-accounts.md). This registry is the SOC2 CC6.3 evidence
+artifact for active DBA access. Update it when provisioning (add entry) and when offboarding
+(remove entry after step 3 of the offboarding runbook completes).
+
 ## DBA Offboarding Runbook
 
 See [runbook-pgadmin-dba-offboarding.md](./runbook-pgadmin-dba-offboarding.md) for the complete

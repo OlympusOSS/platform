@@ -142,29 +142,35 @@ fallback) is sufficient to prevent silent startup with missing secrets.
 
 ### SDK / `ENCRYPTION_KEY`
 
-Prior to this audit, the SDK (`@olympusoss/sdk`) validated `ENCRYPTION_KEY` only on first call to
-`encrypt()` or `decrypt()` — not at module load. This meant containers (ciam-hera, iam-hera, ciam-athena,
-iam-athena) would start successfully, pass healthchecks, and fail only on the first settings operation.
+The SDK (`@olympusoss/sdk`) validates `ENCRYPTION_KEY` on first call to `encrypt()` or `decrypt()` —
+not at module load. This is the deliberate design (see athena#111): eager module-level validation broke
+the container build stage because `next build` imports SDK-dependent API routes without `ENCRYPTION_KEY`
+set. Deferring validation to call time allows builds to succeed while still catching missing keys at
+runtime before any actual encryption is attempted.
 
-**Remediation applied**: `sdk/src/index.ts` now validates `ENCRYPTION_KEY` at module load. The module-level
-check throws immediately if the environment variable is absent or empty:
+**Behavior with missing `ENCRYPTION_KEY`**:
+- Container starts and passes healthchecks (startup itself does not throw)
+- First call to `encrypt()` or `decrypt()` throws with the exact error:
+  `[SDK] ENCRYPTION_KEY environment variable is required but not set. Generate a key with: openssl rand -base64 32`
+- Athena emits an `ERROR`-level log at startup if `ENCRYPTION_KEY` is absent (via `src/instrumentation.ts`)
 
-```ts
-if (!process.env.ENCRYPTION_KEY) {
-    throw new Error(
-        "[SDK] ENCRYPTION_KEY environment variable is required but not set. " +
-        "Set this variable to a strong random string before starting the service.",
-    );
-}
+**Startup warning**: Athena logs an ERROR on startup when `ENCRYPTION_KEY` is missing:
+```
+ERROR: ENCRYPTION_KEY is not set — SDK encryption operations will throw on first call.
+Set ENCRYPTION_KEY before serving requests.
 ```
 
-Since all four affected containers (ciam-hera, iam-hera, ciam-athena, iam-athena) import `@olympusoss/sdk`
-on startup via Next.js module initialization, this error surfaces during container startup — before any
-request is served. The container will crash immediately, causing its healthcheck to never pass, and
-`deploy.yml` will detect the unhealthy service and fail the deployment.
+This log is the operator signal. It does not block startup, but it surfaces the misconfiguration before
+any user request fails. Monitor for this log pattern in production.
 
-**Verdict: REMEDIATED.** A deployment with a missing `ENCRYPTION_KEY` will now fail its health gate before
-being declared healthy.
+**Deploy guard**: `deploy.yml` sources `ENCRYPTION_KEY` from `secrets.ENCRYPTION_KEY` with no `:-default`
+fallback. If the GitHub Secret is absent, the container receives an empty string, `instrumentation.ts`
+emits the ERROR log, and the first settings API call throws. The deployment health check will detect the
+service is not responding to settings requests and the deployment is considered failed.
+
+**Verdict: DEFERRED VALIDATION.** The SDK validates on first use, not on import. The startup ERROR log
+(Athena `instrumentation.ts`) is the early-warning mechanism. The build-stage constraint (athena#111)
+is why module-level validation was removed. See `sdk/src/crypto.ts` for the deferred validation implementation.
 
 ---
 
@@ -179,7 +185,7 @@ being declared healthy.
 | No dev placeholder values in `prod/` files | Critical | PASS — no inline secrets in any prod config |
 | Kratos refuses to start with empty secrets | Critical | PASS — empirically verified, exit code 1 |
 | Hydra refuses to start with empty secrets | Critical | PASS — empirically verified, exit code 1 |
-| SDK validates `ENCRYPTION_KEY` on module load | High | REMEDIATED — added to `sdk/src/index.ts` |
+| SDK validates `ENCRYPTION_KEY` on first encrypt/decrypt call (deferred) | High | MITIGATED — startup ERROR log via `athena/src/instrumentation.ts`; build-stage constraint prevents eager validation (athena#111) |
 
 ---
 
