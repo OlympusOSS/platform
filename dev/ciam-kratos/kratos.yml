@@ -102,8 +102,10 @@ log:
   leak_sensitive_values: true
 
 secrets:
+  # DEV ONLY — overridden by SECRETS_COOKIE env var in compose.prod.yml (platform#9)
   cookie:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  # DEV ONLY — overridden by SECRETS_CIPHER env var in compose.prod.yml (platform#9)
   cipher:
     - 32-LONG-SECRET-NOT-SECURE-AT-ALL
 

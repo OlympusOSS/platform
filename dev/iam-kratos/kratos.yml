@@ -78,8 +78,10 @@ log:
   leak_sensitive_values: true
 
 secrets:
+  # DEV ONLY — overridden by SECRETS_COOKIE env var in compose.prod.yml (platform#9)
   cookie:
     - iam-kratos-cookie-secret-change-me
+  # DEV ONLY — overridden by SECRETS_CIPHER env var in compose.prod.yml (platform#9)
   cipher:
     - iam-kratos-cipher-secret!!abcdef
 

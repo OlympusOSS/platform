@@ -14,6 +14,7 @@ urls:
   logout: http://localhost:4000/logout
 
 secrets:
+  # DEV ONLY — overridden by SECRETS_SYSTEM env var in compose.prod.yml (platform#9)
   system:
     - iam-hydra-secret-change-me
 
@@ -23,6 +24,7 @@ oidc:
       - pairwise
       - public
     pairwise:
+      # DEV ONLY — overridden by OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT env var in compose.prod.yml (platform#9)
       salt: iam-hydra-pairwise-salt
   # Note (platform#21): Hydra v26.2.0 does not support oidc.claims_mapper.
   # The 'roles' claim for the pgAdmin DBA role gate is injected via the consent
