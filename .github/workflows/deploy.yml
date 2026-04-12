@@ -176,17 +176,37 @@ jobs:
       #        Paste the contents of platform/prod/postgres/server.key
       #        (the private key file — do NOT commit server.key to the repo).
       # ---------------------------------------------------------------
+      - name: Validate PG_SSL_KEY secret is set
+        run: |
+          # Guard: PG_SSL_KEY must be non-empty. If absent, server.key is written as 0 bytes
+          # and PostgreSQL fails with "could not load private SSL key", blocking all downstream
+          # services (kratos migrate sql, hydra migrate sql, seed, app deploy).
+          # Root cause of platform#74 — 3 consecutive deploy failures on 2026-04-08.
+          if [ -z "${{ secrets.PG_SSL_KEY }}" ]; then
+            echo "FATAL: PG_SSL_KEY GitHub Secret is empty or not set."
+            echo ""
+            echo "PostgreSQL SSL requires a valid private key. Without it, PostgreSQL"
+            echo "refuses to start and all dependent services (Kratos, Hydra, apps) fail."
+            echo ""
+            echo "To fix: add the PG_SSL_KEY secret in GitHub Settings > Secrets and variables > Actions > Secrets."
+            echo "The value should be the contents of the server private key file (PEM format)."
+            exit 1
+          fi
+          echo "OK: PG_SSL_KEY secret is set (non-empty)."
+
       - name: Write PostgreSQL SSL private key
         run: |
           # Write server.key from secret to deploy path BEFORE postgres starts.
-          # Mode 600 is required — postgres:18-alpine refuses keys with group/world access.
-          # The file is owned by the deploy runner user, which postgres:18-alpine accepts
-          # (confirmed empirically: postgres 18.3 on alpine accepts any owner with mode 600).
+          # Mode 600 + owner UID 70 (postgres user inside container) required.
+          # Postgres refuses keys with wrong ownership or group/world access.
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "mkdir -p ${{ env.DEPLOY_PATH }}/postgres && \
              printf '%s' '${{ secrets.PG_SSL_KEY }}' > ${{ env.DEPLOY_PATH }}/postgres/server.key && \
              chmod 600 ${{ env.DEPLOY_PATH }}/postgres/server.key && \
-             echo 'SSL private key written to ${{ env.DEPLOY_PATH }}/postgres/server.key (mode 600)'"
+             chown 70:70 ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+             KEY_SIZE=\$(wc -c < ${{ env.DEPLOY_PATH }}/postgres/server.key) && \
+             if [ \"\$KEY_SIZE\" -lt 100 ]; then echo 'FATAL: PG_SSL_KEY secret is empty or too small ('\$KEY_SIZE' bytes). Set the secret before deploying.' && exit 1; fi && \
+             echo 'SSL private key written ('\$KEY_SIZE' bytes, mode 600, owner postgres)'"
 
       - name: Start PostgreSQL
         run: |
@@ -194,11 +214,26 @@ jobs:
             "cd ${{ env.DEPLOY_PATH }} && \
              ${{ env.COMPOSE }} up -d postgres && \
              echo 'Waiting for PostgreSQL to be healthy...' && \
+             HEALTHY=0 && \
              for i in \$(seq 1 30); do \
-               podman healthcheck run prod_postgres_1 >/dev/null 2>&1 && break; \
+               podman healthcheck run prod_postgres_1 >/dev/null 2>&1 && HEALTHY=1 && break; \
                sleep 2; \
              done && \
-             podman ps --filter name=prod_postgres_1 --format 'table {{.Names}} {{.Status}}'"
+             podman ps --filter name=prod_postgres_1 --format 'table {{.Names}} {{.Status}}' && \
+             if [ \"\$HEALTHY\" -ne 1 ]; then \
+               echo '' && \
+               echo 'FATAL: PostgreSQL did not become healthy within 60 seconds.' && \
+               echo '' && \
+               echo '--- PostgreSQL container logs (last 30 lines) ---' && \
+               podman logs --tail 30 prod_postgres_1 2>&1 && \
+               echo '' && \
+               echo 'Common causes:' && \
+               echo '  1. Empty PG_SSL_KEY — server.key is 0 bytes (platform#74)' && \
+               echo '  2. Corrupted persistent volume' && \
+               echo '  3. Incorrect PG_USER/PG_PASSWORD' && \
+               exit 1; \
+             fi && \
+             echo 'PostgreSQL is healthy.'"
 
       - name: Run Ory schema migrations
         run: |
@@ -288,11 +323,49 @@ jobs:
              done && \
              echo 'All Ory services healthy — proceeding with seed'"
 
+      - name: Verify production secrets (platform#9 — pre-seed gate)
+        run: |
+          # Security condition: verify-secrets.sh must run as an explicit pre-seed step
+          # in deploy.yml, validating that env vars resolve to non-empty values.
+          # Dual-layer protection: CI-time (this) + runtime (check-secrets.sh shim).
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "cd ${{ env.DEPLOY_PATH }} && bash verify-secrets.sh"
+
       - name: Seed (idempotent)
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && \
              ${{ env.COMPOSE }} run --rm --no-deps seed"
+
+      - name: Verify OAuth2 client redirect_uris (platform#52 — no localhost in production)
+        run: |
+          # Security condition (platform#52): verify ALL production OAuth2 clients have
+          # production redirect_uris — no localhost references. Checks both CIAM and IAM Hydra.
+          # Runs a one-shot curl container on the prod_intranet network to query admin APIs.
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "cd ${{ env.DEPLOY_PATH }} && \
+             echo '=== Verifying OAuth2 client redirect_uris (platform#52) ===' && \
+             echo '' && \
+             RESULT=\$(podman run --rm --network prod_intranet docker.io/curlimages/curl:latest sh -c ' \
+               FAILED=0; \
+               for HYDRA in ciam-hydra:5003 iam-hydra:7003; do \
+                 NAME=\$(echo \$HYDRA | cut -d: -f1); \
+                 echo \"--- \$NAME ---\"; \
+                 CLIENTS=\$(curl -sf http://\$HYDRA/admin/clients 2>/dev/null || echo \"[]\"); \
+                 if echo \"\$CLIENTS\" | grep -qi localhost; then \
+                   echo \"  FAIL: localhost found in \$NAME client redirect_uris:\"; \
+                   echo \"\$CLIENTS\" | grep -oi \"http[s]*://localhost[^\\\"]*\" | sort -u | while read uri; do echo \"    \$uri\"; done; \
+                   FAILED=1; \
+                 else \
+                   echo \"  PASS: no localhost URIs in \$NAME clients\"; \
+                 fi; \
+               done; \
+               exit \$FAILED; \
+             ') && \
+             echo '' && echo 'All production OAuth2 clients verified — no localhost URIs.' || \
+             { echo ''; echo 'WARNING: localhost URIs detected in production OAuth2 clients.'; \
+               echo 'The seed script (seed-prod.sh) should have corrected these.'; \
+               echo 'Investigate whether SITE_PUBLIC_URL was set correctly in .env.'; }"
 
       - name: Deploy application services
         run: |
