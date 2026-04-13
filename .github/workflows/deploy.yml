@@ -89,6 +89,9 @@ jobs:
           # Application settings encryption
           ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
 
+          # Athena session signing (athena#99)
+          SESSION_SIGNING_KEY=${{ secrets.SESSION_SIGNING_KEY }}
+
           # CIAM Kratos
           CIAM_KRATOS_SECRET_COOKIE=${{ secrets.CIAM_KRATOS_SECRET_COOKIE }}
           CIAM_KRATOS_SECRET_CIPHER=${{ secrets.CIAM_KRATOS_SECRET_CIPHER }}

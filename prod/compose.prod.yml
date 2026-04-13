@@ -544,6 +544,8 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - OAUTH_CLIENT_ID=${ATHENA_CIAM_OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${ATHENA_CIAM_OAUTH_CLIENT_SECRET}
+      # Session signing (athena#99)
+      - SESSION_SIGNING_KEY=${SESSION_SIGNING_KEY}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
       - HERA_INTERNAL_URL=http://ciam-hera:3000
@@ -610,6 +612,8 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - OAUTH_CLIENT_ID=${ATHENA_IAM_OAUTH_CLIENT_ID}
       - OAUTH_CLIENT_SECRET=${ATHENA_IAM_OAUTH_CLIENT_SECRET}
+      # Session signing (athena#99)
+      - SESSION_SIGNING_KEY=${SESSION_SIGNING_KEY}
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
       - HERA_INTERNAL_URL=http://iam-hera:4000
