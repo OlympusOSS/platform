@@ -44,6 +44,17 @@ name: Verify production config has no sensitive value leaks
 #   Ownership: this workflow (platform#9) owns gitleaks configuration.
 #   The .gitleaks.toml config file lives in the repo root.
 #
+# Gate 4 — private key files in tracked git files (platform#53):
+#   Asserts that no .key files are committed under prod/postgres/ or prod/.
+#   .gitignore is a soft control that can be bypassed with --force.
+#   This CI check is the hard gate that catches accidental commits.
+#
+# Gate 5 — sslmode regression check (platform#53):
+#   Asserts that compose.prod.yml does not contain sslmode=require,
+#   sslmode=disable, sslmode=prefer, or sslmode=allow. All production
+#   DSNs must use sslmode=verify-full. Scoped to prod/ only — dev
+#   uses sslmode=disable intentionally.
+#
 # Gate model:
 #   Push-to-main is the authoritative gate — it always runs on the final
 #   merged state. The pull_request trigger is fast feedback during review;
@@ -97,6 +108,41 @@ jobs:
             exit 1
           fi
           echo "OK: no placeholder or insecure secret strings found in production Ory configs."
+
+      - name: Check for private key files in tracked files (platform#53)
+        run: |
+          # Gate 4: .key files must never be committed. .gitignore blocks them,
+          # but this is a soft control. This CI check is the hard gate.
+          # Scoped to platform/prod/ to avoid false positives on dev configs.
+          FOUND=$(git ls-files 'prod/postgres/*.key' 'prod/*.key' || true)
+          if [ -n "$FOUND" ]; then
+            echo ""
+            echo "ERROR: Private key file(s) found in tracked git files:"
+            echo "$FOUND"
+            echo ""
+            echo "Private keys (server.key, pg-ca.key) must NEVER be committed."
+            echo "Remove with: git rm --cached <file> && git commit"
+            echo "Store keys in GitHub Secrets (PG_SSL_KEY, PG_CA_KEY)."
+            exit 1
+          fi
+          echo "OK: no private key files in tracked git files."
+
+      - name: Check sslmode is verify-full in prod compose (platform#53)
+        run: |
+          # Gate 5: Detect sslmode regressions in compose.prod.yml.
+          # Any DSN reference that uses sslmode= but NOT verify-full is a regression.
+          # Scoped to platform/prod/ only — dev uses sslmode=disable intentionally.
+          FOUND=$(grep -nE 'sslmode=(require|disable|prefer|allow)' prod/compose.prod.yml || true)
+          if [ -n "$FOUND" ]; then
+            echo ""
+            echo "ERROR: sslmode regression detected in prod/compose.prod.yml:"
+            echo "$FOUND"
+            echo ""
+            echo "All production DSNs must use sslmode=verify-full (platform#53)."
+            echo "sslmode=require does not validate the server certificate (MITM risk)."
+            exit 1
+          fi
+          echo "OK: no sslmode regression detected in production compose."
 
       - name: Run gitleaks secrets scan on prod/ directory
         uses: gitleaks/gitleaks-action@v2

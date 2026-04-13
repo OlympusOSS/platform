@@ -7,12 +7,17 @@ services:
     image: docker.io/postgres:18-alpine
     # SSL is enabled via command arguments. The server.key is written by deploy.yml
     # from secrets.PG_SSL_KEY BEFORE this container starts (ordering enforced in deploy.yml).
-    # server.key must be mode 600; server.crt is committed to the repo (public).
+    # server.key must be mode 600; server.crt and pg-ca.crt are committed to the repo (public).
+    #
+    # sslmode=verify-full (platform#53): All client DSNs include sslrootcert pointing to
+    # pg-ca.crt. PostgreSQL presents server.crt (signed by pg-ca.crt) to clients.
+    # ssl_ca_file is set so PostgreSQL can optionally verify client certs (future use).
     command: >
       postgres
       -c ssl=on
       -c ssl_cert_file=/var/lib/postgresql/server.crt
       -c ssl_key_file=/var/lib/postgresql/server.key
+      -c ssl_ca_file=/var/lib/postgresql/pg-ca.crt
     environment:
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
@@ -32,6 +37,11 @@ services:
       - type: bind
         source: ./postgres/server.key
         target: /var/lib/postgresql/server.key
+        read_only: true
+      # CA certificate (public — committed to repo; used by clients for verify-full)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /var/lib/postgresql/pg-ca.crt
         read_only: true
     networks:
       - intranet
@@ -111,6 +121,11 @@ services:
       - type: bind
         source: ./ciam-kratos
         target: /etc/config/ciam-kratos
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     entrypoint: ["sh", "/check-secrets.sh", "ciam-kratos-migrate", "DSN", "--"]
     command: ["kratos", "-c", "/etc/config/ciam-kratos/kratos.yml", "migrate", "sql", "-e", "--yes"]
     networks:
@@ -147,6 +162,11 @@ services:
       - type: bind
         source: ./ciam-kratos
         target: /etc/config/ciam-kratos
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     healthcheck:
@@ -172,6 +192,11 @@ services:
       - type: bind
         source: ./iam-kratos
         target: /etc/config/iam-kratos
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     entrypoint: ["sh", "/check-secrets.sh", "iam-kratos-migrate", "DSN", "--"]
     command: ["kratos", "-c", "/etc/config/iam-kratos/kratos.yml", "migrate", "sql", "-e", "--yes"]
     networks:
@@ -208,6 +233,11 @@ services:
       - type: bind
         source: ./iam-kratos
         target: /etc/config/iam-kratos
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     healthcheck:
@@ -235,6 +265,11 @@ services:
       - type: bind
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     depends_on:
@@ -258,6 +293,11 @@ services:
       - type: bind
         source: ./ciam-hydra
         target: /etc/config/ciam-hydra
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     environment:
       - DSN=${PG_CIAM_HYDRA_DSN}
       - SERVE_PUBLIC_PORT=5002
@@ -296,6 +336,11 @@ services:
       - type: bind
         source: ./iam-hydra
         target: /etc/config/iam-hydra
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     depends_on:
@@ -329,6 +374,11 @@ services:
       - type: bind
         source: ./iam-hydra
         target: /etc/config/iam-hydra
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     restart: unless-stopped
     networks:
       - intranet
@@ -375,6 +425,12 @@ services:
       # protections for demo accounts. Both Hera CAPTCHA verification and login rate-limiting are
       # skipped entirely. This MUST remain false in production.
       - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
+    volumes:
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     restart: unless-stopped
@@ -426,6 +482,12 @@ services:
       # protections for demo accounts. Both Hera CAPTCHA verification and login rate-limiting are
       # skipped entirely. This MUST remain false in production.
       - ALLOW_DEMO_ACCOUNTS=${ALLOW_DEMO_ACCOUNTS:-false}
+    volumes:
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     restart: unless-stopped
@@ -485,6 +547,12 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://ciam-athena:3000
       - HERA_INTERNAL_URL=http://ciam-hera:3000
+    volumes:
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     depends_on:
@@ -545,6 +613,12 @@ services:
       # Stack health checks (own domain only)
       - ATHENA_INTERNAL_URL=http://iam-athena:3000
       - HERA_INTERNAL_URL=http://iam-hera:4000
+    volumes:
+      # CA certificate for sslmode=verify-full (platform#53)
+      - type: bind
+        source: ./postgres/pg-ca.crt
+        target: /etc/ssl/certs/pg-ca.crt
+        read_only: true
     networks:
       - intranet
     depends_on:

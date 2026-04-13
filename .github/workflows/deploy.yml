@@ -77,11 +77,14 @@ jobs:
           PG_PASSWORD=${PG_PASSWORD}
 
           # PostgreSQL — per-service DSNs derived from single base DSN
-          PG_CIAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=${{ vars.PG_SSLMODE || 'require' }}
-          PG_CIAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=${{ vars.PG_SSLMODE || 'require' }}
-          PG_IAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=${{ vars.PG_SSLMODE || 'require' }}
-          PG_IAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=${{ vars.PG_SSLMODE || 'require' }}
-          PG_OLYMPUS_DSN=${{ secrets.PG_DSN_BASE }}/olympus?sslmode=${{ vars.PG_SSLMODE || 'require' }}
+          # sslmode=verify-full (platform#53): clients verify server cert is signed by
+          # the CA and hostname matches CN=postgres. sslrootcert points to the CA cert
+          # mounted from ./postgres/pg-ca.crt into /etc/ssl/certs/pg-ca.crt in each container.
+          PG_CIAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
+          PG_CIAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
+          PG_IAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
+          PG_IAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
+          PG_OLYMPUS_DSN=${{ secrets.PG_DSN_BASE }}/olympus?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
 
           # Application settings encryption
           ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
@@ -148,6 +151,35 @@ jobs:
           # Generate pgpass for pgAdmin (format: hostname:port:database:username:password)
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "mkdir -p ${{ env.DEPLOY_PATH }}/pgadmin && echo 'postgres:5432:*:${PG_USER}:${PG_PASSWORD}' > ${{ env.DEPLOY_PATH }}/pgadmin/pgpass"
+
+      # ---------------------------------------------------------------
+      # SECURITY: Deploy-time assertion for DSN sslmode (platform#53).
+      # Verifies all 5 DSN strings contain sslmode=verify-full.
+      # Catches silent regressions from PG_SSLMODE variable overrides
+      # or .env template mistakes.
+      # ---------------------------------------------------------------
+      - name: Verify DSN sslmode=verify-full (platform#53)
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "echo '=== DSN sslmode assertion (platform#53) ===' && \
+             FAILED=0 && \
+             for DSN_VAR in PG_CIAM_KRATOS_DSN PG_CIAM_HYDRA_DSN PG_IAM_KRATOS_DSN PG_IAM_HYDRA_DSN PG_OLYMPUS_DSN; do \
+               DSN_VALUE=\$(grep \"^\${DSN_VAR}=\" ${{ env.DEPLOY_PATH }}/.env | cut -d= -f2-); \
+               if echo \"\$DSN_VALUE\" | grep -q 'sslmode=verify-full'; then \
+                 echo \"  PASS: \$DSN_VAR contains sslmode=verify-full\"; \
+               else \
+                 echo \"  FAIL: \$DSN_VAR does not contain sslmode=verify-full\"; \
+                 FAILED=1; \
+               fi; \
+             done && \
+             if [ \$FAILED -eq 1 ]; then \
+               echo '' && \
+               echo 'FATAL: One or more DSNs do not use sslmode=verify-full.' && \
+               echo 'This is a security regression — MITM protection requires verify-full.' && \
+               echo 'Check deploy.yml DSN template and remove any PG_SSLMODE variable override.' && \
+               exit 1; \
+             fi && \
+             echo 'All 5 DSNs use sslmode=verify-full.'"
 
       - name: Login to GHCR on server
         run: |
@@ -240,25 +272,30 @@ jobs:
           # podman-compose 1.0.6 `run --rm --no-deps` silently fails to resolve
           # env vars from compose files. Run migrations directly via `podman run`
           # with explicit DSN and volume mounts to bypass the issue.
+          # Mount pg-ca.crt into migration containers for sslmode=verify-full (platform#53)
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "cd ${{ env.DEPLOY_PATH }} && source .env && \
              podman run --rm --network prod_intranet \
                -v \$(pwd)/ciam-kratos:/etc/config/ciam-kratos:ro \
+               -v \$(pwd)/postgres/pg-ca.crt:/etc/ssl/certs/pg-ca.crt:ro \
                -e DSN=\"\$PG_CIAM_KRATOS_DSN\" \
                docker.io/oryd/kratos:v26.2.0 \
                -c /etc/config/ciam-kratos/kratos.yml migrate sql -e --yes && \
              podman run --rm --network prod_intranet \
                -v \$(pwd)/iam-kratos:/etc/config/iam-kratos:ro \
+               -v \$(pwd)/postgres/pg-ca.crt:/etc/ssl/certs/pg-ca.crt:ro \
                -e DSN=\"\$PG_IAM_KRATOS_DSN\" \
                docker.io/oryd/kratos:v26.2.0 \
                -c /etc/config/iam-kratos/kratos.yml migrate sql -e --yes && \
              podman run --rm --network prod_intranet \
                -v \$(pwd)/ciam-hydra:/etc/config/ciam-hydra:ro \
+               -v \$(pwd)/postgres/pg-ca.crt:/etc/ssl/certs/pg-ca.crt:ro \
                -e DSN=\"\$PG_CIAM_HYDRA_DSN\" \
                docker.io/oryd/hydra:v26.2.0 \
                migrate -c /etc/config/ciam-hydra/hydra.yml sql up -e --yes && \
              podman run --rm --network prod_intranet \
                -v \$(pwd)/iam-hydra:/etc/config/iam-hydra:ro \
+               -v \$(pwd)/postgres/pg-ca.crt:/etc/ssl/certs/pg-ca.crt:ro \
                -e DSN=\"\$PG_IAM_HYDRA_DSN\" \
                docker.io/oryd/hydra:v26.2.0 \
                migrate -c /etc/config/iam-hydra/hydra.yml sql up -e --yes"
@@ -410,17 +447,24 @@ jobs:
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "PG_USER=\$(grep '^PG_USER=' ${{ env.DEPLOY_PATH }}/.env | cut -d= -f2) && \
-             echo '=== SOC2 CC6.1 Evidence: PostgreSQL SSL Status ===' && \
+             echo '=== SOC2 CC6.1 Evidence: PostgreSQL SSL Status (verify-full) ===' && \
              echo '' && \
              echo '--- Structural check: ssl setting in pg_settings ---' && \
              podman exec prod_postgres_1 psql -U \$PG_USER -c \
-               \"SELECT name, setting FROM pg_settings WHERE name = 'ssl';\" && \
+               \"SELECT name, setting FROM pg_settings WHERE name IN ('ssl', 'ssl_ca_file') ORDER BY name;\" && \
              echo '' && \
              echo '--- Active TLS connections: pg_stat_ssl ---' && \
              podman exec prod_postgres_1 psql -U \$PG_USER -c \
                \"SELECT count(*) AS ssl_connections FROM pg_stat_ssl WHERE ssl = true;\" && \
              echo '' && \
-             echo '=== End SOC2 evidence — copy above output to platform#19 issue thread ==='"
+             echo '--- DSN sslmode verification: all 5 DSNs must use verify-full ---' && \
+             for DSN_VAR in PG_CIAM_KRATOS_DSN PG_CIAM_HYDRA_DSN PG_IAM_KRATOS_DSN PG_IAM_HYDRA_DSN PG_OLYMPUS_DSN; do \
+               DSN_VALUE=\$(grep \"^\${DSN_VAR}=\" ${{ env.DEPLOY_PATH }}/.env | cut -d= -f2-); \
+               SSLMODE=\$(echo \"\$DSN_VALUE\" | grep -o 'sslmode=[^&]*' || echo 'sslmode=NOT_SET'); \
+               echo \"  \$DSN_VAR: \$SSLMODE\"; \
+             done && \
+             echo '' && \
+             echo '=== End SOC2 evidence — copy above output to platform#53 issue thread ==='"
 
       - name: Cleanup SSH key
         if: always()

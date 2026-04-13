@@ -1,0 +1,118 @@
+# Certificate Expiry Alerting (SR-53-1 / platform#53)
+#
+# Monthly check of PostgreSQL TLS certificate expiry dates.
+# Creates a GitHub Issue when certificates approach expiry thresholds:
+#   - Server cert (1-year): alert at 90 days remaining
+#   - CA cert (5-year): alert at 180 days remaining
+#
+# Duplicate prevention: checks for existing open issues with the same label
+# before creating a new one.
+#
+# Assignee: Platform Engineer (cert rotation responsibility per runbook)
+# Labels: security, cert-expiry
+
+name: Certificate Expiry Check
+
+on:
+  schedule:
+    # Monthly on the 1st at 09:00 UTC
+    - cron: '0 9 1 * *'
+  workflow_dispatch: {}
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check server cert expiry
+        id: server-cert
+        run: |
+          CERT_FILE="prod/postgres/server.crt"
+          if [ ! -f "$CERT_FILE" ]; then
+            echo "FATAL: $CERT_FILE not found in repo"
+            echo "alert=true" >> "$GITHUB_OUTPUT"
+            echo "message=Server certificate file missing from repository" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          EXPIRY_DATE=$(openssl x509 -in "$CERT_FILE" -noout -enddate | cut -d= -f2)
+          EXPIRY_EPOCH=$(date -d "$EXPIRY_DATE" +%s 2>/dev/null || date -jf "%b %d %T %Y %Z" "$EXPIRY_DATE" +%s)
+          NOW_EPOCH=$(date +%s)
+          DAYS_REMAINING=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+
+          echo "Server cert expires: $EXPIRY_DATE ($DAYS_REMAINING days remaining)"
+          echo "days=$DAYS_REMAINING" >> "$GITHUB_OUTPUT"
+          echo "expiry=$EXPIRY_DATE" >> "$GITHUB_OUTPUT"
+
+          if [ "$DAYS_REMAINING" -le 90 ]; then
+            echo "alert=true" >> "$GITHUB_OUTPUT"
+            echo "message=Server certificate expires in $DAYS_REMAINING days ($EXPIRY_DATE). Annual rotation required." >> "$GITHUB_OUTPUT"
+          else
+            echo "alert=false" >> "$GITHUB_OUTPUT"
+            echo "Server cert OK: $DAYS_REMAINING days remaining (threshold: 90)"
+          fi
+
+      - name: Check CA cert expiry
+        id: ca-cert
+        run: |
+          CERT_FILE="prod/postgres/pg-ca.crt"
+          if [ ! -f "$CERT_FILE" ]; then
+            echo "FATAL: $CERT_FILE not found in repo"
+            echo "alert=true" >> "$GITHUB_OUTPUT"
+            echo "message=CA certificate file missing from repository" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          EXPIRY_DATE=$(openssl x509 -in "$CERT_FILE" -noout -enddate | cut -d= -f2)
+          EXPIRY_EPOCH=$(date -d "$EXPIRY_DATE" +%s 2>/dev/null || date -jf "%b %d %T %Y %Z" "$EXPIRY_DATE" +%s)
+          NOW_EPOCH=$(date +%s)
+          DAYS_REMAINING=$(( (EXPIRY_EPOCH - NOW_EPOCH) / 86400 ))
+
+          echo "CA cert expires: $EXPIRY_DATE ($DAYS_REMAINING days remaining)"
+          echo "days=$DAYS_REMAINING" >> "$GITHUB_OUTPUT"
+          echo "expiry=$EXPIRY_DATE" >> "$GITHUB_OUTPUT"
+
+          if [ "$DAYS_REMAINING" -le 180 ]; then
+            echo "alert=true" >> "$GITHUB_OUTPUT"
+            echo "message=CA certificate expires in $DAYS_REMAINING days ($EXPIRY_DATE). 5-year rotation required." >> "$GITHUB_OUTPUT"
+          else
+            echo "alert=false" >> "$GITHUB_OUTPUT"
+            echo "CA cert OK: $DAYS_REMAINING days remaining (threshold: 180)"
+          fi
+
+      - name: Create alert issue (if needed)
+        if: steps.server-cert.outputs.alert == 'true' || steps.ca-cert.outputs.alert == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Duplicate prevention: check for existing open cert-expiry issues
+          EXISTING=$(gh issue list --repo OlympusOSS/platform --label "cert-expiry" --state open --json number --jq 'length')
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "Open cert-expiry issue already exists ($EXISTING found). Skipping creation."
+            exit 0
+          fi
+
+          BODY="## Certificate Expiry Alert (automated)\n\n"
+
+          if [ "${{ steps.server-cert.outputs.alert }}" = "true" ]; then
+            BODY="${BODY}### Server Certificate\n${{ steps.server-cert.outputs.message }}\n\n"
+          fi
+
+          if [ "${{ steps.ca-cert.outputs.alert }}" = "true" ]; then
+            BODY="${BODY}### CA Certificate\n${{ steps.ca-cert.outputs.message }}\n\n"
+          fi
+
+          BODY="${BODY}### Action Required\nFollow the rotation procedure in \`docs/cert-rotation.md\`.\n\n"
+          BODY="${BODY}**Server cert**: expires ${{ steps.server-cert.outputs.expiry }} (${{ steps.server-cert.outputs.days }} days)\n"
+          BODY="${BODY}**CA cert**: expires ${{ steps.ca-cert.outputs.expiry }} (${{ steps.ca-cert.outputs.days }} days)\n"
+
+          printf "$BODY" | gh issue create \
+            --repo OlympusOSS/platform \
+            --title "[SECURITY] TLS certificate expiry approaching" \
+            --body-file - \
+            --label "security,cert-expiry"
+
+          echo "Alert issue created."
