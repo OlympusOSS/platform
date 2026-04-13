@@ -8,7 +8,7 @@
 # Duplicate prevention: checks for existing open issues with the same label
 # before creating a new one.
 #
-# Assignee: Platform Engineer (cert rotation responsibility per runbook)
+# Assignee: Team Lead (cert rotation responsibility per runbook)
 # Labels: security, cert-expiry
 
 name: Certificate Expiry Check
@@ -105,7 +105,7 @@ jobs:
             BODY="${BODY}### CA Certificate\n${{ steps.ca-cert.outputs.message }}\n\n"
           fi
 
-          BODY="${BODY}### Action Required\nFollow the rotation procedure in \`docs/cert-rotation.md\`.\n\n"
+          BODY="${BODY}### Action Required\n**This is a human-only task.** Agents must NOT generate or rotate certificates. Only the Team Lead or Daedalus may perform certificate rotation.\n\nFollow the rotation procedure in \`docs/cert-rotation.md\`.\n\n"
           BODY="${BODY}**Server cert**: expires ${{ steps.server-cert.outputs.expiry }} (${{ steps.server-cert.outputs.days }} days)\n"
           BODY="${BODY}**CA cert**: expires ${{ steps.ca-cert.outputs.expiry }} (${{ steps.ca-cert.outputs.days }} days)\n"
 

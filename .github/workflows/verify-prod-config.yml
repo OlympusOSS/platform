@@ -55,6 +55,16 @@ name: Verify production config has no sensitive value leaks
 #   DSNs must use sslmode=verify-full. Scoped to prod/ only — dev
 #   uses sslmode=disable intentionally.
 #
+# Gate 6 — certificate file modification detection (platform#78):
+#   Blocks PRs that modify committed certificate files (.crt, .pem) under
+#   prod/postgres/ unless the PR carries the 'human-cert-rotation' label.
+#   Only human operators (Team Lead/Daedalus) may rotate certificates.
+#
+# Gate 7 — openssl key/cert generation detection (platform#78):
+#   Scans prod/, scripts/, and *.sh for openssl commands that generate
+#   cryptographic material (genrsa, genpkey, req -new, req -x509, etc.).
+#   Agents must NEVER generate certificates or keys.
+#
 # Gate model:
 #   Push-to-main is the authoritative gate — it always runs on the final
 #   merged state. The pull_request trigger is fast feedback during review;
@@ -143,6 +153,39 @@ jobs:
             exit 1
           fi
           echo "OK: no sslmode regression detected in production compose."
+
+      - name: "Gate 6: Certificate file modification detection (platform#78)"
+        if: "!contains(github.event.pull_request.labels.*.name, 'human-cert-rotation')"
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DIFF_BASE="${{ github.event.pull_request.base.sha }}"
+            DIFF_HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            DIFF_BASE="HEAD~1"
+            DIFF_HEAD="HEAD"
+          fi
+          MODIFIED_CERTS=$(git diff --name-only "$DIFF_BASE" "$DIFF_HEAD" -- \
+            'prod/postgres/*.crt' 'prod/postgres/*.pem' 2>/dev/null || true)
+          if [ -n "$MODIFIED_CERTS" ]; then
+            echo "::error::Certificate files modified: $MODIFIED_CERTS"
+            echo "Certificate files must NOT be modified by agents. Only human operators"
+            echo "(Team Lead/Daedalus) can modify certs and update the matching GitHub Secret."
+            echo "Add 'human-cert-rotation' label to bypass. Reference: platform#53, platform#78"
+            exit 1
+          fi
+          echo "Gate 6 PASS: no certificate files modified."
+
+      - name: "Gate 7: openssl key/cert generation detection (platform#78)"
+        run: |
+          FOUND=$(grep -rnE 'openssl\s+(genrsa|genpkey|req\s+-new|req\s+-x509|ca\s+-|x509\s+-req|pkcs12|ecparam\s+-genkey)' \
+            prod/ scripts/ *.sh 2>/dev/null || true)
+          if [ -n "$FOUND" ]; then
+            echo "::error::openssl key/cert generation command found: $FOUND"
+            echo "Agents must NEVER generate cryptographic material."
+            echo "Reference: platform#53, platform#78"
+            exit 1
+          fi
+          echo "Gate 7 PASS: no openssl generation commands."
 
       - name: Run gitleaks secrets scan on prod/ directory
         uses: gitleaks/gitleaks-action@v2

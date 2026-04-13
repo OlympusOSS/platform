@@ -41,6 +41,18 @@ jobs:
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
             "mkdir -p ${{ env.DEPLOY_PATH }}"
 
+      - name: Backup existing certificates before sync
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "BACKUP=${{ env.DEPLOY_PATH }}/postgres/.cert-backup-\$(date +%Y%m%d-%H%M%S) && \
+             mkdir -p \$BACKUP && \
+             cp ${{ env.DEPLOY_PATH }}/postgres/server.crt \$BACKUP/ 2>/dev/null || true && \
+             cp ${{ env.DEPLOY_PATH }}/postgres/pg-ca.crt \$BACKUP/ 2>/dev/null || true && \
+             cp ${{ env.DEPLOY_PATH }}/postgres/server.key \$BACKUP/ 2>/dev/null || true && \
+             chmod 600 \$BACKUP/server.key 2>/dev/null || true && \
+             echo \$BACKUP > /tmp/cert-backup-path && \
+             echo \"Cert backup: \$BACKUP\""
+
       - name: Sync configs to server
         run: |
           rsync -avz --delete \
@@ -242,6 +254,30 @@ jobs:
              KEY_SIZE=\$(wc -c < ${{ env.DEPLOY_PATH }}/postgres/server.key) && \
              if [ \"\$KEY_SIZE\" -lt 100 ]; then echo 'FATAL: PG_SSL_KEY secret is empty or too small ('\$KEY_SIZE' bytes). Set the secret before deploying.' && exit 1; fi && \
              echo 'SSL private key written ('\$KEY_SIZE' bytes, mode 600, owner postgres)'"
+
+      - name: Validate cert/key consistency (platform#78)
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "CERT_MOD=\$(openssl x509 -in ${{ env.DEPLOY_PATH }}/postgres/server.crt -noout -modulus 2>/dev/null | md5sum | cut -d' ' -f1) && \
+             KEY_MOD=\$(openssl rsa -in ${{ env.DEPLOY_PATH }}/postgres/server.key -noout -modulus 2>/dev/null | md5sum | cut -d' ' -f1) && \
+             echo \"Cert modulus: \$CERT_MOD\" && \
+             echo \"Key modulus:  \$KEY_MOD\" && \
+             if [ \"\$CERT_MOD\" != \"\$KEY_MOD\" ]; then \
+               echo '::error::FATAL: server.crt does not match server.key (PG_SSL_KEY).' && \
+               echo 'The committed certificate and private key were generated independently.' && \
+               echo 'PostgreSQL will refuse to start. Restoring from backup...' && \
+               BACKUP=\$(cat /tmp/cert-backup-path 2>/dev/null) && \
+               if [ -n \"\$BACKUP\" ] && [ -d \"\$BACKUP\" ]; then \
+                 cp \$BACKUP/server.crt ${{ env.DEPLOY_PATH }}/postgres/server.crt && \
+                 cp \$BACKUP/server.key ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+                 cp \$BACKUP/pg-ca.crt ${{ env.DEPLOY_PATH }}/postgres/pg-ca.crt 2>/dev/null; \
+                 chown 70:70 ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+                 chmod 600 ${{ env.DEPLOY_PATH }}/postgres/server.key && \
+                 echo 'Certs restored from backup. Deploy aborted — fix cert/key pair first.'; \
+               fi && \
+               exit 1; \
+             fi && \
+             echo 'Cert/key consistency: MATCH'"
 
       - name: Start PostgreSQL
         run: |

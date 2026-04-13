@@ -41,8 +41,10 @@ CLAUDE.md
 private/
 dev/.npmrc
 
-# PostgreSQL SSL private keys — must never be committed (server.key and CA key are secrets)
-# server.crt and pg-ca.crt are public and CAN be committed
+# PostgreSQL SSL — SECURITY POLICY (platform#78)
+# Private keys: NEVER committed (gitignored + CI Gate 4 blocks)
+# Public certs: committed but FROZEN — only human operators (Team Lead/Daedalus)
+# may modify server.crt or pg-ca.crt. CI Gate 6 blocks agent modifications.
 prod/postgres/server.key
 prod/postgres/pg-ca.key
 prod/postgres/pg-ca.srl
