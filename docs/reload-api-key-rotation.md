@@ -2,7 +2,7 @@
 
 **Last updated**: 2026-04-05
 **Ticket**: platform#31
-**ADR reference**: `docs/state/ADR-003-social-login-config-reload.md`
+**ADR reference**: ADR-003 (Social Login Config Reload)
 
 ---
 
@@ -133,8 +133,7 @@ of the rotation ordering above. Then re-run the post-rotation verification steps
 - Both `ciam-athena` and `ciam-kratos-reload-sidecar` running and healthy
 - The overall dev environment operational
 
-If the dev environment is degraded (check current status in `docs/state/system-status.md`),
-resolve the instability first, then re-validate the rotation.
+If the dev environment is degraded, resolve the instability first, then re-validate the rotation.
 
 ---
 
@@ -215,6 +214,5 @@ V2 improvement. Until it is available, the rotation schedule must be tracked man
 
 ## Related
 
-- `docs/state/ADR-003-social-login-config-reload.md` — sidecar architecture decision record
 - platform#50 — Add ciam-kratos-reload-sidecar service to compose files (BLOCKING prerequisite)
 - platform#31 — This runbook's origin ticket
