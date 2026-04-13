@@ -45,3 +45,5 @@ dev/.npmrc
 # server.crt and pg-ca.crt are public and CAN be committed
 prod/postgres/server.key
 prod/postgres/pg-ca.key
+prod/server.key
+playwright-report/
