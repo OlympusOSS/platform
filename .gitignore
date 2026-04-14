@@ -50,3 +50,4 @@ prod/postgres/pg-ca.key
 prod/postgres/pg-ca.srl
 prod/server.key
 playwright-report/
+test-results/
