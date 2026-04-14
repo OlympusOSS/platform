@@ -141,12 +141,6 @@ upsert_identity "${IAM_KRATOS_ADMIN_URL}" "viewer@demo.user" \
   '{"schema_id":"admin","traits":{"email":"viewer@demo.user","name":{"first":"Marine","last":"Nannier"},"role":"viewer"},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
   "viewer@demo.user (role: viewer, demo)"
 
-# Create/update DBA user: dba@demo.user (platform#21 — pgAdmin access requires 'dba' role)
-# This identity has the 'dba' roles trait, which is injected into IAM Hydra ID tokens
-# by the global oidc.claims_mapper and validated by pgAdmin's OAUTH2_ADDITIONAL_CLAIMS_VALIDATION.
-upsert_identity "${IAM_KRATOS_ADMIN_URL}" "dba@demo.user" \
-  '{"schema_id":"admin","traits":{"email":"dba@demo.user","name":{"first":"DBA","last":"User"},"role":"admin","roles":["dba"]},"credentials":{"password":{"config":{"password":"admin123!"}}},"metadata_admin":{"demo":true,"password":"admin123!"},"metadata_public":{"dashboardLayout":'"${DEFAULT_LAYOUT}"'},"state":"active"}' \
-  "dba@demo.user (role: admin, roles: [dba], demo)"
 
 echo ""
 echo "=== CIAM Demo Identity ==="
