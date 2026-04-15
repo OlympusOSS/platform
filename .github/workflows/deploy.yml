@@ -381,14 +381,15 @@ jobs:
 
       - name: Clean up stale containers
         run: |
-          # podman-compose 1.0.6 can't `rm` containers that have --requires
-          # dependents (e.g. migration containers create deps on Kratos/Hydra).
-          # Force-remove everything except postgres so `up -d` can recreate fresh.
+          # Remove ALL containers except postgres before compose up.
+          # podman-compose 1.0.6 can't handle existing containers — it tries
+          # to create them and fails with "already in use". Force-remove everything
+          # so compose up starts fresh.
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "podman ps -a --filter label=com.docker.compose.project=prod \
-               --format '{{.Names}}' | \
+            "podman ps -a --format '{{.Names}}' | \
              grep -v prod_postgres_1 | \
-             xargs -r podman rm -f 2>/dev/null || true"
+             xargs -r podman rm -f 2>/dev/null || true && \
+             podman container prune -f 2>/dev/null || true"
 
       - name: Deploy infrastructure services
         run: |
