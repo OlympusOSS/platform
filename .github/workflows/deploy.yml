@@ -292,6 +292,19 @@ jobs:
              fi && \
              echo 'Cert/key consistency: MATCH'"
 
+      - name: Pre-flight — create volumes and remove stale containers
+        run: |
+          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
+            "echo '--- Creating named volumes (if missing) ---' && \
+             podman volume create prod_postgres 2>/dev/null || true && \
+             podman volume create prod_caddy_data 2>/dev/null || true && \
+             podman volume create prod_caddy_config 2>/dev/null || true && \
+             echo '--- Removing ALL stale containers ---' && \
+             podman rm -af 2>/dev/null || true && \
+             echo '--- Creating podman network (if missing) ---' && \
+             podman network create prod_intranet 2>/dev/null || true && \
+             echo 'Pre-flight complete.'"
+
       - name: Start PostgreSQL
         run: |
           ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
