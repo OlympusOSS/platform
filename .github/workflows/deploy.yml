@@ -36,10 +36,23 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -T 10 -p ${{ vars.DEPLOY_SSH_PORT || 22 }} ${{ vars.DEPLOY_SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Ensure deploy directory exists
+      - name: Verify SSH connectivity (retry up to 5 minutes)
         run: |
-          ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} \
-            "mkdir -p ${{ env.DEPLOY_PATH }}"
+          MAX_ATTEMPTS=10
+          WAIT=30
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "[Attempt $i/$MAX_ATTEMPTS] Connecting to ${{ env.SSH_TARGET }}..."
+            if ssh ${{ env.SSH_OPTS }} ${{ env.SSH_TARGET }} "mkdir -p ${{ env.DEPLOY_PATH }}" 2>/dev/null; then
+              echo "SSH connection verified."
+              exit 0
+            fi
+            if [ "$i" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Connection failed. Waiting ${WAIT}s before retry..."
+              sleep $WAIT
+            fi
+          done
+          echo "::error::SSH connection failed after $MAX_ATTEMPTS attempts ($(($MAX_ATTEMPTS * $WAIT))s). Server may be unreachable."
+          exit 1
 
       - name: Backup existing certificates before sync
         run: |
