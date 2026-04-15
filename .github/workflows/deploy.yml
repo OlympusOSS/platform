@@ -105,11 +105,11 @@ jobs:
           # sslmode=verify-full (platform#53): clients verify server cert is signed by
           # the CA and hostname matches CN=postgres. sslrootcert points to the CA cert
           # mounted from ./postgres/pg-ca.crt into /etc/ssl/certs/pg-ca.crt in each container.
-          PG_CIAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
-          PG_CIAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
-          PG_IAM_KRATOS_DSN=${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
-          PG_IAM_HYDRA_DSN=${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
-          PG_OLYMPUS_DSN=${{ secrets.PG_DSN_BASE }}/olympus?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt
+          PG_CIAM_KRATOS_DSN='${{ secrets.PG_DSN_BASE }}/ciam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt'
+          PG_CIAM_HYDRA_DSN='${{ secrets.PG_DSN_BASE }}/ciam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt'
+          PG_IAM_KRATOS_DSN='${{ secrets.PG_DSN_BASE }}/iam_kratos?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt'
+          PG_IAM_HYDRA_DSN='${{ secrets.PG_DSN_BASE }}/iam_hydra?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt'
+          PG_OLYMPUS_DSN='${{ secrets.PG_DSN_BASE }}/olympus?sslmode=verify-full&sslrootcert=/etc/ssl/certs/pg-ca.crt'
 
           # Application settings encryption
           ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}
