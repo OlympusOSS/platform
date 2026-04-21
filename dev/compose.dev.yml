@@ -26,7 +26,7 @@ services:
   # ============================================================
 
   pgadmin:
-    image: docker.io/dpage/pgadmin4:latest
+    image: docker.io/dpage/pgadmin4:9.14.0
     # No direct host port — accessed via Caddy on :5433 (rate-limit enforcement)
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@demo.user

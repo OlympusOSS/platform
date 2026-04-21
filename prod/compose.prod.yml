@@ -683,7 +683,7 @@ services:
   # ============================================================
 
   pgadmin:
-    image: docker.io/dpage/pgadmin4:latest
+    image: docker.io/dpage/pgadmin4:9.14.0
     ports:
       - '5433:80'
     environment:
@@ -726,7 +726,7 @@ services:
   # ============================================================
 
   seed:
-    image: docker.io/curlimages/curl:latest
+    image: docker.io/curlimages/curl:8.19.0
     volumes:
       - type: bind
         source: ./seed-prod.sh

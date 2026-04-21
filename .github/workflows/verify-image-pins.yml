@@ -1,0 +1,46 @@
+name: Verify image tags are pinned (no :latest)
+
+# Blocks PRs/pushes that introduce `:latest` on third-party images in compose files.
+#
+# Rationale: mutable `:latest` tags expose the stack to silent upstream changes and
+# supply-chain risk. Own-org images (ghcr.io/olympusoss/*) are exempt because the
+# deploy workflow always sets an explicit SHA tag via ${VAR:-latest} and we control
+# what publishes under `latest`. Ory Mailslurper's `:latest-smtps` is a versioned
+# variant tag (not a plain `:latest`) and is dev-only.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'prod/compose.prod.yml'
+      - 'dev/compose.dev.yml'
+      - '.github/workflows/verify-image-pins.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'prod/compose.prod.yml'
+      - 'dev/compose.dev.yml'
+      - '.github/workflows/verify-image-pins.yml'
+
+jobs:
+  verify-pins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fail on :latest for third-party images
+        run: |
+          set -euo pipefail
+          # Match `image: X:latest` (end of tag) or `image: X:${VAR:-latest}`.
+          # Exclude ghcr.io/olympusoss/* (own-org; deploy workflow pins via env var).
+          # Exclude :latest-smtps (Ory Mailslurper's versioned SMTPS variant, dev-only).
+          violations=$(grep -nE '^\s*image:.*(:latest$|:\$\{[A-Z_]+:-latest\})' \
+                        prod/compose.prod.yml dev/compose.dev.yml \
+                        | grep -v 'ghcr.io/olympusoss/' \
+                        || true)
+          if [ -n "$violations" ]; then
+            echo "::error::Third-party image(s) use :latest — pin to a semver tag or digest."
+            echo "$violations"
+            exit 1
+          fi
+          echo "OK — all third-party images are pinned."
